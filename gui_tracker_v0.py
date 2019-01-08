@@ -36,9 +36,10 @@ class MainVisual(tk.Frame):
         self.track_data={} # original tracking data
         self.track_data_filtered=self.track_data.copy()  # filtered tracking data  
         self.filter_duration=[0, 1000]
-        self.filter_length=[0, 10000]        
-        
-        
+        self.filter_length=[0, 10000]   
+        self.frame_pos=0
+        self.movie_length=0
+      
      # # # # # # menu to choose files and print data # # # # # #
         
         self.button1 = tk.Button(text="       Select movie file       ", command=self.select_movie, width=40)
@@ -107,7 +108,33 @@ class MainVisual(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3,pady=5)
         # plot all tracks on top         
+   #  #  # # # # next and previous buttons
         
+        buttonbefore = tk.Button(text=" previous frame ", command=self.move_to_previous, width=20)
+        buttonbefore.grid(row=9, column=1, pady=5, sticky=tk.W) 
+
+        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=9, column=2, pady=5)
+        
+        buttonnext = tk.Button(text="  next frame   ", command=self.move_to_next, width=20)
+        buttonnext.grid(row=9, column=3, pady=5, sticky=tk.E)
+
+
+    def move_to_previous(self):
+        if self.frame_pos!=0:
+            self.frame_pos-=1
+        self.show_tracks()
+        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=9, column=2, pady=5)
+        
+    def move_to_next(self):
+        if self.frame_pos!=self.movie_length:
+            self.frame_pos+=1
+        self.show_tracks()   
+        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=9, column=2, pady=5)
+        
+       
 
     def filtering(self):
         
@@ -191,11 +218,12 @@ class MainVisual(tk.Frame):
         self.movie_file=filename
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
+        self.movie_length=self.movie.shape[0]  
         lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file, bg='white')
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
                 # plot image
-        frame_N=0
-        self.image = self.movie[frame_N,:,:]
+        plt.close()
+        self.image = self.movie[self.frame_pos,:,:]
         fig = plt.figure(figsize=(10,10))
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
@@ -249,8 +277,9 @@ class MainVisual(tk.Frame):
         # read data from the selected filesa and show tracks        
 
         # plot image
-        frame_N=0
-        self.image = self.movie[frame_N,:,:]
+
+        self.image = self.movie[self.frame_pos,:,:]
+        plt.close()
         fig = plt.figure(figsize=(10,10))
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
@@ -260,7 +289,6 @@ class MainVisual(tk.Frame):
 
         for p in self.track_data_filtered['tracks']:
             trace=p['trace']
-#            if len(trace)>20:
             plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])
 
 
@@ -278,7 +306,7 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent)
         parent.title("TrackHandler")
         parent.configure(background='white')
-        parent.geometry("1500x1200") #Width x Height
+        parent.geometry("1500x1400") #Width x Height
         self.main = MainVisual(parent)
 #        self.main.pack(side="left")
 
