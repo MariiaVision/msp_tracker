@@ -34,11 +34,15 @@ class MainVisual(tk.Frame):
         self.track_file=" "# path to the file with tracking data (json format)
         self.movie=[] # matrix with data
         self.track_data={} # original tracking data
-        self.track_data_filtered=self.track_data.copy()  # filtered tracking data  
+        self.track_data_filtered={}  # filtered tracking data  
+        self.track_data_framed={}  # tracking data arranged by frames  
         self.filter_duration=[0, 1000]
         self.filter_length=[0, 10000]   
         self.frame_pos=0
         self.movie_length=0
+        
+        # 
+        self.figsize_value=(6,6)
       
      # # # # # # menu to choose files and print data # # # # # #
         
@@ -87,7 +91,7 @@ class MainVisual(tk.Frame):
         # button to filter
         
         self.buttonFilter = tk.Button(text="     Filter      ", command=self.filtering, width=40)
-        self.buttonFilter.grid(row=4, column=5,columnspan=4,  pady=5)          
+        self.buttonFilter.grid(row=4, column=5, columnspan=4,  pady=5)          
         
         
       # # # # # # movie  # # # # # # 
@@ -98,7 +102,7 @@ class MainVisual(tk.Frame):
         
         # plot bg
         bg_img=np.ones((400,400))*0.4
-        fig = plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         self.im = plt.imshow(bg_img) # for later use self.im.set_data(new_data)
 
@@ -110,13 +114,13 @@ class MainVisual(tk.Frame):
         # plot all tracks on top         
    #  #  # # # # next and previous buttons
         
-        buttonbefore = tk.Button(text=" previous frame ", command=self.move_to_previous, width=20)
+        buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
         buttonbefore.grid(row=9, column=1, pady=5, sticky=tk.W) 
 
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
         lbframe.grid(row=9, column=2, pady=5)
         
-        buttonnext = tk.Button(text="  next frame   ", command=self.move_to_next, width=20)
+        buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
         buttonnext.grid(row=9, column=3, pady=5, sticky=tk.E)
 
 
@@ -141,28 +145,24 @@ class MainVisual(tk.Frame):
         #read variables
         if self.txt_duration_from.get()=='':
             self.filter_duration[0]=0
-            print("not filled")
         else:
             self.filter_duration[0]=int(self.txt_duration_from.get())
 
         if self.txt_duration_to.get()=='':
             self.filter_duration[1]=1000
-            print("not filled")
         else:
-            self.filter_duration[1]=int(self.txt_duration_to.get())            
-            
+            self.filter_duration[1]=int(self.txt_duration_to.get())                        
 
         if self.txt_length_from.get()=='':
             self.filter_length[0]=0
-            print("not filled")
         else:
             self.filter_length[0]=int(self.txt_length_from.get())
 
         if self.txt_length_to.get()=='':
             self.filter_length[1]=10000
-            print("not filled")
         else:
-            self.filter_length[1]=int(self.txt_length_to.get())   
+            self.filter_length[1]=int(self.txt_length_to.get())  
+            
         print("filtering for length: ", self.filter_length, "  and for duration: ", self.filter_duration)
 
         # filtering 
@@ -177,14 +177,13 @@ class MainVisual(tk.Frame):
             #calculate maximum displacement between any two positions in track
             track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
             
+            # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
             
             if length_var==True and duration_var==True:
                 self.track_data_filtered['tracks'].append(p)
-#                else:
-#                    print("Track is not added: ", track_length, "  ", track_duration)
-
+        self.track_to_frame()
 
         
         #update the list
@@ -197,7 +196,7 @@ class MainVisual(tk.Frame):
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=root, width=60,  font=("Helvetica", 12))
+        listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12))
         listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=listNodes.yview)
@@ -219,12 +218,12 @@ class MainVisual(tk.Frame):
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
         self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file, bg='white')
+        lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file.split("/")[-1], bg='white')
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
                 # plot image
         plt.close()
         self.image = self.movie[self.frame_pos,:,:]
-        fig = plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
 
@@ -245,6 +244,7 @@ class MainVisual(tk.Frame):
 
             self.track_data = json.load(json_file)
             self.track_data_filtered=self.track_data 
+            self.track_to_frame()
             
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), bg='white', width=30,   font=("Times", 16, "bold"))
         lbl2.grid(row=5, column=5, columnspan=4, pady=5)
@@ -256,7 +256,7 @@ class MainVisual(tk.Frame):
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=root, width=60,  font=("Helvetica", 12))
+        listNodes = tk.Listbox(master=root, width=50,  font=("Times", 12))
         listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=listNodes.yview)        
@@ -268,8 +268,8 @@ class MainVisual(tk.Frame):
             track_duration=p['frames'][-1]-p['frames'][0]            
             track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
             # add to the list
-            listNodes.insert(tk.END, "trackID: "+str(p['trackID'])+"   duration: "+str(track_duration)+
-                             "  length: "+str(track_length)+"   start frame: "+str((p['frames'][0])))
+            listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" duration: "+str(track_duration)+
+                             " length: "+str(track_length)+" start frame: "+str((p['frames'][0])))
         
         
         
@@ -280,33 +280,57 @@ class MainVisual(tk.Frame):
 
         self.image = self.movie[self.frame_pos,:,:]
         plt.close()
-        fig = plt.figure(figsize=(10,10))
+        fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
         
         # plot tracks
-        
-
-        for p in self.track_data_filtered['tracks']:
+        plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
+#        print(plot_info)
+        for p in plot_info:
             trace=p['trace']
-            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])
+            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])      
+#
+#        for p in self.track_data_filtered['tracks']:
+#            trace=p['trace']
+#            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])
 
 
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
         canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
+    
+    def track_to_frame(self):
+        # change data arrangment from tracks to frames
+        self.track_data_framed={}
+        self.track_data_framed.update({'frames':[]})
         
+        for n_frame in range(0,self.movie.shape[0]):
+            
+            frame_dict={}
+            frame_dict.update({'frame': n_frame})
+            frame_dict.update({'tracks': []})
+            
+            #rearrange the data
+            for p in self.track_data['tracks']:
+                if n_frame in p['frames']: # if the frame is in the track
+                    frame_index=p['frames'].index(n_frame) # find position in the track
+                    
+                    new_trace=p['trace'][0:frame_index+1] # copy all the traces before the frame
+                    frame_dict['tracks'].append({'trackID': p['trackID'], 'trace': new_trace}) # add to the list
+                    
+                    
+            self.track_data_framed['frames'].append(frame_dict) # add the dictionary
+            
         
-
-
 
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         parent.title("TrackHandler")
         parent.configure(background='white')
-        parent.geometry("1500x1400") #Width x Height
+        parent.geometry("1000x900") #Width x Height
         self.main = MainVisual(parent)
 #        self.main.pack(side="left")
 
