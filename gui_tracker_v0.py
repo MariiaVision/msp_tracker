@@ -316,7 +316,7 @@ class MainVisual(tk.Frame):
         self.track_data_framed={}
         self.track_data_framed.update({'frames':[]})
         
-        for n_frame in range(0,self.movie.shape[0]):
+        for n_frame in range(0,self.movie_length):
             
             frame_dict={}
             frame_dict.update({'frame': n_frame})
@@ -332,7 +332,128 @@ class MainVisual(tk.Frame):
                     
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
-            
+
+############################################################
+
+class TrackViewer(tk.Frame):
+    def __init__(self, master, track_data, movie):
+        tk.Frame.__init__(self, master)
+#        master.title("TrackViewer")
+        master.configure(background='white')
+        master.geometry("1500x1000") #Width x Height
+        
+        self.viewer = master
+        
+        # save important data
+        self.track_data=track_data
+        self.movie=movie
+        self.frames=track_data['frames']
+        self.trace=track_data['trace']
+        self.id=track_data['trackID']
+        self.frame_pos=track_data['frames'][0]
+        self.figsize_value=(7,7) # figure size
+        self.frame_to_change=0 # frame which can be changed
+        self.movie_length=self.movie.shape[0] # movie length
+        # change the name to add track ID
+        master.title("TrackViewer: track ID "+str(self.id))
+        
+        
+     # # # lay out of the frame
+        self.show_list()     
+        
+        # movie control
+        self.plot_image()
+        
+        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+        buttonbefore.grid(row=3, column=2, pady=5, sticky=tk.W) 
+
+        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=3, column=3, pady=5)
+        
+        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+        buttonnext.grid(row=3, column=4, pady=5, sticky=tk.E)
+        
+        
+
+    def move_to_previous(self):
+        if self.frame_pos!=0:
+            self.frame_pos-=1
+        self.plot_image()
+        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=3, column=3, pady=5)
+        
+    def move_to_next(self):
+        if self.frame_pos!=self.movie_length:
+            self.frame_pos+=1
+        self.plot_image()   
+        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+        lbframe.grid(row=3, column=3, pady=5)
+                
+    
+    
+    def plot_image(self):
+        
+        # plot image
+        plt.close()
+        fig = plt.figure(figsize=self.figsize_value)
+        plt.axis('off')
+        
+        pixN_basic=200
+        img=self.movie[self.frame_pos,:,:]
+        pixN_min=np.min(([pixN_basic, np.min(np.asarray(self.trace)[:,1]), np.min(np.asarray(self.trace)[:,0])]))
+        pixN=np.min(([pixN_min, img.shape[0]-np.max(np.asarray(self.trace)[:,1]),  img.shape[1]-np.max(np.asarray(self.trace)[:,0])]))
+        
+        y_min=np.min(np.asarray(self.trace)[:,1])-pixN
+        y_max=np.max(np.asarray(self.trace)[:,1])+pixN
+    
+        x_min=np.min(np.asarray(self.trace)[:,0])-pixN
+        x_max=np.max(np.asarray(self.trace)[:,0])+pixN
+        
+        region=img[x_min:x_max, y_min:y_max]
+        
+        blue_c=np.linspace(0., 1., len(self.trace))
+        red_c=1-np.linspace(0., 1., len(self.trace))
+    
+        self.im = plt.imshow(region, cmap="gray")
+        for pos in range(0, len(self.trace)-1):
+            plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
+    
+        plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
+        plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+        
+        plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
+        
+        plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
+
+        # DrawingArea
+        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, pady=5)   
+        
+    def show_list(self): 
+        
+        def tracklist_on_select(even):
+            position_in_list=listNodes.curselection()[0]
+            self.frame_to_change=position_in_list
+            print("selected "+str(position_in_list))
+
+                # show the list of data with scroll bar
+        lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 14))
+        lbend.grid(row=1, column=5, columnspan=4)
+        
+        scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
+        scrollbar.grid(row=2, column=9,  sticky=tk.N+tk.S)
+        
+        listNodes = tk.Listbox(master=self.viewer, width=50, height=10, font=("Times", 12), selectmode='single')
+        listNodes.grid(row=2, column=5, columnspan=4, sticky=tk.N+tk.S)
+        listNodes.config(yscrollcommand=scrollbar.set)
+        listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
+        scrollbar.config(command=listNodes.yview)
+        
+       # plot the track positions
+        for i in range(0, len(self.frames)):
+             # add to the list
+            listNodes.insert(tk.END, "frame: "+str(self.frames[i])+"  position: "+str(self.trace[i]))                        
 
 class MainApplication(tk.Frame):
     def __init__(self, parent):
@@ -344,20 +465,7 @@ class MainApplication(tk.Frame):
 #        self.main.pack(side="left")
 
 
-class TrackViewer(tk.Frame):
-    def __init__(self, master, track_data, movie):
-        tk.Frame.__init__(self, master)
-        self.viewer = master
-        self.track_data=track_data
-        self.movie=movie
-        master.title("TrackViewer")
-        master.configure(background='white')
-        master.geometry("1000x500") #Width x Height
 
-        
-
-        
-        print(self.track_data)
         
 if __name__ == "__main__":
     root = tk.Tk()
