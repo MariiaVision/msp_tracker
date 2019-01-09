@@ -7,6 +7,7 @@ Created on Thu Jan  3 13:41:16 2019
 """
 import numpy as np
 
+import time
 import tkinter as tk
 from tkinter import filedialog
 
@@ -123,6 +124,21 @@ class MainVisual(tk.Frame):
         buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
         buttonnext.grid(row=9, column=3, pady=5, sticky=tk.E)
 
+# # # #  play movie - not working - need another solultion
+#        buttonnext = tk.Button(text="play", command=self.play_movie, width=20)
+#        buttonnext.grid(row=10, column=2, padx=5)
+#        
+#        buttonnext = tk.Button(text="stop", command=self.play_stop, width=20)
+#        buttonnext.grid(row=10, column=3, padx=5)
+#        
+#    def play_movie(self):
+#        while self.frame_pos!=self.movie_length:
+#            self.frame_pos+=1   
+#            self.show_tracks()
+#            lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+#            lbframe.grid(row=9, column=2, pady=5)
+#            time.sleep(1)
+        
 
     def move_to_previous(self):
         if self.frame_pos!=0:
@@ -184,9 +200,23 @@ class MainVisual(tk.Frame):
             if length_var==True and duration_var==True:
                 self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
-
         
         #update the list
+        self.list_update()
+
+
+
+    def list_update(self):
+        # updating the list 
+        
+        def tracklist_on_select(even):
+            position_in_list=listNodes.curselection()[0]
+            print('You selected: ', position_in_list)
+            print('Track info:   ', self.track_data_filtered['tracks'][position_in_list]['trackID'])
+            # creating a new window with class TrackViewer
+            self.new_window = tk.Toplevel(self.master)
+            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
+        
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
         lbl2.grid(row=5, column=5, columnspan=4, pady=5)
                 # show the list of data with scroll bar
@@ -196,9 +226,10 @@ class MainVisual(tk.Frame):
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12))
+        listNodes = tk.Listbox(master=root, width=50,  font=("Times", 12), selectmode='single')
         listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
+        listNodes.bind('<Double-1>', tracklist_on_select)
         scrollbar.config(command=listNodes.yview)
         
        # plot the tracks from filtered folder 
@@ -208,9 +239,11 @@ class MainVisual(tk.Frame):
             track_duration=p['frames'][-1]-p['frames'][0]            
             track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
             # add to the list
-            listNodes.insert(tk.END, "trackID: "+str(p['trackID'])+"   duration: "+str(track_duration)+
-                             "  length: "+str(track_length)+"   start frame: "+str((p['frames'][0])))
+            listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" duration: "+str(track_duration)+
+                             " length: "+str(track_length)+" start frame: "+str((p['frames'][0])))        
 
+            
+            
     def select_movie(self):
         # Allow user to select movie
         filename = tk.filedialog.askopenfilename(filetypes = [("All files", "*.*")])
@@ -220,6 +253,7 @@ class MainVisual(tk.Frame):
         self.movie_length=self.movie.shape[0]  
         lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file.split("/")[-1], bg='white')
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
+        
                 # plot image
         plt.close()
         self.image = self.movie[self.frame_pos,:,:]
@@ -246,31 +280,7 @@ class MainVisual(tk.Frame):
             self.track_data_filtered=self.track_data 
             self.track_to_frame()
             
-        lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), bg='white', width=30,   font=("Times", 16, "bold"))
-        lbl2.grid(row=5, column=5, columnspan=4, pady=5)
-        
-                # show the list of data with scroll bar
-        lbend = tk.Label(master=root, text="LIST OF TRACKS:  ",  bg='white', font=("Times", 14))
-        lbend.grid(row=7, column=5, columnspan=4)
-        
-        scrollbar = tk.Scrollbar(master=root, orient="vertical")
-        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
-        
-        listNodes = tk.Listbox(master=root, width=50,  font=("Times", 12))
-        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
-        listNodes.config(yscrollcommand=scrollbar.set)
-        scrollbar.config(command=listNodes.yview)        
-
-        
-        for p in self.track_data['tracks']:
-            #calculate length and duration
-            point_start=p['trace'][0]
-            track_duration=p['frames'][-1]-p['frames'][0]            
-            track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
-            # add to the list
-            listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" duration: "+str(track_duration)+
-                             " length: "+str(track_length)+" start frame: "+str((p['frames'][0])))
-        
+        self.list_update()        
         
         
     def show_tracks(self):
@@ -323,17 +333,31 @@ class MainVisual(tk.Frame):
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
             
-        
 
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
         parent.title("TrackHandler")
         parent.configure(background='white')
-        parent.geometry("1000x900") #Width x Height
+        parent.geometry("1200x1000") #Width x Height
         self.main = MainVisual(parent)
 #        self.main.pack(side="left")
 
+
+class TrackViewer(tk.Frame):
+    def __init__(self, master, track_data, movie):
+        tk.Frame.__init__(self, master)
+        self.viewer = master
+        self.track_data=track_data
+        self.movie=movie
+        master.title("TrackViewer")
+        master.configure(background='white')
+        master.geometry("1000x500") #Width x Height
+
+        
+
+        
+        print(self.track_data)
         
 if __name__ == "__main__":
     root = tk.Tk()
