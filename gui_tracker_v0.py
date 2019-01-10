@@ -8,6 +8,7 @@ Created on Thu Jan  3 13:41:16 2019
 import numpy as np
 
 import time
+import copy
 import tkinter as tk
 from tkinter import filedialog
 
@@ -34,6 +35,7 @@ class MainVisual(tk.Frame):
         self.movie_file=" " # path to the move file
         self.track_file=" "# path to the file with tracking data (json format)
         self.movie=[] # matrix with data
+        self.track_data_original={}
         self.track_data={} # original tracking data
         self.track_data_filtered={}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
@@ -92,8 +94,18 @@ class MainVisual(tk.Frame):
         # button to filter
         
         self.buttonFilter = tk.Button(text="     Filter      ", command=self.filtering, width=40)
-        self.buttonFilter.grid(row=4, column=5, columnspan=4,  pady=5)          
+        self.buttonFilter.grid(row=4, column=5, columnspan=4,  pady=5)   
         
+        
+        # button to update changes
+        
+        button_save=tk.Button(master=root, text=" update changes ", command=self.update_data, width=15)
+        button_save.grid(row=10, column=5)
+        
+        # save button
+     
+        button_save=tk.Button(master=root, text=" save in file ", command=self.save_in_file, width=15)
+        button_save.grid(row=10, column=8)        
         
       # # # # # # movie  # # # # # # 
 
@@ -102,7 +114,7 @@ class MainVisual(tk.Frame):
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
         
         # plot bg
-        bg_img=np.ones((400,400))*0.4
+        bg_img=np.ones((400,400))*0.8
         fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         self.im = plt.imshow(bg_img) # for later use self.im.set_data(new_data)
@@ -139,6 +151,19 @@ class MainVisual(tk.Frame):
 #            lbframe.grid(row=9, column=2, pady=5)
 #            time.sleep(1)
         
+        
+    
+    def save_in_file(self):
+        save_filename = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
+        with open(save_filename+'.txt', 'w') as f:
+            json.dump(self.track_data, f, ensure_ascii=False)  
+        print("origianal: ", self.track_data_original)
+    
+    def update_data(self):
+        self.list_update()
+        self.track_to_frame()
+        self.show_tracks()
+        print("data updated")            
 
     def move_to_previous(self):
         if self.frame_pos!=0:
@@ -188,7 +213,7 @@ class MainVisual(tk.Frame):
         for p in self.track_data['tracks']:
             # check length
             point_start=p['trace'][0]
-            track_duration=p['frames'][-1]-p['frames'][0]
+            track_duration=p['frames'][-1]-p['frames'][0]+1
             
             #calculate maximum displacement between any two positions in track
             track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
@@ -203,8 +228,7 @@ class MainVisual(tk.Frame):
         
         #update the list
         self.list_update()
-
-
+    
 
     def list_update(self):
         # updating the list 
@@ -216,7 +240,7 @@ class MainVisual(tk.Frame):
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
             TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
-        
+            
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
         lbl2.grid(row=5, column=5, columnspan=4, pady=5)
                 # show the list of data with scroll bar
@@ -236,7 +260,7 @@ class MainVisual(tk.Frame):
         for p in self.track_data_filtered['tracks']:
             #calculate length and duration
             point_start=p['trace'][0]
-            track_duration=p['frames'][-1]-p['frames'][0]            
+            track_duration=p['frames'][-1]-p['frames'][0]+1    
             track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
             # add to the list
             listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" duration: "+str(track_duration)+
@@ -276,7 +300,8 @@ class MainVisual(tk.Frame):
         #read  the tracks data 
         with open(self.track_file) as json_file:  # 'tracking_original.txt'
 
-            self.track_data = json.load(json_file)
+            self.track_data_original = json.load(json_file)
+            self.track_data=copy.deepcopy(self.track_data_original)
             self.track_data_filtered=self.track_data 
             self.track_to_frame()
             
@@ -365,42 +390,53 @@ class TrackViewer(tk.Frame):
         self.plot_image()
         
         buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=3, column=2, pady=5, sticky=tk.W) 
+        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
 
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=3, column=3, pady=5)
+        lbframe.grid(row=8, column=3, pady=5)
         
         buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=3, column=4, pady=5, sticky=tk.E)
+        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
         
      # buttins to change the position
      
         buttonnext = tk.Button(master=self.viewer,text="change", command=self.change_position, width=10)
-        buttonnext.grid(row=0, column=10, pady=5)     
+        buttonnext.grid(row=0, column=5, pady=5)     
 
         buttonnext = tk.Button(master=self.viewer,text="delete", command=self.delete_position, width=10)
-        buttonnext.grid(row=0, column=11, pady=5)     
+        buttonnext.grid(row=0, column=6, pady=5)     
         
         buttonnext = tk.Button(master=self.viewer,text="add", command=self.add_position, width=10)
-        buttonnext.grid(row=0, column=12, pady=5)    
+        buttonnext.grid(row=0, column=7, pady=5)    
+        
+#        buttonnext = tk.Button(master=self.viewer,text=" save ", command=self.add_position, width=10)
+#        buttonnext.grid(row=9, column=6, pady=5)    
+#    
+#        
+#    def save_to_main_frame(self):
+#        print("saving to main frame")
+#        
         
         
     def change_position(self):
-        print("changing ", self.frames[self.frame_pos_to_change])
+        
+        self.action_cancel()
 
-        lbframechange = tk.Label(master=self.viewer, text=" frame: "+str(self.frames[self.frame_pos_to_change]), width=20, bg='white')
-        lbframechange.grid(row=1, column=10, columnspan=2, pady=5)
+        self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=40, bg='white')
+        self.lbframechange.grid(row=1, column=10, columnspan=2, pady=5, sticky=tk.W)
 
-        lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
-        lbpose.grid(row=2, column=10, pady=5)  
+        self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
+        self.lbpose.grid(row=2, column=10, pady=5, sticky=tk.W)  
         
         self.txt_position = tk.Entry(self.viewer, width=20)
         self.txt_position.grid(row=2, column=11)                
         
 
-        buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_change, width=10)
-        buttonOK.grid(row=3, column=10, columnspan=2, pady=5)   
+        self.buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_change, width=10)
+        self.buttonOK.grid(row=3, column=10, pady=5)   
         
+        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
+        self.button_cancel.grid(row=3, column=11, pady=5)          
         
     def action_apply_change(self):
         
@@ -409,17 +445,55 @@ class TrackViewer(tk.Frame):
         # update visualisation
         self.show_list()     
         self.plot_image()
+        
+        self.action_cancel()
+        
+
+        
+    def action_cancel(self):
+        #remove all the widgets related to make changes
+
+        try: 
+            self.lbframechange.destroy()
+        except: print("skip this window, as not open")
+        
+        try:
+            self.lbpose.destroy()
+        except: print("skip this window, as not open")
+        try: 
+            self.txt_position.destroy()  
+        except: print("skip this window, as not open")      
+        try: 
+            self.txt_frame.destroy()
+        except: print("skip this window, as not open")
+        
+        try: 
+            self.button_cancel.destroy()  
+        except: print("skip this window, as not open")      
+        try: 
+            self.buttonOK.destroy()
+        except: print("skip this window, as not open")
+        try: 
+            self.buttonOKdel.destroy()
+        except: print("skip this window, as not open")
+        try: 
+            self.buttonOK_add.destroy()
+        except: print("skip this window, as not open")
 
         
     def delete_position(self):
-        print("deleting ", self.frames[self.frame_pos_to_change])  
         
-        lbframechange = tk.Label(master=self.viewer, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=40, bg='white')
-        lbframechange.grid(row=1, column=10, columnspan=2, pady=5)              
+        self.action_cancel()
+        
+        self.lbframechange = tk.Label(master=self.viewer, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=40, bg='white')
+        self.lbframechange.grid(row=1, column=10, columnspan=2,  pady=5, sticky=tk.W)              
         
 
-        buttonOKdel= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_delete, width=10)
-        buttonOKdel.grid(row=3, column=10, columnspan=2, pady=5)  
+        self.buttonOKdel= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_delete, width=10)
+        self.buttonOKdel.grid(row=3, column=10, pady=5)  
+        
+        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
+        self.button_cancel.grid(row=3, column=11, pady=5)     
         
     def action_apply_delete(self):
 
@@ -429,29 +503,36 @@ class TrackViewer(tk.Frame):
         self.show_list()     
         self.plot_image()
         
-    def add_position(self):
-        print("adding ")  
+        self.action_cancel()
+
         
+    def add_position(self): 
         
-        lbframechange = tk.Label(master=self.viewer, text=" Add frame: ", width=20, bg='white')
-        lbframechange.grid(row=1, column=10, columnspan=2, pady=5)
+        self.action_cancel()   
+        
+        self.lbframechange = tk.Label(master=self.viewer, text=" Add frame: ", width=20, bg='white')
+        self.lbframechange.grid(row=1, column=10, pady=5)
 
         self.txt_frame = tk.Entry(self.viewer, width=10)
-        self.txt_frame.grid(row=1, column=12)                
+        self.txt_frame.grid(row=1, column=11)                
         
 
-        lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
-        lbpose.grid(row=2, column=10, pady=5)  
+        self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
+        self.lbpose.grid(row=2, column=10, pady=5)  
         
         self.txt_position = tk.Entry(self.viewer, width=20)
         self.txt_position.grid(row=2, column=11)                
         
 
-        buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_add, width=10)
-        buttonOK.grid(row=3, column=10, columnspan=2, pady=5)   
+        self.buttonOK_add= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_add, width=10)
+        self.buttonOK_add.grid(row=3, column=10,  pady=5)   
+
+        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
+        self.button_cancel.grid(row=3, column=11, pady=5)     
+
         
     def action_apply_add(self):
-
+        
         location_val=[int(self.txt_position.get().split(',')[0]), int(self.txt_position.get().split(',')[1])]
         frame_val=int(self.txt_frame.get())
         
@@ -476,21 +557,37 @@ class TrackViewer(tk.Frame):
         # update visualisation
         self.show_list()     
         self.plot_image()
+        
+        # remove the widgets
+        self.action_cancel()
+
+        
 
     def move_to_previous(self):
         if self.frame_pos!=0:
             self.frame_pos-=1
         self.plot_image()
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=3, column=3, pady=5)
+        lbframe.grid(row=8, column=3, pady=5)
+        
+        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
+        
+        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.plot_image()   
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=3, column=3, pady=5)
-                
+        lbframe.grid(row=8, column=3, pady=5)
+        
+        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
+        
+        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)                
     
     
     def plot_image(self):
@@ -530,7 +627,7 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=4, column=2, columnspan=3, pady=5)   
+        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=7 , pady=5)   
         
     def show_list(self): 
         
@@ -541,13 +638,13 @@ class TrackViewer(tk.Frame):
 
                 # show the list of data with scroll bar
         lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 14))
-        lbend.grid(row=3, column=5, columnspan=4)
+        lbend.grid(row=1, column=5, columnspan=3)
         
         scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
-        scrollbar.grid(row=4, column=9,  sticky=tk.N+tk.S)
+        scrollbar.grid(row=2, column=8, rowspan=7,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=self.viewer, width=50, height=10, font=("Times", 12), selectmode='single')
-        listNodes.grid(row=4, column=5, columnspan=4, sticky=tk.N+tk.S)
+        listNodes = tk.Listbox(master=self.viewer, width=50, font=("Times", 12), selectmode='single')
+        listNodes.grid(row=2, column=5, columnspan=3, rowspan=7 , sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
         scrollbar.config(command=listNodes.yview)
