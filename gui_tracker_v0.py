@@ -330,16 +330,16 @@ class MainVisual(tk.Frame):
         canvas.draw()
         canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
         
-        toolbar = NavigationToolbar2Tk(canvas, root)
-        toolbar.update()
-        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
-
-        def on_key_press(event):
-            print("you pressed {}".format(event.key))
-            key_press_handler(event, canvas, toolbar)
-        
-        
-        canvas.mpl_connect("key_press_event", on_key_press)
+#        toolbar = NavigationToolbar2Tk(canvas, root)
+#        toolbar.update()
+#        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
+#
+#        def on_key_press(event):
+#            print("you pressed {}".format(event.key))
+#            key_press_handler(event, canvas, toolbar)
+#        
+#        
+#        canvas.mpl_connect("key_press_event", on_key_press)
     
     def track_to_frame(self):
         # change data arrangment from tracks to frames
@@ -369,7 +369,7 @@ class TrackViewer(tk.Frame):
     def __init__(self, master, track_data, movie):
         tk.Frame.__init__(self, master)
 #        master.title("TrackViewer")
-        master.configure(background='white')
+        master.configure(background='red')
         master.geometry("1500x1000") #Width x Height
         
         self.viewer = master
