@@ -14,7 +14,10 @@ from tkinter import filedialog
 
 # for plotting
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+# Implement the default Matplotlib key bindings.
+from matplotlib.backend_bases import key_press_handler
+from matplotlib.figure import Figure
 
 import skimage
 from skimage import io
@@ -128,13 +131,13 @@ class MainVisual(tk.Frame):
    #  #  # # # # next and previous buttons
         
         buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=9, column=1, pady=5, sticky=tk.W) 
+        buttonbefore.grid(row=10, column=1, pady=5, sticky=tk.W) 
 
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=9, column=2, pady=5)
+        lbframe.grid(row=10, column=2, pady=5)
         
         buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=9, column=3, pady=5, sticky=tk.E)
+        buttonnext.grid(row=10, column=3, pady=5, sticky=tk.E)
 
 # # # #  play movie - not working - need another solultion
 #        buttonnext = tk.Button(text="play", command=self.play_movie, width=20)
@@ -170,14 +173,14 @@ class MainVisual(tk.Frame):
             self.frame_pos-=1
         self.show_tracks()
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=9, column=2, pady=5)
+        lbframe.grid(row=10, column=2, pady=5)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.show_tracks()   
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=9, column=2, pady=5)
+        lbframe.grid(row=10, column=2, pady=5)
         
        
 
@@ -279,16 +282,7 @@ class MainVisual(tk.Frame):
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
         
                 # plot image
-        plt.close()
-        self.image = self.movie[self.frame_pos,:,:]
-        fig = plt.figure(figsize=self.figsize_value)
-        plt.axis('off')
-        self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
-
-        # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=root)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
+        self.show_tracks()
         
     
     def select_track(self):
@@ -319,13 +313,13 @@ class MainVisual(tk.Frame):
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
         
-        # plot tracks
-        plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
-#        print(plot_info)
-        for p in plot_info:
-            trace=p['trace']
-            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])      
-#
+        if  self.track_data_framed:
+            # plot tracks
+            plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
+            for p in plot_info:
+                trace=p['trace']
+                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])      
+    #
 #        for p in self.track_data_filtered['tracks']:
 #            trace=p['trace']
 #            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])
@@ -335,6 +329,17 @@ class MainVisual(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
         canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
+        
+        toolbar = NavigationToolbar2Tk(canvas, root)
+        toolbar.update()
+        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
+
+        def on_key_press(event):
+            print("you pressed {}".format(event.key))
+            key_press_handler(event, canvas, toolbar)
+        
+        
+        canvas.mpl_connect("key_press_event", on_key_press)
     
     def track_to_frame(self):
         # change data arrangment from tracks to frames
@@ -627,7 +632,13 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=7 , pady=5)   
+        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=7)   
+        
+        def callback(event):
+            print(event.x,"  " ,event.y)
+        canvas.callbacks.connect('button_press_event', callback)
+        
+
         
     def show_list(self): 
         
