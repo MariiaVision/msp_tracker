@@ -253,7 +253,7 @@ class MainVisual(tk.Frame):
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=root, width=50,  font=("Times", 12), selectmode='single')
+        listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12), selectmode='single')
         listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<Double-1>', tracklist_on_select)
@@ -553,7 +553,7 @@ class TrackViewer(tk.Frame):
             if min(diff_array)>0:
                 pos=diff_array_abs.tolist().index(val)
             elif min(diff_array)<0:
-                pos=diff_array_abs.tolist().index(val)+1
+                pos=diff_array_abs.tolist().inde, sticky=tk.Ex(val)+1
                 
 
         self.trace.insert(pos,location_val)
@@ -575,11 +575,11 @@ class TrackViewer(tk.Frame):
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
         lbframe.grid(row=8, column=3, pady=5)
         
-        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
-        
-        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
+#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+#        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
+#        
+#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+#        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
@@ -587,12 +587,12 @@ class TrackViewer(tk.Frame):
         self.plot_image()   
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
         lbframe.grid(row=8, column=3, pady=5)
-        
-        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
-        
-        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)                
+#        
+#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+#        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
+#        
+#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+#        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)                
     
     
     def plot_image(self):
@@ -600,7 +600,8 @@ class TrackViewer(tk.Frame):
         # plot image
         plt.close()
         fig = plt.figure(figsize=self.figsize_value)
-        plt.axis('off')
+#        plt.axis('off')
+        fig.tight_layout()
         
         pixN_basic=200
         img=self.movie[self.frame_pos,:,:]
@@ -632,7 +633,7 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=7)   
+        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=5)   
         
         def callback(event):
             print(event.x,"  " ,event.y)
@@ -652,10 +653,10 @@ class TrackViewer(tk.Frame):
         lbend.grid(row=1, column=5, columnspan=3)
         
         scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
-        scrollbar.grid(row=2, column=8, rowspan=7,  sticky=tk.N+tk.S)
+        scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
         
         listNodes = tk.Listbox(master=self.viewer, width=50, font=("Times", 12), selectmode='single')
-        listNodes.grid(row=2, column=5, columnspan=3, rowspan=7 , sticky=tk.N+tk.S)
+        listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
         scrollbar.config(command=listNodes.yview)
