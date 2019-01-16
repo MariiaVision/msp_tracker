@@ -369,7 +369,7 @@ class TrackViewer(tk.Frame):
     def __init__(self, master, track_data, movie):
         tk.Frame.__init__(self, master)
 #        master.title("TrackViewer")
-        master.configure(background='red')
+        master.configure(background='white')
         master.geometry("1500x1000") #Width x Height
         
         self.viewer = master
