@@ -166,7 +166,7 @@ class MainVisual(tk.Frame):
         self.list_update()
         self.track_to_frame()
         self.show_tracks()
-        print("data updated")            
+#        print("data updated")            
 
     def move_to_previous(self):
         if self.frame_pos!=0:
@@ -238,8 +238,8 @@ class MainVisual(tk.Frame):
         
         def tracklist_on_select(even):
             position_in_list=listNodes.curselection()[0]
-            print('You selected: ', position_in_list)
-            print('Track info:   ', self.track_data_filtered['tracks'][position_in_list]['trackID'])
+#            print('You selected: ', position_in_list)
+#            print('Track info:   ', self.track_data_filtered['tracks'][position_in_list]['trackID'])
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
             TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
@@ -646,7 +646,7 @@ class TrackViewer(tk.Frame):
         def tracklist_on_select(even):
             self.frame_pos_to_change=listNodes.curselection()[0]
             #self.frames[self.frame_to_change]
-            print("selected "+str(self.frames[self.frame_pos_to_change]))
+#            print("selected "+str(self.frames[self.frame_pos_to_change]))
 
                 # show the list of data with scroll bar
         lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 14))
