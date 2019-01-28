@@ -46,6 +46,7 @@ class MainVisual(tk.Frame):
         self.filter_length=[0, 10000]   
         self.frame_pos=0
         self.movie_length=0
+        self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         
         # 
         self.figsize_value=(6,6)
@@ -62,13 +63,21 @@ class MainVisual(tk.Frame):
         self.buttonShow = tk.Button(text="      Show tracks      ", command=self.show_tracks, width=40)
         self.buttonShow.grid(row=2, column=2, pady=5)  
 
-#    # # # # # # filter choice # # # # # # #        
-        # filter / non-filter choice
-#        R1 = tk.Radiobutton(root, text="all tracks", variable=self.filter_switch, value=False, bg='white')
-#        R1.grid(row=1, column=5, padx=5)  
-#        
-#        R2 = tk.Radiobutton(root, text="filtering", variable=self.filter_switch, value=True, bg='white') #  command=sel)
-#        R2.grid(row=1, column=6, padx=5)
+#    # # # # # # filter choice # # # # # # #   
+        var = tk.IntVar()
+        def update_monitor_switch():            
+            self.monitor_switch=var.get()
+            self.show_tracks()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R1 = tk.Radiobutton(root, text="track and IDs", variable=var, value=0, bg='white', command =update_monitor_switch )
+        self.R1.grid(row=4, column=1)  
+        
+        self.R2 = tk.Radiobutton(root, text=" only tracks ", variable=var, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
+        self.R2.grid(row=4, column=2)
+        
+        self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
+        self.R3.grid(row=4, column=3)
         
        # 
 
@@ -144,6 +153,8 @@ class MainVisual(tk.Frame):
         
         self.txt_jump_to = tk.Entry(root, width=10)
         self.txt_jump_to.grid(row=12, column=2)
+        
+
 # # # #  play movie - not working - need another solultion
 #        buttonnext = tk.Button(text="play", command=self.play_movie, width=20)
 #        buttonnext.grid(row=10, column=2, padx=5)
@@ -165,7 +176,7 @@ class MainVisual(tk.Frame):
             self.show_tracks()
             lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
             lbframe.grid(row=10, column=2, pady=5)    
-        self.txt_jump_to.delete(0, 'end')
+            self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
         save_filename = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
@@ -193,7 +204,43 @@ class MainVisual(tk.Frame):
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
         lbframe.grid(row=10, column=2, pady=5)
         
-       
+        
+    def show_tracks(self):
+        # read data from the selected filesa and show tracks        
+
+
+        # plot image
+
+        self.image = self.movie[self.frame_pos,:,:]
+        plt.close()
+        fig = plt.figure(figsize=self.figsize_value)
+        plt.axis('off')
+        self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
+        
+        if  self.track_data_framed and self.monitor_switch<=1:
+            # plot tracks
+            plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
+            for p in plot_info:
+                trace=p['trace']
+                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])     
+                if self.monitor_switch==0:
+                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list[int(p['trackID'])%len(self.color_list)])
+
+        # DrawingArea
+        canvas = FigureCanvasTkAgg(fig, master=root)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
+        
+#        toolbar = NavigationToolbar2Tk(canvas, root)
+#        toolbar.update()
+#        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
+#
+#        def on_key_press(event):
+#            print("you pressed {}".format(event.key))
+#            key_press_handler(event, canvas, toolbar)
+#        
+#        
+#        canvas.mpl_connect("key_press_event", on_key_press)       
 
     def filtering(self):
         
@@ -312,45 +359,6 @@ class MainVisual(tk.Frame):
             
         self.list_update()        
         
-        
-    def show_tracks(self):
-        # read data from the selected filesa and show tracks        
-
-        # plot image
-
-        self.image = self.movie[self.frame_pos,:,:]
-        plt.close()
-        fig = plt.figure(figsize=self.figsize_value)
-        plt.axis('off')
-        self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
-        
-        if  self.track_data_framed:
-            # plot tracks
-            plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
-            for p in plot_info:
-                trace=p['trace']
-                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])      
-    #
-#        for p in self.track_data_filtered['tracks']:
-#            trace=p['trace']
-#            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])
-
-
-        # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=root)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
-        
-#        toolbar = NavigationToolbar2Tk(canvas, root)
-#        toolbar.update()
-#        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
-#
-#        def on_key_press(event):
-#            print("you pressed {}".format(event.key))
-#            key_press_handler(event, canvas, toolbar)
-#        
-#        
-#        canvas.mpl_connect("key_press_event", on_key_press)
     
     def track_to_frame(self):
         # change data arrangment from tracks to frames
@@ -395,6 +403,7 @@ class TrackViewer(tk.Frame):
         self.figsize_value=(7,7) # figure size
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
+        self.plot_switch=1 # switch between plotting/not plotting tracks
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
         
@@ -424,6 +433,19 @@ class TrackViewer(tk.Frame):
         
         buttonnext = tk.Button(master=self.viewer,text="add", command=self.add_position, width=10)
         buttonnext.grid(row=0, column=7, pady=5)    
+        
+    # plotting switch 
+        var = tk.IntVar()
+        def update_monitor_plot():            
+            self.plot_switch=var.get()
+            self.plot_image()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=1, bg='white', command =update_monitor_plot )
+        self.R1.grid(row=1, column=3)  
+        
+        self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=0, bg='white',command = update_monitor_plot ) #  command=sel)
+        self.R2.grid(row=1, column=4)
         
 #        buttonnext = tk.Button(master=self.viewer,text=" save ", command=self.add_position, width=10)
 #        buttonnext.grid(row=9, column=6, pady=5)    
@@ -631,15 +653,16 @@ class TrackViewer(tk.Frame):
         red_c=1-np.linspace(0., 1., len(self.trace))
     
         self.im = plt.imshow(region, cmap="gray")
-        for pos in range(0, len(self.trace)-1):
-            plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
-    
-        plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
-        plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+        if self.plot_switch==1:
+            for pos in range(0, len(self.trace)-1):
+                plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
         
-        plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
-        
-        plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
+            plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
+            plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+            
+            plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
+            
+            plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
 
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
