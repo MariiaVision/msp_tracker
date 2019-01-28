@@ -138,7 +138,12 @@ class MainVisual(tk.Frame):
         
         buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
         buttonnext.grid(row=10, column=3, pady=5, sticky=tk.E)
-
+        
+        buttonnext = tk.Button(text="jumpt to ", command=self.jump_to, width=10)
+        buttonnext.grid(row=11, column=2, pady=5)
+        
+        self.txt_jump_to = tk.Entry(root, width=10)
+        self.txt_jump_to.grid(row=12, column=2)
 # # # #  play movie - not working - need another solultion
 #        buttonnext = tk.Button(text="play", command=self.play_movie, width=20)
 #        buttonnext.grid(row=10, column=2, padx=5)
@@ -154,7 +159,13 @@ class MainVisual(tk.Frame):
 #            lbframe.grid(row=9, column=2, pady=5)
 #            time.sleep(1)
         
-        
+    def jump_to(self):
+        if self.txt_jump_to.get()!='':
+            self.frame_pos=int(self.txt_jump_to.get())
+            self.show_tracks()
+            lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+            lbframe.grid(row=10, column=2, pady=5)    
+        self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
         save_filename = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
@@ -671,7 +682,7 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent)
         parent.title("TrackHandler")
         parent.configure(background='white')
-        parent.geometry("1100x900") #Width x Height
+        parent.geometry("1100x1000") #Width x Height
         self.main = MainVisual(parent)
 #        self.main.pack(side="left")
 
