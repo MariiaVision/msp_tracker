@@ -82,6 +82,14 @@ class MainVisual(tk.Frame):
        # list switchL # 0 - all, 1 
 
         # duration
+        lbl3 = tk.Label(master=root, text="Track number: ", width=30, bg='white')
+        lbl3.grid(row=1, column=5)
+        self.txt_track_number = tk.Entry(root, width=10)
+        self.txt_track_number.grid(row=1, column=6)
+
+        #reader=txt.get()
+
+        # duration
         lbl3 = tk.Label(master=root, text="Track duration (frames): from ", width=30, bg='white')
         lbl3.grid(row=2, column=5)
         self.txt_duration_from = tk.Entry(root, width=10)
@@ -93,7 +101,8 @@ class MainVisual(tk.Frame):
         #reader=txt.get()
 
         # duration        
-
+        
+        
         lbl3 = tk.Label(master=root, text="Track length (pixels): from ", width=30, bg='white')
         lbl3.grid(row=3, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
@@ -245,6 +254,7 @@ class MainVisual(tk.Frame):
     def filtering(self):
         
         #read variables
+        
         if self.txt_duration_from.get()=='':
             self.filter_duration[0]=0
         else:
@@ -264,6 +274,9 @@ class MainVisual(tk.Frame):
             self.filter_length[1]=10000
         else:
             self.filter_length[1]=int(self.txt_length_to.get())  
+        
+        
+            
             
         print("filtering for length: ", self.filter_length, "  and for duration: ", self.filter_duration)
 
@@ -282,8 +295,9 @@ class MainVisual(tk.Frame):
             # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
+            filterID=p['trackID']== int(self.txt_track_number.get()) or self.txt_track_number.get()==''
             
-            if length_var==True and duration_var==True:
+            if length_var==True and duration_var==True and filterID==True:
                 self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
         
