@@ -295,7 +295,10 @@ class MainVisual(tk.Frame):
             # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
-            filterID=p['trackID']== int(self.txt_track_number.get()) or self.txt_track_number.get()==''
+            if self.txt_track_number.get()=='':
+                filterID=True 
+            else:                
+                filterID=p['trackID']== int(self.txt_track_number.get())
             
             if length_var==True and duration_var==True and filterID==True:
                 self.track_data_filtered['tracks'].append(p)
