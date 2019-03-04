@@ -24,6 +24,7 @@ from skimage import io
 
 import json        
 
+import cv2
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
@@ -31,9 +32,15 @@ class MainVisual(tk.Frame):
         tk.Frame.__init__(self, master)
         self.master = master
         
-        self.color_list=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
+        self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
             "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
             "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]
+            
+        self.color_list=[(200, 0, 0), (0, 255, 0), (0, 0, 255), (200, 155, 0),
+                    (100, 255, 5), (255, 10, 120), (255, 127, 255),
+                    (127, 0, 255), (200, 0, 127), (177, 0, 20), (12, 200, 0), (0, 114, 255), (255, 20, 0),
+                    (0, 255, 255), (255, 100, 100), (255, 127, 255),
+                    (127, 0, 255), (127, 0, 127)]
         
         self.movie_file=" " # path to the move file
         self.track_file=" "# path to the file with tracking data (json format)
@@ -123,6 +130,11 @@ class MainVisual(tk.Frame):
         button_save=tk.Button(master=root, text=" update changes ", command=self.update_data, width=15)
         button_save.grid(row=10, column=5)
         
+        # button to update changes
+        
+        button_save=tk.Button(master=root, text=" save movie ", command=self.save_movie, width=15)
+        button_save.grid(row=10, column=6)
+        
         # save button
      
         button_save=tk.Button(master=root, text=" save in file ", command=self.save_in_file, width=15)
@@ -178,6 +190,55 @@ class MainVisual(tk.Frame):
 #            lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
 #            lbframe.grid(row=9, column=2, pady=5)
 #            time.sleep(1)
+
+    def save_movie(self):
+        print ("save movie runs")
+        final_img_set = np.zeros((self.movie.shape[0], self.movie.shape[1], self.movie.shape[2], 3))
+    
+        for frameN in range(0, self.movie.shape[0]):
+            print("frame ", frameN)        
+            plot_info=self.track_data_framed['frames'][frameN]['tracks']
+            frame_img=self.movie[frameN,:,:]
+            # Make a colour image frame
+            orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
+    
+            orig_frame [:,:,0] = frame_img/np.max(frame_img)*256
+            orig_frame [:,:,1] = frame_img/np.max(frame_img)*256
+            orig_frame [:,:,2] = frame_img/np.max(frame_img)*256
+            
+            for p in plot_info:
+                trace=p['trace']
+                trackID=p['trackID']
+                
+                clr = trackID % len(self.color_list)
+                if (len(trace) > 1):
+                    for j in range(len(trace)-1):
+                        # Draw trace line
+                        point1=trace[j]
+                        point2=trace[j+1]
+                        x1 = int(point1[1])
+                        y1 = int(point1[0])
+                        x2 = int(point2[1])
+                        y2 = int(point2[0])                        
+                        cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
+                                 self.color_list[clr], 2)
+
+#                point=trace[0]
+#                cv2.putText(orig_frame,str(trackID) ,(int(point[1]),int(point[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,self.color_list[clr],1,cv2.LINE_AA)
+            # Display the resulting tracking frame
+            cv2.imshow('Tracking', orig_frame)
+
+            ################### to save #################
+            final_img_set[frameN,:,:,:]=orig_frame
+            
+        
+                # save results
+        save_file = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
+        
+        final_img_set=final_img_set/np.max(final_img_set)*65535
+        final_img_set=final_img_set.astype('uint16')
+        skimage.io.imsave(save_file, final_img_set)
+        cv2.destroyAllWindows()
         
     def jump_to(self):
         if self.txt_jump_to.get()!='':
@@ -215,8 +276,7 @@ class MainVisual(tk.Frame):
         
         
     def show_tracks(self):
-        # read data from the selected filesa and show tracks        
-
+        # read data from the selected filesa and show tracks      
 
         # plot image
 
@@ -231,9 +291,9 @@ class MainVisual(tk.Frame):
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
             for p in plot_info:
                 trace=p['trace']
-                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list[int(p['trackID'])%len(self.color_list)])     
+                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 if self.monitor_switch==0:
-                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list[int(p['trackID'])%len(self.color_list)])
+                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=root)
@@ -401,7 +461,7 @@ class MainVisual(tk.Frame):
             frame_dict.update({'tracks': []})
             
             #rearrange the data
-            for p in self.track_data['tracks']:
+            for p in self.track_data_filtered['tracks']:
                 if n_frame in p['frames']: # if the frame is in the track
                     frame_index=p['frames'].index(n_frame) # find position in the track
                     
