@@ -90,7 +90,7 @@ class MainVisual(tk.Frame):
        # list switchL # 0 - all, 1 
 
         # duration
-        lbl3 = tk.Label(master=root, text="Track number: ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Track ID: ", width=30, bg='white')
         lbl3.grid(row=1, column=5)
         self.txt_track_number = tk.Entry(root, width=10)
         self.txt_track_number.grid(row=1, column=6)
