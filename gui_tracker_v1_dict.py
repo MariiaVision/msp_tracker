@@ -23,8 +23,9 @@ import skimage
 from skimage import io
 
 import json        
-
 import cv2
+
+
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data

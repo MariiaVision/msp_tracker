@@ -79,7 +79,7 @@ class MainVisual(tk.Frame):
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
         self.R3.grid(row=4, column=3)
         
-       # 
+       # list switchL # 0 - all, 1 
 
         # duration
         lbl3 = tk.Label(master=root, text="Track duration (frames): from ", width=30, bg='white')
@@ -404,6 +404,8 @@ class TrackViewer(tk.Frame):
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=1 # switch between plotting/not plotting tracks
+        
+        self.pixN_basic=100 # margin size 
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
         
@@ -636,9 +638,9 @@ class TrackViewer(tk.Frame):
 #        plt.axis('off')
         fig.tight_layout()
         
-        pixN_basic=200
+        
         img=self.movie[self.frame_pos,:,:]
-        pixN_min=np.min(([pixN_basic, np.min(np.asarray(self.trace)[:,1]), np.min(np.asarray(self.trace)[:,0])]))
+        pixN_min=np.min(([self.pixN_basic, np.min(np.asarray(self.trace)[:,1]), np.min(np.asarray(self.trace)[:,0])]))
         pixN=np.min(([pixN_min, img.shape[0]-np.max(np.asarray(self.trace)[:,1]),  img.shape[1]-np.max(np.asarray(self.trace)[:,0])]))
         
         y_min=np.min(np.asarray(self.trace)[:,1])-pixN
