@@ -236,8 +236,8 @@ class MainVisual(tk.Frame):
                 # save results
         save_file = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
         
-        final_img_set=final_img_set/np.max(final_img_set)*65535
-        final_img_set=final_img_set.astype('uint16')
+        final_img_set=final_img_set/np.max(final_img_set)*255
+        final_img_set=final_img_set.astype('uint8')
         skimage.io.imsave(save_file, final_img_set)
         cv2.destroyAllWindows()
         
