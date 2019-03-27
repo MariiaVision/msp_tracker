@@ -3,7 +3,7 @@
 """
 Created on Thu Jan  3 13:41:16 2019
 
-@author: mariaa
+@author: maria dmitrieva
 """
 import numpy as np
 
@@ -73,6 +73,7 @@ class MainVisual(tk.Frame):
 
 #    # # # # # # filter choice # # # # # # #   
         var = tk.IntVar()
+        
         def update_monitor_switch():            
             self.monitor_switch=var.get()
             self.show_tracks()
@@ -91,39 +92,39 @@ class MainVisual(tk.Frame):
 
         # duration
         lbl3 = tk.Label(master=root, text="Track ID: ", width=30, bg='white')
-        lbl3.grid(row=1, column=5)
+        lbl3.grid(row=0, column=5)
         self.txt_track_number = tk.Entry(root, width=10)
-        self.txt_track_number.grid(row=1, column=6)
+        self.txt_track_number.grid(row=0, column=6)
 
         #reader=txt.get()
 
         # duration
         lbl3 = tk.Label(master=root, text="Track duration (frames): from ", width=30, bg='white')
-        lbl3.grid(row=2, column=5)
+        lbl3.grid(row=1, column=5)
         self.txt_duration_from = tk.Entry(root, width=10)
-        self.txt_duration_from.grid(row=2, column=6)
+        self.txt_duration_from.grid(row=1, column=6)
         lbl3 = tk.Label(master=root, text="to", bg='white')
-        lbl3.grid(row=2, column=7)
+        lbl3.grid(row=1, column=7)
         self.txt_duration_to = tk.Entry(root, width=10)
-        self.txt_duration_to.grid(row=2, column=8)
+        self.txt_duration_to.grid(row=1, column=8)
         #reader=txt.get()
 
         # duration        
         
         
         lbl3 = tk.Label(master=root, text="Track length (pixels): from ", width=30, bg='white')
-        lbl3.grid(row=3, column=5)
+        lbl3.grid(row=2, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
-        self.txt_length_from.grid(row=3, column=6)
+        self.txt_length_from.grid(row=2, column=6)
         lbl3 = tk.Label(master=root, text="to", bg='white')
-        lbl3.grid(row=3, column=7)
+        lbl3.grid(row=2, column=7)
         self.txt_length_to = tk.Entry(root, width=10)
-        self.txt_length_to.grid(row=3, column=8)     
+        self.txt_length_to.grid(row=2, column=8)     
         
         # button to filter
         
         self.buttonFilter = tk.Button(text="     Filter      ", command=self.filtering, width=40)
-        self.buttonFilter.grid(row=4, column=5, columnspan=4,  pady=5)   
+        self.buttonFilter.grid(row=3, column=5, columnspan=4,  pady=5)   
         
         
         # button to update changes
@@ -158,6 +159,7 @@ class MainVisual(tk.Frame):
         self.canvas = FigureCanvasTkAgg(fig, master=root)
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3,pady=5)
+        
         # plot all tracks on top         
    #  #  # # # # next and previous buttons
         
@@ -193,11 +195,10 @@ class MainVisual(tk.Frame):
 #            time.sleep(1)
 
     def save_movie(self):
-        print ("save movie runs")
         final_img_set = np.zeros((self.movie.shape[0], self.movie.shape[1], self.movie.shape[2], 3))
     
         for frameN in range(0, self.movie.shape[0]):
-            print("frame ", frameN)        
+#            print("frame ", frameN)        
             plot_info=self.track_data_framed['frames'][frameN]['tracks']
             frame_img=self.movie[frameN,:,:]
             # Make a colour image frame
@@ -252,8 +253,9 @@ class MainVisual(tk.Frame):
     def save_in_file(self):
         save_filename = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
         with open(save_filename+'.txt', 'w') as f:
-            json.dump(self.track_data, f, ensure_ascii=False)  
-        print("origianal: ", self.track_data_original)
+            json.dump(self.track_data_filtered, f, ensure_ascii=False) 
+        print("tracks are saved in  ", save_filename, " file")
+
     
     def update_data(self):
         self.list_update()
@@ -344,25 +346,33 @@ class MainVisual(tk.Frame):
         # filtering 
         self.track_data_filtered={}
         self.track_data_filtered.update({'tracks':[]})
+        
         # check through the 
         for p in self.track_data['tracks']:
+            
             # check length
-            point_start=p['trace'][0]
-            track_duration=p['frames'][-1]-p['frames'][0]+1
-            
-            #calculate maximum displacement between any two positions in track
-            track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
-            
-            # variables to evaluate the trackS
+            if len(p['trace'])>0:
+                point_start=p['trace'][0]
+                # check length
+                track_duration=p['frames'][-1]-p['frames'][0]+1
+                #calculate maximum displacement between any two positions in track
+                track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
+                
+            else:
+                track_duration=0
+                track_length=0
+                #calculate maximum displacement between any two positions in track
+
+                # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
             if self.txt_track_number.get()=='':
                 filterID=True 
             else:                
                 filterID=p['trackID']== int(self.txt_track_number.get())
-            
+
             if length_var==True and duration_var==True and filterID==True:
-                self.track_data_filtered['tracks'].append(p)
+                    self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
         
         #update the list
@@ -380,30 +390,129 @@ class MainVisual(tk.Frame):
             self.new_window = tk.Toplevel(self.master)
             TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
             
+            
+        def detele_track_question():
+            
+            self.qdeletetext = tk.Label(master=root, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=20)
+            self.qdeletetext.grid(row=6, column=6, columnspan=2, pady=5) 
+            
+            self.deletbutton = tk.Button(master=root, text=" OK ", command=detele_track, width=7,  bg='red')
+            self.deletbutton.grid(row=6, column=8, columnspan=1, pady=5) 
+            
+        def detele_track():
+            
+            delete_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
+            
+            pos=0
+            for p in self.track_data['tracks']:
+                
+                if p['trackID']==delete_trackID:
+                    print("found")
+                    self.track_data['tracks'].remove(p)
+                    
+                pos+=1
+
+            print("track ", delete_trackID, "is removed")
+            
+            #visualise without the track
+            self.filtering()
+            self.track_to_frame()
+            
+            #update the list
+            self.list_update()
+            
+            #close the question widgets
+            
+            try: 
+                self.qdeletetext.destroy()
+            except: print("skip this window, as not open")
+
+            try: 
+                self.deletbutton.destroy()
+            except: print("skip this window, as not open")            
+            
+        def new_track_question():
+            
+            self.qnewtext = tk.Label(master=root, text="create new track "+str(len(self.track_data_filtered['tracks'])+1)+" ?",  bg='white', font=("Times", 10), width=25)
+            self.qnewtext.grid(row=7, column=6, columnspan=2, pady=5) 
+            
+            self.newbutton = tk.Button(master=root, text=" OK ", command=create_track, width=7,  bg='green')
+            self.newbutton.grid(row=7, column=8, columnspan=1, pady=5) 
+            
+        def create_track():
+            
+            new_trackID=len(self.track_data_filtered['tracks'])+1
+            
+            p={"trackID": new_trackID, "trace":[[0,0]], "frames":[0], "skipped_frames": 0}
+            
+            self.track_data['tracks'].append(p)
+            
+            
+            
+            print("new track ", new_trackID, "is created")
+            
+            #visualise without the track
+            self.filtering()
+            self.track_to_frame()
+            
+            #update the list
+            self.list_update()
+            
+            #close the question widgets
+            
+            try: 
+                self.qnewtext.destroy()
+            except: print("skip this window, as not open")
+
+            try: 
+                self.newbutton.destroy()
+            except: print("skip this window, as not open")            
+            
+            
+            
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
-        lbl2.grid(row=5, column=5, columnspan=4, pady=5)
+        lbl2.grid(row=4, column=5, columnspan=4, pady=5)
                 # show the list of data with scroll bar
         lbend = tk.Label(master=root, text="LIST OF TRACKS:  ",  bg='white', font=("Times", 14))
-        lbend.grid(row=7, column=5, columnspan=4)
+        lbend.grid(row=5, column=5, columnspan=4, pady=5)
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
-        
+
         listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12), selectmode='single')
         listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<Double-1>', tracklist_on_select)
+
         scrollbar.config(command=listNodes.yview)
+        
+        #delete button
+        
+        deletbutton = tk.Button(master=root, text="  DELETE SELECTED TRACK  ", command=detele_track_question, width=18,  bg='red')
+        deletbutton.grid(row=6, column=5, columnspan=1, pady=5) 
+        
+        # add button
+
+        deletbutton = tk.Button(master=root, text="  ADD EMPTY TRACK  ", command=new_track_question, width=18,  bg='green')
+        deletbutton.grid(row=7, column=5, columnspan=1, pady=5) 
+
         
        # plot the tracks from filtered folder 
         for p in self.track_data_filtered['tracks']:
             #calculate length and duration
-            point_start=p['trace'][0]
-            track_duration=p['frames'][-1]-p['frames'][0]+1    
-            track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
+            if len(p['trace'])>0:
+                point_start=p['trace'][0]
+                track_duration=p['frames'][-1]-p['frames'][0]+1    
+                track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
+                start_track_frame=p['frames'][0]
+            else:
+                track_duration=0
+                track_length=0
+                start_track_frame=0
+            
             # add to the list
             listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" duration: "+str(track_duration)+
-                             " length: "+str(track_length)+" start frame: "+str((p['frames'][0])))        
+                             " length: "+str(track_length)+" start frame: "+str(start_track_frame))        
 
             
             
@@ -493,7 +602,7 @@ class TrackViewer(tk.Frame):
         self.figsize_value=(7,7) # figure size
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
-        self.plot_switch=1 # switch between plotting/not plotting tracks
+        self.plot_switch=0 # switch between plotting/not plotting tracks
         
         self.pixN_basic=100 # margin size 
         # change the name to add track ID
@@ -533,10 +642,10 @@ class TrackViewer(tk.Frame):
             self.plot_image()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=1, bg='white', command =update_monitor_plot )
+        self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=0, bg='white', command =update_monitor_plot )
         self.R1.grid(row=1, column=3)  
         
-        self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=0, bg='white',command = update_monitor_plot ) #  command=sel)
+        self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
         self.R2.grid(row=1, column=4)
         
 #        buttonnext = tk.Button(master=self.viewer,text=" save ", command=self.add_position, width=10)
@@ -745,7 +854,7 @@ class TrackViewer(tk.Frame):
         red_c=1-np.linspace(0., 1., len(self.trace))
     
         self.im = plt.imshow(region, cmap="gray")
-        if self.plot_switch==1:
+        if self.plot_switch==0:
             for pos in range(0, len(self.trace)-1):
                 plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
         
