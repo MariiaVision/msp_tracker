@@ -24,7 +24,7 @@ from skimage import io
 
 import json        
 import cv2
-
+import imageio
 
 
 class MainVisual(tk.Frame):
@@ -195,9 +195,10 @@ class MainVisual(tk.Frame):
 #            time.sleep(1)
 
     def save_movie(self):
-        final_img_set = np.zeros((self.movie.shape[0], self.movie.shape[1], self.movie.shape[2], 3))
+        length=300 #self.movie.shape[0]
+        final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
     
-        for frameN in range(0, self.movie.shape[0]):
+        for frameN in range(0, length):
 #            print("frame ", frameN)        
             plot_info=self.track_data_framed['frames'][frameN]['tracks']
             frame_img=self.movie[frameN,:,:]
@@ -239,7 +240,9 @@ class MainVisual(tk.Frame):
         
         final_img_set=final_img_set/np.max(final_img_set)*255
         final_img_set=final_img_set.astype('uint8')
-        skimage.io.imsave(save_file, final_img_set)
+        if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
+            save_file += ".tif"
+        imageio.volwrite(save_file, final_img_set)
         cv2.destroyAllWindows()
         
     def jump_to(self):
@@ -588,7 +591,7 @@ class TrackViewer(tk.Frame):
         tk.Frame.__init__(self, master)
 #        master.title("TrackViewer")
         master.configure(background='white')
-        master.geometry("1500x1000") #Width x Height
+        master.geometry("2000x1000") #Width x Height
         
         self.viewer = master
         
@@ -614,6 +617,10 @@ class TrackViewer(tk.Frame):
         
         # movie control
         self.plot_image()
+        
+        # plot displacement
+        
+        self.plot_displacement()
         
         buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
         buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
@@ -655,7 +662,30 @@ class TrackViewer(tk.Frame):
 #    def save_to_main_frame(self):
 #        print("saving to main frame")
 #        
+    def plot_displacement(self):
+        trajectory=self.trace
         
+        #calculate the displacement
+        x=np.asarray(trajectory)[:,0]    
+        y=np.asarray(trajectory)[:,1]
+        x_0=np.asarray(trajectory)[0,0]
+        y_0=np.asarray(trajectory)[0,1]
+        disp=np.sqrt((x-x_0)**2+(y-y_0)**2)
+
+        # plot image
+#        plt.close()
+        fig = plt.figure()
+#        plt.axis('off')
+        fig.tight_layout()
+        
+        self.im = plt.plot(self.frames, disp)
+        plt.xlabel('frames')
+        plt.ylabel('displacement (px)')
+        # DrawingArea
+        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3)   
+
         
     def change_position(self):
         
@@ -832,7 +862,7 @@ class TrackViewer(tk.Frame):
     def plot_image(self):
         
         # plot image
-        plt.close()
+#        plt.close()
         fig = plt.figure(figsize=self.figsize_value)
 #        plt.axis('off')
         fig.tight_layout()
