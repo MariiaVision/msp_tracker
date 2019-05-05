@@ -6,8 +6,8 @@ Created on Thu Jan  3 13:41:16 2019
 @author: maria dmitrieva
 """
 import numpy as np
+import scipy as sp
 
-import time
 import copy
 import tkinter as tk
 from tkinter import filedialog
@@ -26,6 +26,8 @@ import json
 import cv2
 import imageio
 
+
+from fusion_events import FusionEvent 
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
@@ -46,6 +48,7 @@ class MainVisual(tk.Frame):
         self.movie_file=" " # path to the move file
         self.track_file=" "# path to the file with tracking data (json format)
         self.movie=[] # matrix with data
+        self._membrane_movie=[]
         self.track_data_original={}
         self.track_data={} # original tracking data
         self.track_data_filtered={}  # filtered tracking data  
@@ -123,8 +126,13 @@ class MainVisual(tk.Frame):
         
         # button to filter
         
-        self.buttonFilter = tk.Button(text="     Filter      ", command=self.filtering, width=40)
-        self.buttonFilter.grid(row=3, column=5, columnspan=4,  pady=5)   
+        self.buttonFilter = tk.Button(text="     Filter      ", command=self.filtering, width=20)
+        self.buttonFilter.grid(row=3, column=4, columnspan=3,  pady=5)  
+        
+        # fusion events and statistics
+        
+        self.buttonFilter = tk.Button(text="     Fusion events      ", command=self.find_fusion, width=20)
+        self.buttonFilter.grid(row=3, column=6, columnspan=3,  pady=5)           
         
         
         # button to update changes
@@ -194,8 +202,51 @@ class MainVisual(tk.Frame):
 #            lbframe.grid(row=9, column=2, pady=5)
 #            time.sleep(1)
 
+    
+    def find_fusion(self):
+        '''
+        fusion event detection based on last frame position
+        '''
+        print("fusion event detection ....")
+        
+        # open membrane mask
+        filename = tk.filedialog.askopenfilename()
+        root.update()
+        self._membrane_movie=skimage.io.imread(filename)
+        self._membrane_movie[self._membrane_movie>0]=1
+        self._membrane_movie=sp.ndimage.binary_dilation(self._membrane_movie, iterations=2)
+        
+        # detect events
+        
+        event_count=FusionEvent(self.movie, self.movie, self._membrane_movie, self.track_data_filtered)
+        self.track_data_filtered=event_count.find_fusion()
+        
+        # DrawingArea
+        novi = tk.Toplevel()
+        canvas = tk.Canvas(novi, width = 640, height = 480)
+        canvas.pack(expand = tk.YES, fill = tk.BOTH)
+        gif1 = tk.PhotoImage(file = 'subplot.png')
+                                    #image not visual
+        canvas.create_image(0,0, image = gif1, anchor = tk.NW)
+        #assigned the gif1 to the canvas object
+        canvas.gif1 = gif1
+        
+        # update the view 
+        self.track_to_frame()
+        
+        #update the list
+        self.list_update()        
+        
+        
+    def plot_statistics(self):
+        '''
+        mpl plot of the statistics on filtered data
+        '''
+        print("plotting ....")
+
+        
     def save_movie(self):
-        length=300 #self.movie.shape[0]
+        length=self.movie.shape[0]
         final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
     
         for frameN in range(0, length):
@@ -224,7 +275,7 @@ class MainVisual(tk.Frame):
                         x2 = int(point2[1])
                         y2 = int(point2[0])                        
                         cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                                 self.color_list[clr], 2)
+                                 self.color_list[clr], 1)
 
 #                point=trace[0]
 #                cv2.putText(orig_frame,str(trackID) ,(int(point[1]),int(point[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,self.color_list[clr],1,cv2.LINE_AA)
@@ -474,10 +525,10 @@ class MainVisual(tk.Frame):
             
             
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
-        lbl2.grid(row=4, column=5, columnspan=4, pady=5)
+        lbl2.grid(row=5, column=5, columnspan=4, pady=5)
                 # show the list of data with scroll bar
-        lbend = tk.Label(master=root, text="LIST OF TRACKS:  ",  bg='white', font=("Times", 14))
-        lbend.grid(row=5, column=5, columnspan=4, pady=5)
+#        lbend = tk.Label(master=root, text="LIST OF TRACKS:  ",  bg='white', font=("Times", 14))
+#        lbend.grid(row=5, column=5, columnspan=4, pady=5)
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
