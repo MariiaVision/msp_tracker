@@ -21,11 +21,11 @@ from matplotlib.figure import Figure
 
 import skimage
 from skimage import io
-
+from scipy.ndimage import gaussian_filter1d
 import json        
 import cv2
 import imageio
-
+import math
 
 from fusion_events import FusionEvent 
 
@@ -658,6 +658,9 @@ class TrackViewer(tk.Frame):
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
         
+        self.max_movement_stay=1.5 # evaluate stopped vesicle - movement withit the threshold
+        self.frame_freq=4 # movie frame rate
+        
         self.pixN_basic=100 # margin size 
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
@@ -693,6 +696,19 @@ class TrackViewer(tk.Frame):
         buttonnext = tk.Button(master=self.viewer,text="add", command=self.add_position, width=10)
         buttonnext.grid(row=0, column=7, pady=5)    
         
+        
+    # information
+        text1 = tk.Label(master=self.viewer, text=" duration : "+str(self.frames[-1]-self.frames[0]+1) +" frames", width=30, bg='white')
+        text1.grid(row=0, column=9, columnspan=2, pady=5)    
+
+        text1 = tk.Label(master=self.viewer, text=" final stop : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=30, bg='white')
+        text1.grid(row=0, column=11, columnspan=2, pady=5)    
+
+        text1 = tk.Label(master=self.viewer, text=" speed : "+str(round(self.calculate_speed(self.trace, self.frames),2))+ " pix/sec", width=30, bg='white')
+        text1.grid(row=1, column=9, columnspan=2, pady=5)    
+
+        text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=30, bg='white')
+        text1.grid(row=1 , column=11, columnspan=2, pady=5)            
     # plotting switch 
         var = tk.IntVar()
         def update_monitor_plot():            
@@ -712,7 +728,93 @@ class TrackViewer(tk.Frame):
 #        
 #    def save_to_main_frame(self):
 #        print("saving to main frame")
+        
+    
+#       calculate parameters
+    def calculate_stand_length(self, trajectory, frames):
+        '''
+        calculate length of the standing at the end
+        '''
+        
+                # add missing frames
+        pos=0
+        new_frames=[]
+        new_trace=[]
+        for frame_pos in range(frames[0], frames[-1]+1):
+            frame=frames[pos]
+    #                    print("\n frame:       ", frame)
+    #                    print("frame_pos:      ", frame_pos)
+            if frame_pos==frame:
+                new_frames.append(frame_pos)
+                new_trace.append(trajectory[pos])
+                pos=pos+1
+            else:
+                new_frames.append(frame_pos)
+                new_trace.append(trajectory[pos])  
+                
+        # separated arrays for coordinates
+        x=np.asarray(new_trace)[:,0]    
+        y=np.asarray(new_trace)[:,1]    
+        
+        # end coordinates
+        x_e=np.asarray(new_trace)[-1,0]
+        y_e=np.asarray(new_trace)[-1,1]     
+        
+        sqr_disp_back=np.sqrt((x-x_e)**2+(y-y_e)**2)
+        position=np.array(range(len(sqr_disp_back)))
+
+        sqr_disp_back=sqr_disp_back[::-1]
+        displacement_gaussian_3_end=gaussian_filter1d(sqr_disp_back, 3)
+
+        #count for how long it doesn't exceed movement threshold
+        movement_array=position[displacement_gaussian_3_end>self.max_movement_stay]
+        
+        if len(movement_array)>0:  
+            stand_time=movement_array[0]
+        else:
+            stand_time=frames[-1]-frames[0]+1
+
+        return stand_time
+
+    def calculate_speed(self, trajectory, frames):
+        '''
+        calculate average vesicle speed
+        '''
+        # separated arrays for coordinates
+        x_1=np.asarray(trajectory)[1:,0]    
+        y_1=np.asarray(trajectory)[1:,1]   
+
+        x_2=np.asarray(trajectory)[0:-1,0]    
+        y_2=np.asarray(trajectory)[0:-1,1]           
+        
+        # sum of all the displacements       
+        sqr_disp_back=np.sqrt((x_1-x_2)**2+(y_1-y_2)**2)
+        disp=np.sum(sqr_disp_back)
+        
+        # frames        
+        time=(frames[-1]-frames[0]+1)/self.frame_freq
+        
+        #speed        
+        speed=disp/time
+    
+        return speed
+    
+    def calculate_direction(self, trace):
+        '''
+        calculate average angle of the direction
+        '''
+        pointB=trace[-1]                        
+        pointA=trace[0]
+        changeInX = pointB[0] - pointA[0]
+        changeInY = pointB[1] - pointA[1]
+         
+        return int(math.degrees(math.atan2(changeInY,changeInX)) )
+#        xDiff = p2[0] - p1[0]
+#        yDiff = p2[1] - p1[1]        
+#        general_angle=int(math.degrees(math.atan2(yDiff, xDiff))) 
 #        
+#        return general_angle
+        
     def plot_displacement(self):
         trajectory=self.trace
         
@@ -913,21 +1015,52 @@ class TrackViewer(tk.Frame):
     def plot_image(self):
         
         # plot image
-#        plt.close()
+
         fig = plt.figure(figsize=self.figsize_value)
-#        plt.axis('off')
+        plt.axis('off')
         fig.tight_layout()
         
         
         img=self.movie[self.frame_pos,:,:]
-        pixN_min=int(np.min(([self.pixN_basic, np.min(np.asarray(self.trace)[:,1]), np.min(np.asarray(self.trace)[:,0])])))
-        pixN=int(np.min(([pixN_min, img.shape[0]-np.max(np.asarray(self.trace)[:,1]),  img.shape[1]-np.max(np.asarray(self.trace)[:,0])])))
         
-        y_min=int(np.min(np.asarray(self.trace)[:,1]))-pixN
-        y_max=int(np.max(np.asarray(self.trace)[:,1]))+pixN
-    
-        x_min=int(np.min(np.asarray(self.trace)[:,0]))-pixN
-        x_max=int(np.max(np.asarray(self.trace)[:,0]))+pixN
+        #calculate window position
+        
+        left_point_y=np.min(np.asarray(self.trace)[:,1])-self.pixN_basic
+        right_point_y=np.max(np.asarray(self.trace)[:,1])+self.pixN_basic
+        top_point_x=np.min(np.asarray(self.trace)[:,0])-self.pixN_basic
+        bottom_point_x=np.max(np.asarray(self.trace)[:,0])+self.pixN_basic
+        
+        
+        
+        # for y
+        if left_point_y>=0 and right_point_y<img.shape[1]:
+            y_min=left_point_y
+            y_max=right_point_y
+        elif left_point_y<0 and right_point_y<img.shape[1]:
+            y_min=0
+            y_max=np.min([y_min+self.pixN_basic, (img.shape[1]-1)])  
+        elif left_point_y>=0 and right_point_y>=img.shape[1]:
+            y_max=img.shape[1]-1
+            y_min=np.max([0, y_max-self.pixN_basic])
+        else:
+            y_min=0
+            y_max=img.shape[1]-1
+            
+        # for x
+        
+        if top_point_x>=0 and bottom_point_x<img.shape[0]:
+            x_min=top_point_x
+            x_max=bottom_point_x
+        elif top_point_x<0 and bottom_point_x<img.shape[0]:
+            x_min=0
+            x_max=np.min([x_min+self.pixN_basic, (img.shape[0]-1)])  
+        elif top_point_x>=0 and bottom_point_x>=img.shape[0]:
+            x_max=img.shape[0]-1
+            x_min=np.max([0, x_max-self.pixN_basic])
+        else:
+            x_min=0
+            x_max=img.shape[0]-1            
+        
         
         region=img[x_min:x_max, y_min:y_max]
         
