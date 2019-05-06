@@ -15,7 +15,6 @@ from tkinter import filedialog
 # for plotting
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-# Implement the default Matplotlib key bindings.
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 
@@ -34,6 +33,8 @@ class MainVisual(tk.Frame):
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         self.master = master
+        
+        #colours for plotting tracks
         
         self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
             "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
@@ -60,7 +61,7 @@ class MainVisual(tk.Frame):
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         
         # 
-        self.figsize_value=(6,6)
+        self.figsize_value=(6,6) # image sizeS
       
      # # # # # # menu to choose files and print data # # # # # #
         
@@ -99,7 +100,7 @@ class MainVisual(tk.Frame):
         self.txt_track_number = tk.Entry(root, width=10)
         self.txt_track_number.grid(row=0, column=6)
 
-        #reader=txt.get()
+
 
         # duration
         lbl3 = tk.Label(master=root, text="Track duration (frames): from ", width=30, bg='white')
@@ -110,7 +111,7 @@ class MainVisual(tk.Frame):
         lbl3.grid(row=1, column=7)
         self.txt_duration_to = tk.Entry(root, width=10)
         self.txt_duration_to.grid(row=1, column=8)
-        #reader=txt.get()
+
 
         # duration        
         
@@ -152,7 +153,7 @@ class MainVisual(tk.Frame):
         
       # # # # # # movie  # # # # # # 
 
-              # movie name 
+        # movie name 
         lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file, bg='white')
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
         
@@ -168,7 +169,7 @@ class MainVisual(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3,pady=5)
         
-        # plot all tracks on top         
+              
    #  #  # # # # next and previous buttons
         
         buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
@@ -186,22 +187,6 @@ class MainVisual(tk.Frame):
         self.txt_jump_to = tk.Entry(root, width=10)
         self.txt_jump_to.grid(row=12, column=2)
         
-
-# # # #  play movie - not working - need another solultion
-#        buttonnext = tk.Button(text="play", command=self.play_movie, width=20)
-#        buttonnext.grid(row=10, column=2, padx=5)
-#        
-#        buttonnext = tk.Button(text="stop", command=self.play_stop, width=20)
-#        buttonnext.grid(row=10, column=3, padx=5)
-#        
-#    def play_movie(self):
-#        while self.frame_pos!=self.movie_length:
-#            self.frame_pos+=1   
-#            self.show_tracks()
-#            lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-#            lbframe.grid(row=9, column=2, pady=5)
-#            time.sleep(1)
-
     
     def find_fusion(self):
         '''
@@ -238,13 +223,6 @@ class MainVisual(tk.Frame):
         self.list_update()        
         
         
-    def plot_statistics(self):
-        '''
-        mpl plot of the statistics on filtered data
-        '''
-        print("plotting ....")
-
-        
     def save_movie(self):
         length=self.movie.shape[0]
         final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
@@ -277,8 +255,6 @@ class MainVisual(tk.Frame):
                         cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
                                  self.color_list[clr], 1)
 
-#                point=trace[0]
-#                cv2.putText(orig_frame,str(trackID) ,(int(point[1]),int(point[0])), cv2.FONT_HERSHEY_SIMPLEX, 0.5,self.color_list[clr],1,cv2.LINE_AA)
             # Display the resulting tracking frame
             cv2.imshow('Tracking', orig_frame)
 
@@ -287,7 +263,7 @@ class MainVisual(tk.Frame):
             
         
                 # save results
-        save_file = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
+        save_file = tk.filedialog.asksaveasfilename()
         
         final_img_set=final_img_set/np.max(final_img_set)*255
         final_img_set=final_img_set.astype('uint8')
@@ -297,6 +273,7 @@ class MainVisual(tk.Frame):
         cv2.destroyAllWindows()
         
     def jump_to(self):
+        
         if self.txt_jump_to.get()!='':
             self.frame_pos=int(self.txt_jump_to.get())
             self.show_tracks()
@@ -305,19 +282,22 @@ class MainVisual(tk.Frame):
             self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
-        save_filename = tk.filedialog.asksaveasfilename(filetypes = [("All files", "*.*")])
+        
+        save_filename = tk.filedialog.asksaveasfilename()
         with open(save_filename+'.txt', 'w') as f:
             json.dump(self.track_data_filtered, f, ensure_ascii=False) 
         print("tracks are saved in  ", save_filename, " file")
 
     
     def update_data(self):
+        
         self.list_update()
         self.track_to_frame()
         self.show_tracks()
-#        print("data updated")            
+          
 
     def move_to_previous(self):
+        
         if self.frame_pos!=0:
             self.frame_pos-=1
         self.show_tracks()
@@ -325,6 +305,7 @@ class MainVisual(tk.Frame):
         lbframe.grid(row=10, column=2, pady=5)
         
     def move_to_next(self):
+        
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.show_tracks()   
@@ -332,8 +313,7 @@ class MainVisual(tk.Frame):
         lbframe.grid(row=10, column=2, pady=5)
         
         
-    def show_tracks(self):
-        # read data from the selected filesa and show tracks      
+    def show_tracks(self):    
 
         # plot image
 
@@ -356,17 +336,7 @@ class MainVisual(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
         canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
-        
-#        toolbar = NavigationToolbar2Tk(canvas, root)
-#        toolbar.update()
-#        canvas.get_tk_widget().grid(row=9, column=1, columnspan=3, pady=5)
-#
-#        def on_key_press(event):
-#            print("you pressed {}".format(event.key))
-#            key_press_handler(event, canvas, toolbar)
-#        
-#        
-#        canvas.mpl_connect("key_press_event", on_key_press)       
+    
 
     def filtering(self):
         
@@ -392,8 +362,6 @@ class MainVisual(tk.Frame):
         else:
             self.filter_length[1]=int(self.txt_length_to.get())  
         
-        
-            
             
         print("filtering for length: ", self.filter_length, "  and for duration: ", self.filter_duration)
 
@@ -415,7 +383,6 @@ class MainVisual(tk.Frame):
             else:
                 track_duration=0
                 track_length=0
-                #calculate maximum displacement between any two positions in track
 
                 # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
@@ -434,12 +401,10 @@ class MainVisual(tk.Frame):
     
 
     def list_update(self):
-        # updating the list 
         
         def tracklist_on_select(even):
             position_in_list=listNodes.curselection()[0]
-#            print('You selected: ', position_in_list)
-#            print('Track info:   ', self.track_data_filtered['tracks'][position_in_list]['trackID'])
+            
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
             TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
@@ -526,9 +491,8 @@ class MainVisual(tk.Frame):
             
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
         lbl2.grid(row=5, column=5, columnspan=4, pady=5)
-                # show the list of data with scroll bar
-#        lbend = tk.Label(master=root, text="LIST OF TRACKS:  ",  bg='white', font=("Times", 14))
-#        lbend.grid(row=5, column=5, columnspan=4, pady=5)
+        
+        # show the list of data with scroll bar
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
         scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
@@ -553,6 +517,7 @@ class MainVisual(tk.Frame):
         
        # plot the tracks from filtered folder 
         for p in self.track_data_filtered['tracks']:
+            
             #calculate length and duration
             if len(p['trace'])>0:
                 point_start=p['trace'][0]
@@ -571,8 +536,8 @@ class MainVisual(tk.Frame):
             
             
     def select_movie(self):
-        # Allow user to select movie
-        filename = tk.filedialog.askopenfilename(filetypes = [("All files", "*.*")])
+        
+        filename = tk.filedialog.askopenfilename()
         self.movie_file=filename
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
@@ -580,17 +545,17 @@ class MainVisual(tk.Frame):
         lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file.split("/")[-1], bg='white')
         lbl1.grid(row=3, column=1, columnspan=3, pady=5)
         
-                # plot image
+        # plot image
         self.show_tracks()
         
     
     def select_track(self):
-        # Allow user to select a file with tracking data
+        
         global folder_path_output  
-        filename = tk.filedialog.askopenfilename(filetypes = [("All files", "*.*")])
+        filename = tk.filedialog.askopenfilename()
         self.track_file=filename
         #read  the tracks data 
-        with open(self.track_file) as json_file:  # 'tracking_original.txt'
+        with open(self.track_file) as json_file:  
 
             self.track_data_original = json.load(json_file)
             
@@ -638,9 +603,12 @@ class MainVisual(tk.Frame):
 ############################################################
 
 class TrackViewer(tk.Frame):
+    '''
+    class for the individual track viewer
+    '''
     def __init__(self, master, track_data, movie):
         tk.Frame.__init__(self, master)
-#        master.title("TrackViewer")
+
         master.configure(background='white')
         master.geometry("2000x1000") #Width x Height
         
@@ -658,10 +626,11 @@ class TrackViewer(tk.Frame):
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
         
-        self.max_movement_stay=1.5 # evaluate stopped vesicle - movement withit the threshold
+        self.max_movement_stay=1.5 # evaluate stopped vesicle - movement within the threshold
         self.frame_freq=4 # movie frame rate
         
         self.pixN_basic=100 # margin size 
+        
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
         
@@ -708,7 +677,8 @@ class TrackViewer(tk.Frame):
         text1.grid(row=1, column=9, columnspan=2, pady=5)    
 
         text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=30, bg='white')
-        text1.grid(row=1 , column=11, columnspan=2, pady=5)            
+        text1.grid(row=1 , column=11, columnspan=2, pady=5)  
+          
     # plotting switch 
         var = tk.IntVar()
         def update_monitor_plot():            
@@ -722,13 +692,6 @@ class TrackViewer(tk.Frame):
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
         self.R2.grid(row=1, column=4)
         
-#        buttonnext = tk.Button(master=self.viewer,text=" save ", command=self.add_position, width=10)
-#        buttonnext.grid(row=9, column=6, pady=5)    
-#    
-#        
-#    def save_to_main_frame(self):
-#        print("saving to main frame")
-        
     
 #       calculate parameters
     def calculate_stand_length(self, trajectory, frames):
@@ -736,14 +699,13 @@ class TrackViewer(tk.Frame):
         calculate length of the standing at the end
         '''
         
-                # add missing frames
+        # add missing frames
         pos=0
         new_frames=[]
         new_trace=[]
         for frame_pos in range(frames[0], frames[-1]+1):
             frame=frames[pos]
-    #                    print("\n frame:       ", frame)
-    #                    print("frame_pos:      ", frame_pos)
+            
             if frame_pos==frame:
                 new_frames.append(frame_pos)
                 new_trace.append(trajectory[pos])
@@ -809,11 +771,7 @@ class TrackViewer(tk.Frame):
         changeInY = pointB[1] - pointA[1]
          
         return int(math.degrees(math.atan2(changeInY,changeInX)) )
-#        xDiff = p2[0] - p1[0]
-#        yDiff = p2[1] - p1[1]        
-#        general_angle=int(math.degrees(math.atan2(yDiff, xDiff))) 
-#        
-#        return general_angle
+
         
     def plot_displacement(self):
         trajectory=self.trace
@@ -825,15 +783,14 @@ class TrackViewer(tk.Frame):
         y_0=np.asarray(trajectory)[0,1]
         disp=np.sqrt((x-x_0)**2+(y-y_0)**2)
 
-        # plot image
-#        plt.close()
         fig = plt.figure()
-#        plt.axis('off')
+
         fig.tight_layout()
         
         self.im = plt.plot(self.frames, disp)
         plt.xlabel('frames')
         plt.ylabel('displacement (px)')
+        
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
@@ -845,20 +802,20 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
 
         self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=40, bg='white')
-        self.lbframechange.grid(row=1, column=10, columnspan=2, pady=5, sticky=tk.W)
+        self.lbframechange.grid(row=2, column=10, columnspan=2, pady=5, sticky=tk.W)
 
         self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
-        self.lbpose.grid(row=2, column=10, pady=5, sticky=tk.W)  
+        self.lbpose.grid(row=3, column=10, pady=5, sticky=tk.W)  
         
         self.txt_position = tk.Entry(self.viewer, width=20)
-        self.txt_position.grid(row=2, column=11)                
+        self.txt_position.grid(row=3, column=11)                
         
 
         self.buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_change, width=10)
-        self.buttonOK.grid(row=3, column=10, pady=5)   
+        self.buttonOK.grid(row=4, column=10, pady=5)   
         
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=3, column=11, pady=5)          
+        self.button_cancel.grid(row=4, column=11, pady=5)          
         
     def action_apply_change(self):
         
@@ -908,14 +865,14 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
         
         self.lbframechange = tk.Label(master=self.viewer, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=40, bg='white')
-        self.lbframechange.grid(row=1, column=10, columnspan=2,  pady=5, sticky=tk.W)              
+        self.lbframechange.grid(row=2, column=10, columnspan=2,  pady=5, sticky=tk.W)              
         
 
         self.buttonOKdel= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_delete, width=10)
-        self.buttonOKdel.grid(row=3, column=10, pady=5)  
+        self.buttonOKdel.grid(row=4, column=10, pady=5)  
         
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=3, column=11, pady=5)     
+        self.button_cancel.grid(row=4, column=11, pady=5)     
         
     def action_apply_delete(self):
 
@@ -933,24 +890,24 @@ class TrackViewer(tk.Frame):
         self.action_cancel()   
         
         self.lbframechange = tk.Label(master=self.viewer, text=" Add frame: ", width=20, bg='white')
-        self.lbframechange.grid(row=1, column=10, pady=5)
+        self.lbframechange.grid(row=2, column=10, pady=5)
 
         self.txt_frame = tk.Entry(self.viewer, width=10)
-        self.txt_frame.grid(row=1, column=11)                
+        self.txt_frame.grid(row=2, column=11)                
         
 
         self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=25, bg='white')
-        self.lbpose.grid(row=2, column=10, pady=5)  
+        self.lbpose.grid(row=3, column=10, pady=5)  
         
         self.txt_position = tk.Entry(self.viewer, width=20)
-        self.txt_position.grid(row=2, column=11)                
+        self.txt_position.grid(row=3, column=11)                
         
 
         self.buttonOK_add= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_add, width=10)
-        self.buttonOK_add.grid(row=3, column=10,  pady=5)   
+        self.buttonOK_add.grid(row=4, column=10,  pady=5)   
 
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=3, column=11, pady=5)     
+        self.button_cancel.grid(row=4, column=11, pady=5)     
 
         
     def action_apply_add(self):
@@ -992,24 +949,12 @@ class TrackViewer(tk.Frame):
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
         lbframe.grid(row=8, column=3, pady=5)
         
-#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-#        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
-#        
-#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-#        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
-        
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.plot_image()   
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=8, column=3, pady=5)
-#        
-#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-#        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
-#        
-#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-#        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)                
+        lbframe.grid(row=8, column=3, pady=5)              
     
     
     def plot_image(self):
@@ -1094,8 +1039,6 @@ class TrackViewer(tk.Frame):
         
         def tracklist_on_select(even):
             self.frame_pos_to_change=listNodes.curselection()[0]
-            #self.frames[self.frame_to_change]
-#            print("selected "+str(self.frames[self.frame_pos_to_change]))
 
                 # show the list of data with scroll bar
         lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 14))
@@ -1122,9 +1065,6 @@ class MainApplication(tk.Frame):
         parent.configure(background='white')
         parent.geometry("1100x1000") #Width x Height
         self.main = MainVisual(parent)
-#        self.main.pack(side="left")
-
-
 
         
 if __name__ == "__main__":
