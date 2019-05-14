@@ -19,7 +19,7 @@ class FusionEvent(object):
     """class for detection and description of the fusion events
     """
     
-    def __init__(self, cargo_movie, membrane_movie, membrane_mask, tracks):
+    def __init__(self, cargo_movie=np.zeros((10,10)), membrane_movie=np.zeros((10,10)), membrane_mask=np.zeros((10,10)), tracks=[]):
         """
         Initialise variables
         """
@@ -109,7 +109,7 @@ class FusionEvent(object):
         return speed
     
     
-    def calculate_stand_length(self, trajectory, plot_var=1):
+    def calculate_stand_length(self, trajectory, plot_var=0):
         '''
         calculate length of the standing at the end
         '''
@@ -188,13 +188,13 @@ class FusionEvent(object):
         print(" \n ----------- \n Total number of fusion events: ", count)
         
         #plotting histograms
-        fig, axes = plt.subplots(2,2) #, sharex=True, sharey=True)
+        fig, axes = plt.subplots(2,3) #, sharex=True, sharey=True)
         plt.subplots_adjust(wspace=0.5, hspace=0.5)
 #        plt.tight_layout()
         
         #length
         axes[0,0].hist(self.final_stop_length_array, bins=100)
-        axes[0,0].set_title('final stop length')
+        axes[0,0].set_title('stop duration')
         axes[0,0].set_ylabel('number of events')
         axes[0,0].set_xlabel('frames')
         
@@ -202,8 +202,13 @@ class FusionEvent(object):
         axes[0,1].hist(self.duration_array, bins=100)
         axes[0,1].set_title('track length')
         axes[0,1].set_ylabel('number of events')
-        axes[0,1].set_title('frames')
-
+        axes[0,1].set_xlabel('frames')
+        
+        # displacement
+        axes[0,2].hist(self.max_displacement_array, bins=100)
+        axes[0,2].set_title('final displacement')
+        axes[0,2].set_ylabel('number of events')
+        axes[0,2].set_xlabel('pix')
         # speed
         axes[1,0].hist(self.speed_array, bins=100)
         axes[1,0].set_title('average speed')
@@ -215,7 +220,9 @@ class FusionEvent(object):
         axes[1,1].set_title('average direction')
         axes[1,1].set_ylabel('number of events')
         axes[1,1].set_xlabel('degrees')
-    
+
+        axes[1,2].set_axis_off() 
+        
         fig.savefig('subplot.png')
   
 

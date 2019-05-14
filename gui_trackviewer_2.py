@@ -53,33 +53,56 @@ class MainVisual(tk.Frame):
         self.movie_file=" " # path to the move file
         self.track_file=" "# path to the file with tracking data (json format)
         self.movie=[] # matrix with data
-        self._membrane_movie=[]
+        self.membrane_movie=[]
         self.track_data_original={}
         self.track_data={} # original tracking data
         self.track_data_filtered={}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
+        #filter parameters
         self.filter_duration=[0, 1000]
         self.filter_length=[0, 10000]   
+        self.filter_stop=[0, 10000] 
+        
         self.frame_pos=0
         self.movie_length=0
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        
+        self.moemebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
+        self.pad_val=5
         # 
         self.figsize_value=(4,4) # image sizeS
-      
+        # 
+        self.deleted_tracks_N=0
+        self.created_tracks_N=0
+        self.filtered_tracks_N=0
      # # # # # # menu to choose files and print data # # # # # #
         
-        self.button1 = tk.Button(text="Select movie file", command=self.select_movie, width=30)
-        self.button1.grid(row=0, column=2, pady=5)
+        self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=30)
+        self.button_mv.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
+        self.button_mm = tk.Button(text="   Select membrane movie   ", command=self.select_membrane_movie, width=30)
+        self.button_mm.grid(row=0, column=2, columnspan=2,pady=self.pad_val, padx=self.pad_val)
         
         self.button2 = tk.Button(text="Select file with tracks", command=self.select_track, width=30)
-        self.button2.grid(row=1, column=2, pady=5)
+        self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
 
-        self.buttonShow = tk.Button(text="Show tracks", command=self.show_tracks, width=30)
-        self.buttonShow.grid(row=2, column=2, pady=5)  
+#        self.buttonShow = tk.Button(text="Show tracks", command=self.show_tracks, width=30)
+#        self.buttonShow.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)  
 
-#    # # # # # # filter choice # # # # # # #   
+#    # # # # # # filter choice:membrane on/off # # # # # # #   
+        var_membrane = tk.IntVar()
+        
+        def update_membrane_switch():            
+            self.moemebrane_switch=var_membrane.get()
+            # change image
+            self.show_tracks()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.M1 = tk.Radiobutton(root, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
+        self.M1.grid(row=3, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.M2 = tk.Radiobutton(root, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
+        self.M2.grid(row=3, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+#    # # # # # # filter choice:tracks # # # # # # #   
         var = tk.IntVar()
         
         def update_monitor_switch():            
@@ -88,78 +111,82 @@ class MainVisual(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(root, text="track and IDs", variable=var, value=0, bg='white', command =update_monitor_switch )
-        self.R1.grid(row=4, column=1)  
+        self.R1.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(root, text=" only tracks ", variable=var, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
-        self.R2.grid(row=4, column=2)
+        self.R2.grid(row=4, column=2, pady=self.pad_val, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
-        self.R3.grid(row=4, column=3)
+        self.R3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
         
        # list switchL # 0 - all, 1 
 
         # duration
         lbl3 = tk.Label(master=root, text="Track ID: ", width=20, bg='white')
-        lbl3.grid(row=0, column=5)
+        lbl3.grid(row=0, column=5, pady=self.pad_val, padx=self.pad_val)
         self.txt_track_number = tk.Entry(root, width=10)
-        self.txt_track_number.grid(row=0, column=6)
+        self.txt_track_number.grid(row=0, column=6, pady=self.pad_val, padx=self.pad_val)
 
 
 
         # duration
-        lbl3 = tk.Label(master=root, text="Duration (frames): from ", width=20, bg='white')
-        lbl3.grid(row=1, column=5)
+        lbl3 = tk.Label(master=root, text="Duration (frames): from ", width=30, bg='white')
+        lbl3.grid(row=1, column=5, pady=self.pad_val, padx=self.pad_val)
         self.txt_duration_from = tk.Entry(root, width=10)
-        self.txt_duration_from.grid(row=1, column=6)
+        self.txt_duration_from.grid(row=1, column=6, pady=self.pad_val, padx=self.pad_val)
         lbl3 = tk.Label(master=root, text="to", bg='white')
-        lbl3.grid(row=1, column=7)
+        lbl3.grid(row=1, column=7, pady=self.pad_val, padx=self.pad_val)
         self.txt_duration_to = tk.Entry(root, width=10)
-        self.txt_duration_to.grid(row=1, column=8)
+        self.txt_duration_to.grid(row=1, column=8, pady=self.pad_val, padx=self.pad_val)
 
 
-        # duration        
-        
-        
-        lbl3 = tk.Label(master=root, text="Length (pixels): from ", width=20, bg='white')
+        # Length       
+        lbl3 = tk.Label(master=root, text="Length (pix): from ", width=30, bg='white')
         lbl3.grid(row=2, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
-        self.txt_length_from.grid(row=2, column=6)
+        self.txt_length_from.grid(row=2, column=6, pady=self.pad_val, padx=self.pad_val)
         lbl3 = tk.Label(master=root, text="to", bg='white')
-        lbl3.grid(row=2, column=7)
+        lbl3.grid(row=2, column=7, pady=self.pad_val, padx=self.pad_val)
         self.txt_length_to = tk.Entry(root, width=10)
-        self.txt_length_to.grid(row=2, column=8)     
+        self.txt_length_to.grid(row=2, column=8, pady=self.pad_val, padx=self.pad_val)     
+        
+        # Stop duration
+        lbl3 = tk.Label(master=root, text="Stop duration (frames): from ", width=30, bg='white')
+        lbl3.grid(row=3, column=5)
+        self.txt_stop_from = tk.Entry(root, width=10)
+        self.txt_stop_from.grid(row=3, column=6, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=root, text="to", bg='white')
+        lbl3.grid(row=3, column=7, pady=self.pad_val, padx=self.pad_val)
+        self.txt_stop_to = tk.Entry(root, width=10)
+        self.txt_stop_to.grid(row=3, column=8, pady=self.pad_val, padx=self.pad_val)    
         
         # button to filter
         
         self.buttonFilter = tk.Button(text="Filter", command=self.filtering, width=10)
-        self.buttonFilter.grid(row=3, column=4, columnspan=3,  pady=5)  
+        self.buttonFilter.grid(row=4, column=4, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
         
         # fusion events and statistics
         
         self.buttonFilter = tk.Button(text="Fusion events", command=self.find_fusion, width=10)
-        self.buttonFilter.grid(row=3, column=6, columnspan=3,  pady=5)           
+        self.buttonFilter.grid(row=4, column=6, columnspan=3,  pady=self.pad_val, padx=self.pad_val)           
         
         
         # button to update changes
         
         button_save=tk.Button(master=root, text="update", command=self.update_data, width=10)
-        button_save.grid(row=10, column=5)
+        button_save.grid(row=12, column=5, pady=self.pad_val, padx=self.pad_val)
         
         # button to update changes
         
         button_save=tk.Button(master=root, text="save movie", command=self.save_movie, width=10)
-        button_save.grid(row=10, column=6)
+        button_save.grid(row=12, column=6, pady=self.pad_val, padx=self.pad_val)
         
         # save button
      
         button_save=tk.Button(master=root, text="save in file", command=self.save_in_file, width=10)
-        button_save.grid(row=10, column=8)        
+        button_save.grid(row=12, column=8, pady=self.pad_val, padx=self.pad_val)        
         
       # # # # # # movie  # # # # # # 
-
-        # movie name 
-        lbl1 = tk.Label(master=root, text="movie: "+self.movie_file, bg='white')
-        lbl1.grid(row=3, column=1, columnspan=3, pady=5)
         
         # plot bg
         bg_img=np.ones((200,200))*0.8
@@ -171,25 +198,25 @@ class MainVisual(tk.Frame):
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(fig, master=root)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3,pady=5)
+        self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
         
               
    #  #  # # # # next and previous buttons
         
         buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=10, column=1, pady=5, sticky=tk.W) 
+        buttonbefore.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=10, column=2, pady=5)
+        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
         
         buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=10, column=3, pady=5, sticky=tk.E)
+        buttonnext.grid(row=12, column=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
         
         buttonnext = tk.Button(text="jumpt to ", command=self.jump_to, width=10)
-        buttonnext.grid(row=11, column=2, pady=5)
+        buttonnext.grid(row=13, column=2, pady=self.pad_val, padx=self.pad_val)
         
         self.txt_jump_to = tk.Entry(root, width=10)
-        self.txt_jump_to.grid(row=12, column=2)
+        self.txt_jump_to.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
         
     
     def find_fusion(self):
@@ -198,16 +225,12 @@ class MainVisual(tk.Frame):
         '''
         print("fusion event detection ....")
         
-        # open membrane mask
-        filename = tk.filedialog.askopenfilename()
-        root.update()
-        self._membrane_movie=skimage.io.imread(filename)
-        self._membrane_movie[self._membrane_movie>0]=1
-        self._membrane_movie=sp.ndimage.binary_dilation(self._membrane_movie, iterations=1)
+
+        membrane_movie_deliated=sp.ndimage.binary_dilation(self.membrane_movie, iterations=1)
         
         # detect events
         
-        event_count=FusionEvent(self.movie, self.movie, self._membrane_movie, self.track_data_filtered)
+        event_count=FusionEvent(self.movie, self.movie, membrane_movie_deliated, self.track_data_filtered)
         self.track_data_filtered=event_count.find_fusion()
         
         # DrawingArea
@@ -282,7 +305,7 @@ class MainVisual(tk.Frame):
             self.frame_pos=int(self.txt_jump_to.get())
             self.show_tracks()
             lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-            lbframe.grid(row=10, column=2, pady=5)    
+            lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)    
             self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
@@ -306,7 +329,7 @@ class MainVisual(tk.Frame):
             self.frame_pos-=1
         self.show_tracks()
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=10, column=2, pady=5)
+        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
         
     def move_to_next(self):
         
@@ -314,14 +337,18 @@ class MainVisual(tk.Frame):
             self.frame_pos+=1
         self.show_tracks()   
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=10, column=2, pady=5)
+        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
         
         
     def show_tracks(self):    
 
         # plot image
 
-        self.image = self.movie[self.frame_pos,:,:]
+        if self.moemebrane_switch==0:
+            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        else:
+            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/4
+
         fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
@@ -338,7 +365,7 @@ class MainVisual(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=5)
+        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
     
 
     def filtering(self):
@@ -364,9 +391,18 @@ class MainVisual(tk.Frame):
             self.filter_length[1]=10000
         else:
             self.filter_length[1]=int(self.txt_length_to.get())  
-        
             
-        print("filtering for length: ", self.filter_length, "  and for duration: ", self.filter_duration)
+        if self.txt_stop_from.get()=='':
+            self.filter_stop[0]=0
+        else:
+            self.filter_stop[0]=int(self.txt_stop_from.get())
+
+        if self.txt_stop_to.get()=='':
+            self.filter_stop[1]=10000
+        else:
+            self.filter_stop[1]=int(self.txt_stop_to.get())          
+            
+        print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   stop duration: ", self.filter_stop)
 
         # filtering 
         self.track_data_filtered={}
@@ -380,28 +416,37 @@ class MainVisual(tk.Frame):
                 point_start=p['trace'][0]
                 # check length
                 track_duration=p['frames'][-1]-p['frames'][0]+1
-                #calculate maximum displacement between any two positions in track
+                # check maximum displacement between any two positions in track
                 track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
+                # check stop length
+                fusion_event=FusionEvent()
+                track_stop=fusion_event.calculate_stand_length(p['trace'])
                 
             else:
                 track_duration=0
                 track_length=0
+                track_stop=0
 
                 # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
+            stop_var=track_stop>=self.filter_stop[0] and track_duration<=self.filter_stop[1]
+            
             if self.txt_track_number.get()=='':
                 filterID=True 
             else:                
                 filterID=p['trackID']== int(self.txt_track_number.get())
 
-            if length_var==True and duration_var==True and filterID==True:
+            if length_var==True and duration_var==True and filterID==True and stop_var==True:
                     self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
         
         #update the list
         self.list_update()
-    
+        
+        #plot the filters
+        lbl2 = tk.Label(master=root, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
+        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
 
     def list_update(self):
         
@@ -415,14 +460,14 @@ class MainVisual(tk.Frame):
             
         def detele_track_question():
             
-            self.qdeletetext = tk.Label(master=root, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=20)
-            self.qdeletetext.grid(row=6, column=6, columnspan=2, pady=5) 
+            self.qdeletetext = tk.Label(master=root, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=25)
+            self.qdeletetext.grid(row=9, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
             
-            self.deletbutton = tk.Button(master=root, text=" OK ", command=detele_track, width=7,  bg='red')
-            self.deletbutton.grid(row=6, column=8, columnspan=1, pady=5) 
+            self.deletbutton = tk.Button(master=root, text=" OK ", command=detele_track, width=5,  bg='red')
+            self.deletbutton.grid(row=9, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
         def detele_track():
-            
+            self.deleted_tracks_N+=1
             delete_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
             
             pos=0
@@ -456,13 +501,13 @@ class MainVisual(tk.Frame):
         def new_track_question():
             
             self.qnewtext = tk.Label(master=root, text="create new track "+str(len(self.track_data_filtered['tracks'])+1)+" ?",  bg='white', font=("Times", 10), width=25)
-            self.qnewtext.grid(row=7, column=6, columnspan=2, pady=5) 
+            self.qnewtext.grid(row=10, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
             
-            self.newbutton = tk.Button(master=root, text=" OK ", command=create_track, width=7,  bg='green')
-            self.newbutton.grid(row=7, column=8, columnspan=1, pady=5) 
+            self.newbutton = tk.Button(master=root, text=" OK ", command=create_track, width=5,  bg='green')
+            self.newbutton.grid(row=10, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
         def create_track():
-            
+            self.created_tracks_N+=1
             new_trackID=len(self.track_data_filtered['tracks'])+1
             
             p={"trackID": new_trackID, "trace":[[0,0]], "frames":[0], "skipped_frames": 0}
@@ -492,16 +537,26 @@ class MainVisual(tk.Frame):
             
             
             
-        lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 16, "bold"))
-        lbl2.grid(row=5, column=5, columnspan=4, pady=5)
+        lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 14, "bold"))
+        lbl2.grid(row=5, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        
+        # show track statistics
+        lbl2 = tk.Label(master=root, text="deleted tracks: "+str(self.deleted_tracks_N), width=30, bg='white',  font=("Times", 12,))
+        lbl2.grid(row=6, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
+
+        lbl2 = tk.Label(master=root, text="created tracks: "+str(self.created_tracks_N), width=30, bg='white',  font=("Times", 12))
+        lbl2.grid(row=6, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+
+        lbl2 = tk.Label(master=root, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
+        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
         
         # show the list of data with scroll bar
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
-        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S)
+        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
 
-        listNodes = tk.Listbox(master=root, width=40,  font=("Times", 12), selectmode='single')
-        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S)
+        listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12), selectmode='single')
+        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<Double-1>', tracklist_on_select)
 
@@ -510,12 +565,12 @@ class MainVisual(tk.Frame):
         #delete button
         
         deletbutton = tk.Button(master=root, text="DELETE TRACK", command=detele_track_question, width=15,  bg='red')
-        deletbutton.grid(row=6, column=5, columnspan=1, pady=5) 
+        deletbutton.grid(row=9, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         # add button
 
         deletbutton = tk.Button(master=root, text="ADD TRACK", command=new_track_question, width=15,  bg='green')
-        deletbutton.grid(row=7, column=5, columnspan=1, pady=5) 
+        deletbutton.grid(row=10, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
 
         
        # plot the tracks from filtered folder 
@@ -537,20 +592,30 @@ class MainVisual(tk.Frame):
 
             
             
-    def select_movie(self):
+    def select_vesicle_movie(self):
         
         filename = tk.filedialog.askopenfilename()
         self.movie_file=filename
         root.update()
+        
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
         self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=root, text="movie file: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=3, column=1, columnspan=3, pady=5)
+        lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        
+        # create a none-membrane movie
+        self.membrane_movie=np.zeros(self.movie.shape)
         
         # plot image
         self.show_tracks()
+
+    def select_membrane_movie(self):
         
+        filename = tk.filedialog.askopenfilename()
+        # read files 
+        self.membrane_movie=skimage.io.imread(filename)
+        self.membrane_movie[self.membrane_movie>0]=1
     
     def select_track(self):
         
@@ -613,7 +678,7 @@ class TrackViewer(tk.Frame):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
-        master.geometry("1200x800") #Width x Height
+#        master.geometry("1200x800") #Width x Height
         
         self.viewer = master
         
@@ -637,6 +702,10 @@ class TrackViewer(tk.Frame):
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
         
+        # interface settings
+        
+        self.pad_val=5
+        
         
      # # # lay out of the frame
         self.show_list()     
@@ -649,38 +718,38 @@ class TrackViewer(tk.Frame):
         self.plot_displacement()
         
         buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=8, column=2, pady=5, sticky=tk.W) 
+        buttonbefore.grid(row=8, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=8, column=3, pady=5)
+        lbframe.grid(row=8, column=3, pady=self.pad_val, padx=self.pad_val)
         
         buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=8, column=4, pady=5, sticky=tk.E)
+        buttonnext.grid(row=8, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
         
      # buttins to change the position
      
         buttonnext = tk.Button(master=self.viewer,text="change", command=self.change_position, width=10)
-        buttonnext.grid(row=0, column=5, pady=5)     
+        buttonnext.grid(row=0, column=5, pady=self.pad_val, padx=self.pad_val)     
 
         buttonnext = tk.Button(master=self.viewer,text="delete", command=self.delete_position, width=10)
-        buttonnext.grid(row=0, column=6, pady=5)     
+        buttonnext.grid(row=0, column=6, pady=self.pad_val, padx=self.pad_val)     
         
         buttonnext = tk.Button(master=self.viewer,text="add", command=self.add_position, width=10)
-        buttonnext.grid(row=0, column=7, pady=5)    
+        buttonnext.grid(row=0, column=7, pady=self.pad_val, padx=self.pad_val)    
         
         
     # information
         text1 = tk.Label(master=self.viewer, text=" duration : "+str(self.frames[-1]-self.frames[0]+1) +" frames", width=20, bg='white')
-        text1.grid(row=0, column=9, columnspan=2, pady=5)    
+        text1.grid(row=0, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
-        text1 = tk.Label(master=self.viewer, text=" final stop : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=20, bg='white')
-        text1.grid(row=0, column=11, columnspan=2, pady=5)    
+        text1 = tk.Label(master=self.viewer, text=" stop duration : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=20, bg='white')
+        text1.grid(row=0, column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
         text1 = tk.Label(master=self.viewer, text=" speed : "+str(round(self.calculate_speed(self.trace, self.frames),2))+ " pix/sec", width=20, bg='white')
-        text1.grid(row=1, column=9, columnspan=2, pady=5)    
+        text1.grid(row=1, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
         text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=20, bg='white')
-        text1.grid(row=1 , column=11, columnspan=2, pady=5)  
+        text1.grid(row=1 , column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
           
     # plotting switch 
         var = tk.IntVar()
@@ -797,7 +866,7 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3)   
+        canvas.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)   
 
         
     def change_position(self):
@@ -805,20 +874,20 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
 
         self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=40, bg='white')
-        self.lbframechange.grid(row=2, column=10, columnspan=2, pady=5, sticky=tk.W)
+        self.lbframechange.grid(row=2, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
         self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=15, bg='white')
-        self.lbpose.grid(row=3, column=10, pady=5, sticky=tk.W)  
+        self.lbpose.grid(row=3, column=10, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
         self.txt_position = tk.Entry(self.viewer, width=15)
-        self.txt_position.grid(row=3, column=11)                
+        self.txt_position.grid(row=3, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
         self.buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_change, width=10)
-        self.buttonOK.grid(row=4, column=10, pady=5)   
+        self.buttonOK.grid(row=4, column=10, pady=self.pad_val, padx=self.pad_val)   
         
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=4, column=11, pady=5)          
+        self.button_cancel.grid(row=4, column=11, pady=self.pad_val, padx=self.pad_val)          
         
     def action_apply_change(self):
         
@@ -868,14 +937,14 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
         
         self.lbframechange = tk.Label(master=self.viewer, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=40, bg='white')
-        self.lbframechange.grid(row=2, column=10, columnspan=2,  pady=5, sticky=tk.W)              
+        self.lbframechange.grid(row=2, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
 
         self.buttonOKdel= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_delete, width=10)
-        self.buttonOKdel.grid(row=4, column=10, pady=5)  
+        self.buttonOKdel.grid(row=4, column=10, pady=self.pad_val, padx=self.pad_val)  
         
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=4, column=11, pady=5)     
+        self.button_cancel.grid(row=4, column=11, pady=self.pad_val, padx=self.pad_val)     
         
     def action_apply_delete(self):
 
@@ -893,24 +962,24 @@ class TrackViewer(tk.Frame):
         self.action_cancel()   
         
         self.lbframechange = tk.Label(master=self.viewer, text=" Add frame: ", width=20, bg='white')
-        self.lbframechange.grid(row=2, column=10, pady=5)
+        self.lbframechange.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)
 
         self.txt_frame = tk.Entry(self.viewer, width=10)
         self.txt_frame.grid(row=2, column=11)                
         
 
         self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=15, bg='white')
-        self.lbpose.grid(row=3, column=10, pady=5)  
+        self.lbpose.grid(row=3, column=10, pady=self.pad_val, padx=self.pad_val)  
         
         self.txt_position = tk.Entry(self.viewer, width=10)
-        self.txt_position.grid(row=3, column=11)                
+        self.txt_position.grid(row=3, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
         self.buttonOK_add= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_add, width=10)
-        self.buttonOK_add.grid(row=4, column=10,  pady=5)   
+        self.buttonOK_add.grid(row=4, column=10, pady=self.pad_val, padx=self.pad_val)   
 
         self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=10)
-        self.button_cancel.grid(row=4, column=11, pady=5)     
+        self.button_cancel.grid(row=4, column=11, pady=self.pad_val, padx=self.pad_val)     
 
         
     def action_apply_add(self):
@@ -950,14 +1019,14 @@ class TrackViewer(tk.Frame):
             self.frame_pos-=1
         self.plot_image()
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=8, column=3, pady=5)
+        lbframe.grid(row=8, column=3, pady=self.pad_val, padx=self.pad_val)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.plot_image()   
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=8, column=3, pady=5)              
+        lbframe.grid(row=8, column=3, pady=self.pad_val, padx=self.pad_val)              
     
     
     def plot_image(self):
@@ -1030,7 +1099,7 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=2, column=2, columnspan=3, rowspan=5)   
+        canvas.get_tk_widget().grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val, columnspan=3)   
         
         def callback(event):
             print(event.x,"  " ,event.y)
@@ -1066,7 +1135,7 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent)
         parent.title("TrackHandler")
         parent.configure(background='white')
-        parent.geometry("1200x1000") #Width x Height
+#        parent.geometry("1200x1000") #Width x Height
         self.main = MainVisual(parent)
 
         
