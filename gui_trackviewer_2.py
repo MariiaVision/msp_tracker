@@ -55,8 +55,8 @@ class MainVisual(tk.Frame):
         self.movie=[] # matrix with data
         self.membrane_movie=[]
         self.track_data_original={}
-        self.track_data={} # original tracking data
-        self.track_data_filtered={}  # filtered tracking data  
+        self.track_data={'tracks':[]} # original tracking data
+        self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
         #filter parameters
         self.filter_duration=[0, 1000]
@@ -84,7 +84,8 @@ class MainVisual(tk.Frame):
         
         self.button2 = tk.Button(text="Select file with tracks", command=self.select_track, width=30)
         self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-
+        #update the list
+        self.list_update()  
 #        self.buttonShow = tk.Button(text="Show tracks", command=self.show_tracks, width=30)
 #        self.buttonShow.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)  
 
@@ -167,9 +168,11 @@ class MainVisual(tk.Frame):
         
         # fusion events and statistics
         
-        self.buttonFilter = tk.Button(text="Fusion events", command=self.find_fusion, width=10)
-        self.buttonFilter.grid(row=4, column=6, columnspan=3,  pady=self.pad_val, padx=self.pad_val)           
+        self.buttonFilter = tk.Button(text="Fusion events: distance", command=self.find_fusion, width=20)
+        self.buttonFilter.grid(row=4, column=7, columnspan=2,  pady=self.pad_val, padx=self.pad_val)           
         
+        self.fusion_distance = tk.Entry(root, width=10)
+        self.fusion_distance.grid(row=4, column=9, pady=self.pad_val, padx=self.pad_val)     
         
         # button to update changes
         
@@ -226,11 +229,18 @@ class MainVisual(tk.Frame):
         print("fusion event detection ....")
         
 
-        membrane_movie_deliated=sp.ndimage.binary_dilation(self.membrane_movie, iterations=1)
+#        membrane_movie_deliated=sp.ndimage.binary_dilation(self.membrane_movie, iterations=1)
         
         # detect events
         
-        event_count=FusionEvent(self.movie, self.movie, membrane_movie_deliated, self.track_data_filtered)
+        event_count=FusionEvent(self.movie, self.movie, self.membrane_movie, self.track_data_filtered)
+        
+        # assign the distance value
+        if self.fusion_distance.get()=='':
+            event_count.distance_to_membrane==0
+        else:
+            event_count.distance_to_membrane=float(self.fusion_distance.get())
+            
         self.track_data_filtered=event_count.find_fusion()
         
         # DrawingArea
@@ -261,8 +271,10 @@ class MainVisual(tk.Frame):
             save_file += ".avi"
         print("path: ", save_file)
         out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc('M','J','P','G'), 4.0, (self.movie.shape[1],self.movie.shape[2]))
+        
+
         for frameN in range(0, length):
-#            print("frame ", frameN)        
+            print("frame ", frameN)        
             plot_info=self.track_data_framed['frames'][frameN]['tracks']
             frame_img=self.movie[frameN,:,:]
             membrane_img=self.membrane_movie[frameN,:,:]
@@ -312,6 +324,7 @@ class MainVisual(tk.Frame):
 #            save_file += ".tif"
 #        imageio.volwrite(save_file, final_img_set)
         cv2.destroyAllWindows()
+        
         print("movie location: ", save_file)
     def jump_to(self):
         

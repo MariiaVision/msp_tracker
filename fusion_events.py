@@ -25,10 +25,11 @@ class FusionEvent(object):
         """
         self.tracks=tracks # output tracks
         self.membrane_movie=membrane_movie
-        if len(membrane_mask.shape)==3:
-            self.membrane_mask=self.register_cam1(membrane_mask)
-        else:
+        
+        if len(membrane_mask.shape)!=3:
             self.membrane_mask=np.ones(cargo_movie.shape)*membrane_mask
+        else:
+            self.membrane_mask=membrane_mask
             
         self.cargo_movie=cargo_movie
         self.fusion_events=[]
@@ -39,6 +40,7 @@ class FusionEvent(object):
         self.max_movement=1.5 # maximum movement which is counted as standing
         
         self.frame_freq=4
+        self.distance_to_membrane=0 # minimum ditsnce to the membrane mask
         #parameters to estimate
         self.final_stop_length_array=[]
         self.max_displacement_array=[]
@@ -155,6 +157,7 @@ class FusionEvent(object):
         look thorugh all the track and
         find the tracks which ends at the membrane 
         '''
+        print("distance_to_membrane -  ",self.distance_to_membrane)
         count=0
         for trackID in range(0, len(self.tracks['tracks'])):
             track=self.tracks['tracks'][trackID]
@@ -163,9 +166,13 @@ class FusionEvent(object):
             if len(track['trace'])>self.track_length_min and len(track['trace'])<self.track_length_max: 
                 point=track['trace'][-1]
                 
+                # calculate mask location and min distance                
+                membrane_coordinates=np.argwhere(self.membrane_mask[track['frames'][-1],:,:]==1)
+                distance_m=np.sqrt((np.asarray(membrane_coordinates)[:,0]-point[0])**2+(np.asarray(membrane_coordinates)[:,1]-point[1])**2)
+                on_membrane_val=np.min(distance_m)<=self.distance_to_membrane
 
-                
-                if self.membrane_mask[track['frames'][-1], point[0], point[1]]:
+#                if self.membrane_mask[track['frames'][-1], point[0], point[1]]:
+                if on_membrane_val==True:
                     count+=1
                     stand_time=self.calculate_stand_length(track['trace'],0)
                     vespeed=self.speed_calculation(track['trace'], track['frames'])
@@ -185,7 +192,7 @@ class FusionEvent(object):
                     self.duration_array.append(len(track['trace']))
                     self.max_displacement_array.append(max_disp)
                     
-        print(" \n ----------- \n Total number of fusion events: ", count)
+        print(" Total number of fusion events: ", count, " \n ----------- \n")
         
         #plotting histograms
         fig, axes = plt.subplots(2,3) #, sharex=True, sharey=True)
