@@ -252,18 +252,27 @@ class MainVisual(tk.Frame):
         
     def save_movie(self):
         length=self.movie.shape[0]
-        final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
-    
+#        final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
+        
+        # request file name
+        save_file = tk.filedialog.asksaveasfilename() 
+
+        if not(save_file.endswith(".avi")):
+            save_file += ".avi"
+        print("path: ", save_file)
+        out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc('M','J','P','G'), 4.0, (self.movie.shape[1],self.movie.shape[2]))
         for frameN in range(0, length):
 #            print("frame ", frameN)        
             plot_info=self.track_data_framed['frames'][frameN]['tracks']
             frame_img=self.movie[frameN,:,:]
+            membrane_img=self.membrane_movie[frameN,:,:]
             # Make a colour image frame
             orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
     
-            orig_frame [:,:,0] = frame_img/np.max(frame_img)*256
-            orig_frame [:,:,1] = frame_img/np.max(frame_img)*256
-            orig_frame [:,:,2] = frame_img/np.max(frame_img)*256
+            img=frame_img/np.max(frame_img)+membrane_img*0.2
+            orig_frame [:,:,0] = img/np.max(img)*256
+            orig_frame [:,:,1] = img/np.max(img)*256
+            orig_frame [:,:,2] = img/np.max(img)*256
             
             for p in plot_info:
                 trace=p['trace']
@@ -281,24 +290,29 @@ class MainVisual(tk.Frame):
                         y2 = int(point2[0])                        
                         cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
                                  self.color_list[clr], 1)
-
+                        
             # Display the resulting tracking frame
             cv2.imshow('Tracking', orig_frame)
+            # write the flipped frame
+            out.write(np.uint8(orig_frame))
+
+            
+        out.release()
 
             ################### to save #################
-            final_img_set[frameN,:,:,:]=orig_frame
+#            final_img_set[frameN,:,:,:]=orig_frame
             
         
                 # save results
-        save_file = tk.filedialog.asksaveasfilename()
+#        save_file = tk.filedialog.asksaveasfilename()
         
-        final_img_set=final_img_set/np.max(final_img_set)*255
-        final_img_set=final_img_set.astype('uint8')
-        if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
-            save_file += ".tif"
-        imageio.volwrite(save_file, final_img_set)
+#        final_img_set=final_img_set/np.max(final_img_set)*255
+#        final_img_set=final_img_set.astype('uint8')
+#        if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
+#            save_file += ".tif"
+#        imageio.volwrite(save_file, final_img_set)
         cv2.destroyAllWindows()
-        
+        print("movie location: ", save_file)
     def jump_to(self):
         
         if self.txt_jump_to.get()!='':
@@ -408,7 +422,7 @@ class MainVisual(tk.Frame):
         self.track_data_filtered={}
         self.track_data_filtered.update({'tracks':[]})
         
-        # check through the 
+        # check through the tracks
         for p in self.track_data['tracks']:
             
             # check length
@@ -455,7 +469,7 @@ class MainVisual(tk.Frame):
             
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
-            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie)
+            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie)
             
             
         def detele_track_question():
@@ -674,7 +688,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the individual track viewer
     '''
-    def __init__(self, master, track_data, movie):
+    def __init__(self, master, track_data, movie, membrane_movie):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -685,6 +699,7 @@ class TrackViewer(tk.Frame):
         # save important data
         self.track_data=track_data
         self.movie=movie
+        self.membrane_movie=membrane_movie
         self.frames=track_data['frames']
         self.trace=track_data['trace']
         self.id=track_data['trackID']
@@ -699,6 +714,7 @@ class TrackViewer(tk.Frame):
         
         self.pixN_basic=100 # margin size 
         
+        self.moemebrane_switch=0 # switch between membrane and no membrane
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
         
@@ -739,18 +755,33 @@ class TrackViewer(tk.Frame):
         
         
     # information
-        text1 = tk.Label(master=self.viewer, text=" duration : "+str(self.frames[-1]-self.frames[0]+1) +" frames", width=20, bg='white')
+        text1 = tk.Label(master=self.viewer, text=" duration : "+str(self.frames[-1]-self.frames[0]+1) +" frames", width=20, bg='white', font=("Times", 10))
         text1.grid(row=0, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
-        text1 = tk.Label(master=self.viewer, text=" stop duration : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=20, bg='white')
+        text1 = tk.Label(master=self.viewer, text=" stop duration : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=20, bg='white', font=("Times", 10))
         text1.grid(row=0, column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
-        text1 = tk.Label(master=self.viewer, text=" speed : "+str(round(self.calculate_speed(self.trace, self.frames),2))+ " pix/sec", width=20, bg='white')
+        text1 = tk.Label(master=self.viewer, text=" speed : "+str(round(self.calculate_speed(self.trace, self.frames),2))+ " pix/sec", width=20, bg='white', font=("Times", 10))
         text1.grid(row=1, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
 
-        text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=20, bg='white')
+        text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=20, bg='white', font=("Times", 10))
         text1.grid(row=1 , column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
           
+#    # # # # # # filter choice:membrane on/off # # # # # # #   
+        var_membrane = tk.IntVar()
+        
+        def update_membrane_switch():            
+            self.moemebrane_switch=var_membrane.get()
+            # change image
+            self.plot_image()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.M1 = tk.Radiobutton(master=self.viewer, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
+        self.M1.grid(row=2, column=3, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.M2 = tk.Radiobutton(master=self.viewer, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
+        self.M2.grid(row=2, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        
     # plotting switch 
         var = tk.IntVar()
         def update_monitor_plot():            
@@ -759,10 +790,10 @@ class TrackViewer(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=0, bg='white', command =update_monitor_plot )
-        self.R1.grid(row=1, column=3)  
+        self.R1.grid(row=1, column=3, pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=4)
+        self.R2.grid(row=1, column=4, pady=self.pad_val, padx=self.pad_val)
         
     
 #       calculate parameters
@@ -1032,14 +1063,16 @@ class TrackViewer(tk.Frame):
     def plot_image(self):
         
         # plot image
+        
 
         fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
         fig.tight_layout()
         
-        
-        img=self.movie[self.frame_pos,:,:]
-        
+        if self.moemebrane_switch==0:
+            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        else:
+            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+0.1*self.membrane_movie[self.frame_pos,:,:]
         #calculate window position
         
         left_point_y=np.min(np.asarray(self.trace)[:,1])-self.pixN_basic
@@ -1099,7 +1132,7 @@ class TrackViewer(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val, columnspan=3)   
+        canvas.get_tk_widget().grid(row=4, column=2, pady=self.pad_val, padx=self.pad_val, columnspan=3)   
         
         def callback(event):
             print(event.x,"  " ,event.y)
