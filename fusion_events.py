@@ -37,7 +37,7 @@ class FusionEvent(object):
         # parameters for detection
         self.track_length_min=2
         self.track_length_max=5000
-        self.max_movement=1.5 # maximum movement which is counted as standing
+        self.max_movement_stay=1 # maximum movement which is counted as standing
         
         self.frame_freq=4
         self.distance_to_membrane=0 # minimum ditsnce to the membrane mask
@@ -111,45 +111,66 @@ class FusionEvent(object):
         return speed
     
     
-    def calculate_stand_length(self, trajectory, plot_var=0):
+    def calculate_stand_length(self, trajectory, frames, max_movement_stay):
         '''
         calculate length of the standing at the end
         '''
+        
+        # add missing frames ( in case any )
+        pos=0
+        new_frames=[]
+        new_trace=[]
+        for frame_pos in range(frames[0], frames[-1]+1):
+            frame=frames[pos]
+            
+            if frame_pos==frame:
+                new_frames.append(frame_pos)
+                new_trace.append(trajectory[pos])
+                pos=pos+1
+            else:
+                new_frames.append(frame_pos)
+                new_trace.append(trajectory[pos])  
+                
+        # find displacement in respect to end point
         # separated arrays for coordinates
-        x=np.asarray(trajectory)[:,0]    
-        y=np.asarray(trajectory)[:,1]    
+        x=np.asarray(new_trace)[:,0]    
+        y=np.asarray(new_trace)[:,1]    
         
         # end coordinates
-        x_e=np.asarray(trajectory)[-1,0]
-        y_e=np.asarray(trajectory)[-1,1]     
+        x_e=np.asarray(new_trace)[-1,0]
+        y_e=np.asarray(new_trace)[-1,1]     
         
         sqr_disp_back=np.sqrt((x-x_e)**2+(y-y_e)**2)
         position=np.array(range(len(sqr_disp_back)))
 
         sqr_disp_back=sqr_disp_back[::-1]
-        displacement_gaussian_3_end=gaussian_filter1d(sqr_disp_back, 3)
-
         #count for how long it doesn't exceed movement threshold
-        movement_array=position[displacement_gaussian_3_end>self.max_movement]
+        movement_array=position[sqr_disp_back>max_movement_stay]-1
+
+        # find frame based displacements
+        x_from=np.asarray(trajectory)[0:-1,0] 
+        y_from=np.asarray(trajectory)[0:-1,1] 
+        x_to=np.asarray(trajectory)[1:,0] 
+        y_to=np.asarray(trajectory)[1:,1] 
+        distance_frame_based=np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)
+        position=np.array(range(len(distance_frame_based)))
         
-        if len(movement_array)>0:           
+        #invert order
+        distance_frame_based=distance_frame_based[::-1]
+        displacement_array=position[distance_frame_based>max_movement_stay]
+        print(sqr_disp_back)
+        print(distance_frame_based)
+
+        
+        if len(movement_array)>0 and len(displacement_array)>0:  
+            stand_time=np.min([movement_array[0], displacement_array[0]])
+        elif len(movement_array)>0 and len(displacement_array)==0:
             stand_time=movement_array[0]
+        elif len(movement_array)==0 and len(displacement_array)>0:
+            stand_time=displacement_array[0]
         else:
-            stand_time=0
-        
-        if plot_var==1:
-            time=np.arange(0,len(trajectory))
-            plt.figure()
-            plt.plot(time, displacement_gaussian_3_end, 'r-', label='gaussian ')
-            plt.plot(time,sqr_disp_back, 'g-', label='desplacement from the back')
-            plt.plot(time, self.calculate_displacement(trajectory), 'b-', label=' original desplacement')
-            plt.xlabel('frames')
-            plt.ylabel('displacement')
-            plt.title(str(stand_time))
-            plt.legend()
-            plt.show() 
-        
-        
+            stand_time=frames[-1]-frames[0]+1
+            
         return stand_time
      
     def find_fusion(self):

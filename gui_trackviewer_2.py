@@ -29,6 +29,7 @@ import json
 import cv2
 import imageio
 import math
+from skimage.feature import peak_local_max
 
 from fusion_events import FusionEvent 
 
@@ -74,6 +75,8 @@ class MainVisual(tk.Frame):
         self.deleted_tracks_N=0
         self.created_tracks_N=0
         self.filtered_tracks_N=0
+        
+        self.max_movement_stay=1.0
      # # # # # # menu to choose files and print data # # # # # #
         
         self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=30)
@@ -86,6 +89,7 @@ class MainVisual(tk.Frame):
         self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         #update the list
         self.list_update()  
+        
 #        self.buttonShow = tk.Button(text="Show tracks", command=self.show_tracks, width=30)
 #        self.buttonShow.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)  
 
@@ -142,7 +146,7 @@ class MainVisual(tk.Frame):
 
 
         # Length       
-        lbl3 = tk.Label(master=root, text="Length (pix): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Max distance (pix): from ", width=30, bg='white')
         lbl3.grid(row=2, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
         self.txt_length_from.grid(row=2, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -257,8 +261,8 @@ class MainVisual(tk.Frame):
         self.track_to_frame()
         
         #update the list
-        self.list_update()        
-        
+        self.list_update()    
+              
         
     def save_movie(self):
         length=self.movie.shape[0]
@@ -446,8 +450,8 @@ class MainVisual(tk.Frame):
                 # check maximum displacement between any two positions in track
                 track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
                 # check stop length
-                fusion_event=FusionEvent()
-                track_stop=fusion_event.calculate_stand_length(p['trace'])
+
+                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)
                 
             else:
                 track_duration=0
@@ -482,7 +486,7 @@ class MainVisual(tk.Frame):
             
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
-            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie)
+            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie, self.max_movement_stay)
             
             
         def detele_track_question():
@@ -580,10 +584,10 @@ class MainVisual(tk.Frame):
         # show the list of data with scroll bar
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
-        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
 
         listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12), selectmode='single')
-        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S,padx=self.pad_val)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<Double-1>', tracklist_on_select)
 
@@ -632,7 +636,7 @@ class MainVisual(tk.Frame):
         lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         
         # create a none-membrane movie
-        self.membrane_movie=np.zeros(self.movie.shape)
+        self.membrane_movie=np.ones(self.movie.shape)
         
         # plot image
         self.show_tracks()
@@ -701,7 +705,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the individual track viewer
     '''
-    def __init__(self, master, track_data, movie, membrane_movie):
+    def __init__(self, master, track_data, movie, membrane_movie, max_movement_stay):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -722,10 +726,11 @@ class TrackViewer(tk.Frame):
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
         
-        self.max_movement_stay=1.5 # evaluate stopped vesicle - movement within the threshold
+        self.max_movement_stay=max_movement_stay # evaluate stopped vesicle - movement within the threshold
         self.frame_freq=4 # movie frame rate
         
         self.pixN_basic=100 # margin size 
+        self.vesicle_patch_size=10
         
         self.moemebrane_switch=0 # switch between membrane and no membrane
         
@@ -754,8 +759,13 @@ class TrackViewer(tk.Frame):
         
         self.plot_displacement()
         
+        # plot intensity graph
+        self.intensity_calculation()
+        
         # plot parameters
         self.show_parameters()
+        
+        
         
         buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
         buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
@@ -807,51 +817,7 @@ class TrackViewer(tk.Frame):
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
         self.R2.grid(row=1, column=3, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
         
-    
-#       calculate parameters
-    def calculate_stand_length(self, trajectory, frames):
-        '''
-        calculate length of the standing at the end
-        '''
-        
-        # add missing frames
-        pos=0
-        new_frames=[]
-        new_trace=[]
-        for frame_pos in range(frames[0], frames[-1]+1):
-            frame=frames[pos]
-            
-            if frame_pos==frame:
-                new_frames.append(frame_pos)
-                new_trace.append(trajectory[pos])
-                pos=pos+1
-            else:
-                new_frames.append(frame_pos)
-                new_trace.append(trajectory[pos])  
-                
-        # separated arrays for coordinates
-        x=np.asarray(new_trace)[:,0]    
-        y=np.asarray(new_trace)[:,1]    
-        
-        # end coordinates
-        x_e=np.asarray(new_trace)[-1,0]
-        y_e=np.asarray(new_trace)[-1,1]     
-        
-        sqr_disp_back=np.sqrt((x-x_e)**2+(y-y_e)**2)
-        position=np.array(range(len(sqr_disp_back)))
 
-        sqr_disp_back=sqr_disp_back[::-1]
-        displacement_gaussian_3_end=gaussian_filter1d(sqr_disp_back, 3)
-
-        #count for how long it doesn't exceed movement threshold
-        movement_array=position[displacement_gaussian_3_end>self.max_movement_stay]
-        
-        if len(movement_array)>0:  
-            stand_time=movement_array[0]
-        else:
-            stand_time=frames[-1]-frames[0]+1
-
-        return stand_time/self.frame_freq
 
     def calculate_speed(self, trajectory, frames):
         '''
@@ -869,7 +835,7 @@ class TrackViewer(tk.Frame):
         disp=np.sum(sqr_disp_back)
         
         # frames        
-        time=(frames[-1]-frames[0]+1)/self.frame_freq
+        time=(frames[-1]-frames[0]+1)
         
         #speed        
         speed=disp/time
@@ -887,46 +853,7 @@ class TrackViewer(tk.Frame):
          
         return int(math.degrees(math.atan2(changeInY,changeInX)) )
 
-        
-    def plot_displacement(self):
-        trajectory=self.trace
-        
-        #calculate the displacement
-        x=np.asarray(trajectory)[:,0]    
-        y=np.asarray(trajectory)[:,1]
-        x_0=np.asarray(trajectory)[0,0]
-        y_0=np.asarray(trajectory)[0,1]
-        
-        x_e=np.asarray(trajectory)[-1,0]
-        y_e=np.asarray(trajectory)[-1,1]
-        
-        self.displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)
-        #calculate all type of displacements
-        # max displacement
-        self.max_displacement=np.round(np.max(self.displacement_array),2)
-        
-        # displacement from start to the end
-        self.net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)
-        
-        # total displacement
-        x_from=np.asarray(trajectory)[0:-1,0] 
-        y_from=np.asarray(trajectory)[0:-1,1] 
-        x_to=np.asarray(trajectory)[1:,0] 
-        y_to=np.asarray(trajectory)[1:,1] 
-        self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
-        
-        fig = plt.figure(figsize=(3,4))
 
-        fig.tight_layout()
-        
-        self.im = plt.plot(self.frames, self.displacement_array)
-        plt.xlabel('frames')
-        plt.ylabel('displacement (px)')
-        
-        # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)   
 
         
     def change_position(self):
@@ -936,7 +863,7 @@ class TrackViewer(tk.Frame):
         self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=40, bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
-        self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=15, bg='white')
+        self.lbpose = tk.Label(master=self.viewer, text=" x, y ", width=15, bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
         self.txt_position = tk.Entry(self.viewer, width=15)
@@ -958,6 +885,7 @@ class TrackViewer(tk.Frame):
         
         self.plot_image()
         self.plot_displacement()
+        self.intensity_calculation()
         self.show_parameters()
         self.action_cancel()
         
@@ -1017,9 +945,10 @@ class TrackViewer(tk.Frame):
         
         self.plot_image()
         self.plot_displacement()
+        self.intensity_calculation()
         self.show_parameters()
         self.action_cancel()
-
+        self.intensity_calculation()
         
     def add_position(self): 
         
@@ -1074,6 +1003,7 @@ class TrackViewer(tk.Frame):
         
         self.plot_image()
         self.plot_displacement()
+        self.intensity_calculation()
         self.show_parameters()
         # remove the widgets
         self.action_cancel()
@@ -1085,14 +1015,14 @@ class TrackViewer(tk.Frame):
             self.frame_pos-=1
         self.plot_image()
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)
+        lbframe.grid(row=5, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.plot_image()   
         lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)              
+        lbframe.grid(row=5, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)              
     
     
     def plot_image(self):
@@ -1163,6 +1093,7 @@ class TrackViewer(tk.Frame):
             plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
             
             plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
+        plt.title("Displacement")
 
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
@@ -1189,33 +1120,20 @@ class TrackViewer(tk.Frame):
 #        listNodes_parameters.itemconfig(1, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Maximum distance traveled        "+str(self.max_displacement)+" px")
         
-        listNodes_parameters.insert(tk.END, " Total trajectory time            "+str((self.frames[-1]-self.frames[0]+1)/self.frame_freq)+" sec")
+        listNodes_parameters.insert(tk.END, " Total trajectory time            "+str((self.frames[-1]-self.frames[0]+1))+" frames")
 
-        listNodes_parameters.insert(tk.END, " Stop duration                    "+str(self.calculate_stand_length(self.trace, self.frames))+" sec")
+        listNodes_parameters.insert(tk.END, " Stop duration                    "+str(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay))+" frames")
 #        listNodes_parameters.itemconfig(3, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Net direction                    "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed           "+str(round(self.calculate_speed(self.trace, self.frames),2))+" px/frames")
-
+        listNodes_parameters.insert(tk.END, " Mean  speed                      "+str(round(self.calculate_speed(self.trace, self.frames),2))+" px/frame")
+#Mean curvilinear speed
 #        listNodes_parameters.insert(tk.END, " Mean straight-line speed         "+str(0.00)+" px/frames")
 
 #        listNodes_parameters.insert(tk.END, " Linearity of forward progression "+str(0.00))
 
 #        listNodes_parameters.insert(tk.END, " Confinement ration               "+str(0.00))          
 
-
-#    # information
-#        text1 = tk.Label(master=self.viewer, text=" duration : "+str(self.frames[-1]-self.frames[0]+1) +" frames", width=20, bg='white', font=("Times", 10))
-#        text1.grid(row=0, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
-#
-#        text1 = tk.Label(master=self.viewer, text=" stop duration : "+str(self.calculate_stand_length(self.trace, self.frames))+ " frames", width=20, bg='white', font=("Times", 10))
-#        text1.grid(row=0, column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
-#
-#        text1 = tk.Label(master=self.viewer, text=" speed : "+str(round(self.calculate_speed(self.trace, self.frames),2))+ " pix/sec", width=20, bg='white', font=("Times", 10))
-#        text1.grid(row=1, column=9, columnspan=2, pady=self.pad_val, padx=self.pad_val)    
-#
-#        text1 = tk.Label(master=self.viewer, text=" direction : "+str(self.calculate_direction(self.trace))+ " degrees", width=20, bg='white', font=("Times", 10))
-#        text1.grid(row=1 , column=11, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
         
     def show_list(self): 
         
@@ -1227,10 +1145,10 @@ class TrackViewer(tk.Frame):
         lbend.grid(row=1, column=5, columnspan=3, pady=self.pad_val, padx=self.pad_val)
         
         scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
-        scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
         
         listNodes = tk.Listbox(master=self.viewer, width=30, height=30, font=("Times", 12), selectmode='single')
-        listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
         scrollbar.config(command=listNodes.yview)
@@ -1238,8 +1156,147 @@ class TrackViewer(tk.Frame):
        # plot the track positions
         for i in range(0, len(self.frames)):
              # add to the list
-            listNodes.insert(tk.END, "frame: "+str(self.frames[i])+"  position: "+str(self.trace[i]))                        
+            listNodes.insert(tk.END, "frame: "+str(self.frames[i])+"  position: "+str(self.trace[i]))     
 
+
+
+
+
+        
+    def intensity_calculation(self):
+        '''
+        Calculates changes in intersity for the given the track
+        and plot it into a canva
+        '''
+        trace=self.trace
+        frames=self.frames
+        patch_size=self.vesicle_patch_size
+        def img_segmentation(img_segment, int_size, box_size):
+            '''
+            the function segments the image based on the thresholding and watershed segmentation
+            the only center part of the segmented part is taked into account.
+            '''
+    
+        # calculate threshold based on the centre
+            threshold=np.mean(img_segment[int(box_size/2-int_size):int(box_size/2+int_size), int(box_size/2-int_size):int(box_size/2+int_size)])
+        #    thresholding to get the mask
+            mask=np.zeros(np.shape(img_segment))
+            mask[img_segment>threshold]=1
+        
+            # separate the objects in image
+        ## Generate the markers as local maxima of the distance to the background
+            distance = sp.ndimage.distance_transform_edt(mask)
+            local_maxi = peak_local_max(distance, indices=False, footprint=np.ones((3, 3)), labels=mask)
+            markers = sp.ndimage.label(local_maxi)[0]
+        
+            # segment the mask
+            segment = skimage.morphology.watershed(-distance, markers, mask=mask)
+           
+        # save the segment which is only in the centre
+            val=segment[int(box_size/2), int(box_size/2)]
+            segment[segment!=val]=0
+            segment[segment==val]=1
+    
+            return segment
+        
+        #extract images
+        track_img=np.zeros((len(trace),patch_size,patch_size))
+        
+        intensity_array_1=[]
+        intensity_array_2=[]
+        #
+        
+        check_boarder=0 # variable for the
+        for N in range(0,len(frames)):
+            frameN=frames[N]
+            point=trace[N]
+            x_min=int(point[0]-patch_size/2)
+            x_max=int(point[0]+patch_size/2)
+            y_min=int(point[1]-patch_size/2)
+            y_max=int(point[1]+patch_size/2)
+            
+            if x_min>0 and y_min>0 and x_max<self.movie.shape[1] and y_max<self.movie.shape[2]:
+                
+                # create img
+                track_img[N,:,:]= self.movie[frameN, x_min:x_max, y_min:y_max]
+                #segment img
+                int_size=5
+                segmented_vesicle=img_segmentation(track_img[N,:,:]/np.max(track_img[N,:,:]), int_size, patch_size)
+                #calculate mean intensity inside the segment
+                
+                intensity_1=np.sum(track_img[N,:,:]*segmented_vesicle)/np.sum(segmented_vesicle)
+                intensity_2=np.sum(track_img[N,:,:])/(patch_size*patch_size)
+                intensity_array_1.append(intensity_1)
+                intensity_array_2.append(intensity_2)
+            else:
+                check_boarder=1
+                intensity_array_1.append(0)
+                intensity_array_2.append(0)
+        
+        # plotting
+        fig1 = plt.figure()     
+        fig1.tight_layout()
+        plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-g", label="segmented vesicle")
+#        self.im =  plt.plot(frames, intensity_array_2/np.max(intensity_array_2), "-r", frames, intensity_array_1/np.max(intensity_array_1), "-g")
+#        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
+        plt.xlabel("frames", fontsize='small')
+        plt.ylabel("intensity", fontsize='small')
+        plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-r", label="without segmentation")
+        if check_boarder==0:
+            plt.title('Vesicle intensity', fontsize='small')
+        else:
+            plt.title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
+        plt.legend(fontsize='small')   
+        plt.ylim(top = 1.1, bottom = 0)            
+        
+        # DrawingArea
+        canvas1 = FigureCanvasTkAgg(fig1, master=self.viewer)
+        canvas1.draw()
+        canvas1.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)  
+                     
+        
+    def plot_displacement(self):
+        trajectory=self.trace
+        
+        #calculate the displacement
+        x=np.asarray(trajectory)[:,0]    
+        y=np.asarray(trajectory)[:,1]
+        x_0=np.asarray(trajectory)[0,0]
+        y_0=np.asarray(trajectory)[0,1]
+        
+        x_e=np.asarray(trajectory)[-1,0]
+        y_e=np.asarray(trajectory)[-1,1]
+        
+        self.displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)
+        #calculate all type of displacements
+        # max displacement
+        self.max_displacement=np.round(np.max(self.displacement_array),2)
+        
+        # displacement from start to the end
+        self.net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)
+        
+        # total displacement
+        x_from=np.asarray(trajectory)[0:-1,0] 
+        y_from=np.asarray(trajectory)[0:-1,1] 
+        x_to=np.asarray(trajectory)[1:,0] 
+        y_to=np.asarray(trajectory)[1:,1] 
+        self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
+        
+        fig = plt.figure()
+
+        fig.tight_layout()
+        
+        self.im = plt.plot(self.frames, self.displacement_array)
+        plt.xlabel('frames', fontsize='small')
+        plt.ylabel('displacement (px)', fontsize='small')
+        plt.title('Displacement', fontsize='small')
+        
+        # DrawingArea
+        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
+        canvas.draw()
+        canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
+        
+        
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
