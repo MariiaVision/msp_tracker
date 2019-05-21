@@ -158,8 +158,6 @@ class FusionEvent(object):
         #invert order
         distance_frame_based=distance_frame_based[::-1]
         displacement_array=position[distance_frame_based>max_movement_stay]
-        print(sqr_disp_back)
-        print(distance_frame_based)
 
         
         if len(movement_array)>0 and len(displacement_array)>0:  
@@ -195,7 +193,8 @@ class FusionEvent(object):
 #                if self.membrane_mask[track['frames'][-1], point[0], point[1]]:
                 if on_membrane_val==True:
                     count+=1
-                    stand_time=self.calculate_stand_length(track['trace'],0)
+                    #trajectory, frames, max_movement_stay
+                    stand_time=self.calculate_stand_length(track['trace'], track['frames'], self.max_movement_stay)
                     vespeed=self.speed_calculation(track['trace'], track['frames'])
                     max_disp=np.max(self.calculate_displacement(track['trace'],0))
 #                    print("\n", track['trackID'])

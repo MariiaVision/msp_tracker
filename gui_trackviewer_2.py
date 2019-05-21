@@ -68,7 +68,7 @@ class MainVisual(tk.Frame):
         self.movie_length=0
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.moemebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
-        self.pad_val=5
+        self.pad_val=1
         # 
         self.figsize_value=(4,4) # image sizeS
         # 
@@ -79,10 +79,10 @@ class MainVisual(tk.Frame):
         self.max_movement_stay=1.0
      # # # # # # menu to choose files and print data # # # # # #
         
-        self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=30)
+        self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=20)
         self.button_mv.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
-        self.button_mm = tk.Button(text="   Select membrane movie   ", command=self.select_membrane_movie, width=30)
+        self.button_mm = tk.Button(text="   Select membrane movie   ", command=self.select_membrane_movie, width=20)
         self.button_mm.grid(row=0, column=2, columnspan=2,pady=self.pad_val, padx=self.pad_val)
         
         self.button2 = tk.Button(text="Select file with tracks", command=self.select_track, width=30)
@@ -721,7 +721,7 @@ class TrackViewer(tk.Frame):
         self.trace=track_data['trace']
         self.id=track_data['trackID']
         self.frame_pos=track_data['frames'][0]
-        self.figsize_value=(5,5) # figure size
+        self.figsize_value=(5,3) # figure size
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
@@ -744,7 +744,7 @@ class TrackViewer(tk.Frame):
         
         # interface settings
         
-        self.pad_val=5
+        self.pad_val=1
         
         
      # # # lay out of the frame
@@ -860,10 +860,10 @@ class TrackViewer(tk.Frame):
         
         self.action_cancel()
 
-        self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=40, bg='white')
+        self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=30, bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
-        self.lbpose = tk.Label(master=self.viewer, text=" x, y ", width=15, bg='white')
+        self.lbpose = tk.Label(master=self.viewer, text=" x, y ", width=10, bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
         self.txt_position = tk.Entry(self.viewer, width=15)
@@ -1147,7 +1147,7 @@ class TrackViewer(tk.Frame):
         scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
         scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=self.viewer, width=30, height=30, font=("Times", 12), selectmode='single')
+        listNodes = tk.Listbox(master=self.viewer, width=30, font=("Times", 10), selectmode='single')
         listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
@@ -1234,12 +1234,12 @@ class TrackViewer(tk.Frame):
                 intensity_array_2.append(0)
         
         # plotting
-        fig1 = plt.figure()     
-        fig1.tight_layout()
+        fig1 = plt.figure(figsize=self.figsize_value)
+        #        fig1.tight_layout()
         plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-g", label="segmented vesicle")
 #        self.im =  plt.plot(frames, intensity_array_2/np.max(intensity_array_2), "-r", frames, intensity_array_1/np.max(intensity_array_1), "-g")
 #        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
-        plt.xlabel("frames", fontsize='small')
+#plt.xlabel("frames", fontsize='small')
         plt.ylabel("intensity", fontsize='small')
         plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-r", label="without segmentation")
         if check_boarder==0:
@@ -1282,12 +1282,12 @@ class TrackViewer(tk.Frame):
         y_to=np.asarray(trajectory)[1:,1] 
         self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
         
-        fig = plt.figure()
+        fig = plt.figure(figsize=self.figsize_value)
 
-        fig.tight_layout()
+        #fig.tight_layout()
         
         self.im = plt.plot(self.frames, self.displacement_array)
-        plt.xlabel('frames', fontsize='small')
+        #       plt.xlabel('frames', fontsize='small')
         plt.ylabel('displacement (px)', fontsize='small')
         plt.title('Displacement', fontsize='small')
         
@@ -1305,8 +1305,13 @@ class MainApplication(tk.Frame):
 #        parent.geometry("1200x1000") #Width x Height
         self.main = MainVisual(parent)
 
+        parent.protocol('WM_DELETE_WINDOW', self.close_app)
+
+        tk.mainloop()
+
+    def close_app(self):
+        self.quit()
         
 if __name__ == "__main__":
     root = tk.Tk()
     MainApplication(root)
-    root.mainloop()
