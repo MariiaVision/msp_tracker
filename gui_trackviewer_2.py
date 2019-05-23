@@ -270,66 +270,105 @@ class MainVisual(tk.Frame):
         
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
-
-        if not(save_file.endswith(".avi")):
-            save_file += ".avi"
-        print("path: ", save_file)
-        out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc('M','J','P','G'), 4.0, (self.movie.shape[1],self.movie.shape[2]))
         
+        if self.movie.shape[1]<200 and self.movie.shape[2]<200:
+            #save tiff file for small cell solution
+            final_img_set=np.zeros((self.movie.shape[0],self.movie.shape[1],self.movie.shape[2], 3))
 
-        for frameN in range(0, length):
-            print("frame ", frameN)        
-            plot_info=self.track_data_framed['frames'][frameN]['tracks']
-            frame_img=self.movie[frameN,:,:]
-            membrane_img=self.membrane_movie[frameN,:,:]
-            # Make a colour image frame
-            orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
-    
-            img=frame_img/np.max(frame_img)+membrane_img*0.2
-            orig_frame [:,:,0] = img/np.max(img)*256
-            orig_frame [:,:,1] = img/np.max(img)*256
-            orig_frame [:,:,2] = img/np.max(img)*256
-            
-            for p in plot_info:
-                trace=p['trace']
-                trackID=p['trackID']
+            for frameN in range(0, length):
+          
+                plot_info=self.track_data_framed['frames'][frameN]['tracks']
+                frame_img=self.movie[frameN,:,:]
+                membrane_img=self.membrane_movie[frameN,:,:]
+                # Make a colour image frame
+                orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
+        
+                img=frame_img/np.max(frame_img)+membrane_img*0.2
+                orig_frame [:,:,0] = img/np.max(img)*256
+                orig_frame [:,:,1] = img/np.max(img)*256
+                orig_frame [:,:,2] = img/np.max(img)*256
                 
-                clr = trackID % len(self.color_list)
-                if (len(trace) > 1):
-                    for j in range(len(trace)-1):
-                        # Draw trace line
-                        point1=trace[j]
-                        point2=trace[j+1]
-                        x1 = int(point1[1])
-                        y1 = int(point1[0])
-                        x2 = int(point2[1])
-                        y2 = int(point2[0])                        
-                        cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                                 self.color_list[clr], 1)
-                        
-            # Display the resulting tracking frame
-            cv2.imshow('Tracking', orig_frame)
-            # write the flipped frame
-            out.write(np.uint8(orig_frame))
+                for p in plot_info:
+                    trace=p['trace']
+                    trackID=p['trackID']
+                    
+                    clr = trackID % len(self.color_list)
+                    if (len(trace) > 1):
+                        for j in range(len(trace)-1):
+                            # Draw trace line
+                            point1=trace[j]
+                            point2=trace[j+1]
+                            x1 = int(point1[1])
+                            y1 = int(point1[0])
+                            x2 = int(point2[1])
+                            y2 = int(point2[0])                        
+                            cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
+                                     self.color_list[clr], 1)
+                            
+                # Display the resulting tracking frame
+                cv2.imshow('Tracking', orig_frame)
+                final_img_set[frameN,:,:,:]=orig_frame
 
+            #save the file
+            final_img_set=final_img_set/np.max(final_img_set)*255
+            final_img_set=final_img_set.astype('uint8')
             
-        out.release()
+            if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
+                save_file += ".tif"
+                
+            imageio.volwrite(save_file, final_img_set)
+        else:
+            #save avi file for large movies
 
-            ################### to save #################
-#            final_img_set[frameN,:,:,:]=orig_frame
-            
+            if not(save_file.endswith(".avi")):
+                save_file += ".avi"
+
+    #        cv2.VideoWriter_fourcc(*'XVID')
+    #        cv2.VideoWriter_fourcc('M','J','P','G')
+            out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
+    
+            for frameN in range(0, length):
+          
+                plot_info=self.track_data_framed['frames'][frameN]['tracks']
+                frame_img=self.movie[frameN,:,:]
+                membrane_img=self.membrane_movie[frameN,:,:]
+                # Make a colour image frame
+                orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
         
-                # save results
-#        save_file = tk.filedialog.asksaveasfilename()
-        
-#        final_img_set=final_img_set/np.max(final_img_set)*255
-#        final_img_set=final_img_set.astype('uint8')
-#        if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
-#            save_file += ".tif"
-#        imageio.volwrite(save_file, final_img_set)
+                img=frame_img/np.max(frame_img)+membrane_img*0.2
+                orig_frame [:,:,0] = img/np.max(img)*256
+                orig_frame [:,:,1] = img/np.max(img)*256
+                orig_frame [:,:,2] = img/np.max(img)*256
+                
+                for p in plot_info:
+                    trace=p['trace']
+                    trackID=p['trackID']
+                    
+                    clr = trackID % len(self.color_list)
+                    if (len(trace) > 1):
+                        for j in range(len(trace)-1):
+                            # Draw trace line
+                            point1=trace[j]
+                            point2=trace[j+1]
+                            x1 = int(point1[1])
+                            y1 = int(point1[0])
+                            x2 = int(point2[1])
+                            y2 = int(point2[0])                        
+                            cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
+                                     self.color_list[clr], 1)
+                            
+                # Display the resulting tracking frame
+                cv2.imshow('Tracking', orig_frame)
+                # write the flipped frame
+                out.write(np.uint8(orig_frame))
+    
+                
+            out.release()
+
         cv2.destroyAllWindows()
         
         print("movie location: ", save_file)
+        
     def jump_to(self):
         
         if self.txt_jump_to.get()!='':
