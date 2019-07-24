@@ -14,7 +14,7 @@ the software visualises the detected tracks, provides statistics and allows trac
   - for fusion event detection select membrane (segmented membrane) 
 
 
-to do list:
+## to do list:
 - change from list to a table with sorting option
 - change plotting to grab the coordinates from the image
 - export excel file with tracks information
