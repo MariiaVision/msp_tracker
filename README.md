@@ -21,4 +21,5 @@ the software visualises the detected tracks, provides statistics and allows trac
 - project all the tracks on one frame
 - insert image resolution value and move from pix and frames
 - change to black and white colours
+- add visualisation of the membrane's skeleton
 - clean the code
