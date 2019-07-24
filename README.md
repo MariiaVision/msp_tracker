@@ -2,11 +2,10 @@
 GUI to review tracks
 
 to do list:
-- delete or add track 
-- multiple numbers in track ID filter
-- filter -> show fusion events
-- plot MSD, speed, direction, displacement, etc in the second window
-- change plotting
-- change data storage
-- fix tracks/no tracks switch on second window
+- change from list to a table with sorting option
+- change plotting to grab the coordinates from the image
+- export excel file with tracks information
+- project all the tracks on one frame
+- insert image resolution value and move from pix and frames
+- change to black and white colours
 - clean the code
