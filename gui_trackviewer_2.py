@@ -12,6 +12,8 @@ import copy
 import tkinter as tk
 from tkinter import filedialog
 
+import csv
+
 # for plotting
 import matplotlib
 matplotlib.use("TkAgg")
@@ -59,6 +61,10 @@ class MainVisual(tk.Frame):
         self.track_data={'tracks':[]} # original tracking data
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
+        self.stat_data=[] # stat data to save csv file
+        self.stat_data.append(['trackID', 'start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
+                                 ' Maximum distance travelled (nm)', ' Total distance travelled (nm)', ' Stop duration (sec)', 
+                                 ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
         #filter parameters
         self.filter_duration=[0, 1000]
         self.filter_length=[0, 10000]   
@@ -67,8 +73,11 @@ class MainVisual(tk.Frame):
         self.frame_pos=0
         self.movie_length=0
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.moemebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
+        self.memebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
         self.pad_val=1
+        
+        self.img_resolution=100 # resolution of the image, default is 100 nm/pix 
+        self.frame_rate=4 # frame rate, default is 4 f/s
         # 
         self.figsize_value=(4,4) # image sizeS
         # 
@@ -97,16 +106,19 @@ class MainVisual(tk.Frame):
         var_membrane = tk.IntVar()
         
         def update_membrane_switch():            
-            self.moemebrane_switch=var_membrane.get()
+            self.memebrane_switch=var_membrane.get()
             # change image
             self.show_tracks()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.M1 = tk.Radiobutton(root, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
-        self.M1.grid(row=3, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        self.M1.grid(row=3, column=0, pady=self.pad_val, padx=self.pad_val)  
         
         self.M2 = tk.Radiobutton(root, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M2.grid(row=3, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        self.M2.grid(row=3, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        
+        self.M2 = tk.Radiobutton(root, text=" with boarder ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
+        self.M2.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
 #    # # # # # # filter choice:tracks # # # # # # #   
         var = tk.IntVar()
         
@@ -124,6 +136,19 @@ class MainVisual(tk.Frame):
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
         self.R3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
         
+        # resolution in time and space    
+            
+        res_lb = tk.Label(master=root, text=" resolution (nm/pix) : ", width=20, bg='white')
+        res_lb.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)
+        v = tk.StringVar(root, value=str(self.img_resolution))
+        self.res_parameter = tk.Entry(root, width=10, text=v)
+        self.res_parameter.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+            
+        lbl3 = tk.Label(master=root, text="frame rate (f/sec) : ", width=20, bg='white')
+        lbl3.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val)
+        v = tk.StringVar(root, value=str(self.frame_rate))
+        self.frame_parameter = tk.Entry(root, width=10, text=v)
+        self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)        
        # list switchL # 0 - all, 1 
 
         # duration
@@ -135,7 +160,7 @@ class MainVisual(tk.Frame):
 
 
         # duration
-        lbl3 = tk.Label(master=root, text="Duration (frames): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Duration (sec): from ", width=30, bg='white')
         lbl3.grid(row=1, column=5, pady=self.pad_val, padx=self.pad_val)
         self.txt_duration_from = tk.Entry(root, width=10)
         self.txt_duration_from.grid(row=1, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -146,7 +171,7 @@ class MainVisual(tk.Frame):
 
 
         # Length       
-        lbl3 = tk.Label(master=root, text="Max distance (pix): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Max distance (nm): from ", width=30, bg='white')
         lbl3.grid(row=2, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
         self.txt_length_from.grid(row=2, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -156,7 +181,7 @@ class MainVisual(tk.Frame):
         self.txt_length_to.grid(row=2, column=8, pady=self.pad_val, padx=self.pad_val)     
         
         # Stop duration
-        lbl3 = tk.Label(master=root, text="Stop duration (frames): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Stop duration (sec): from ", width=30, bg='white')
         lbl3.grid(row=3, column=5)
         self.txt_stop_from = tk.Entry(root, width=10)
         self.txt_stop_from.grid(row=3, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -185,13 +210,16 @@ class MainVisual(tk.Frame):
         
         # button to update changes
         
-        button_save=tk.Button(master=root, text="save movie", command=self.save_movie, width=10)
-        button_save.grid(row=12, column=6, pady=self.pad_val, padx=self.pad_val)
+        button_save=tk.Button(master=root, text="save movie", command=self.save_movie, width=12)
+        button_save.grid(row=9, column=8, pady=self.pad_val, padx=self.pad_val)
         
         # save button
      
-        button_save=tk.Button(master=root, text="save in file", command=self.save_in_file, width=10)
+        button_save=tk.Button(master=root, text="tracks to json", command=self.save_in_file, width=12)
         button_save.grid(row=12, column=8, pady=self.pad_val, padx=self.pad_val)        
+
+        button_save=tk.Button(master=root, text="info to csv", command=self.save_data_csv, width=12)
+        button_save.grid(row=10, column=8, pady=self.pad_val, padx=self.pad_val)  
         
       # # # # # # movie  # # # # # # 
         
@@ -199,7 +227,7 @@ class MainVisual(tk.Frame):
         bg_img=np.ones((200,200))*0.8
         fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
-        self.im = plt.imshow(bg_img) # for later use self.im.set_data(new_data)
+        self.im = plt.imshow(bg_img, cmap="gray") # for later use self.im.set_data(new_data)
 
 
         # DrawingArea
@@ -388,6 +416,13 @@ class MainVisual(tk.Frame):
     
     def update_data(self):
         
+        if self.frame_parameter.get()!='':
+            self.frame_rate=float(self.frame_parameter.get())
+
+        if self.res_parameter.get()!='':
+            self.img_resolution=float(self.res_parameter.get())        
+        
+        
         self.list_update()
         self.track_to_frame()
         self.show_tracks()
@@ -414,14 +449,16 @@ class MainVisual(tk.Frame):
 
         # plot image
 
-        if self.moemebrane_switch==0:
+        if self.memebrane_switch==0:
             self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        else:
+        elif self.memebrane_switch==1:
             self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/4
+        else:
+            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
         fig = plt.figure(figsize=self.figsize_value)
         plt.axis('off')
-        self.im = plt.imshow(self.image) # for later use self.im.set_data(new_data)
+        self.im = plt.imshow(self.image, cmap="gray") # for later use self.im.set_data(new_data)
         
         if  self.track_data_framed and self.monitor_switch<=1:
             # plot tracks
@@ -431,7 +468,17 @@ class MainVisual(tk.Frame):
                 plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 if self.monitor_switch==0:
                     plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
-
+        if self.memebrane_switch==2:
+            #extract skeleton
+            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+            # create an individual cmap with red colour
+            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+            cmap_new._init() # create the _lut array, with rgba values
+            alphas = np.linspace(0, 0.8, cmap_new.N+3)
+            cmap_new._lut[:,-1] = alphas
+            #plot the membrane boarder on the top
+            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
+        
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
@@ -445,32 +492,32 @@ class MainVisual(tk.Frame):
         if self.txt_duration_from.get()=='':
             self.filter_duration[0]=0
         else:
-            self.filter_duration[0]=int(self.txt_duration_from.get())
+            self.filter_duration[0]=float(self.txt_duration_from.get())
 
         if self.txt_duration_to.get()=='':
             self.filter_duration[1]=1000
         else:
-            self.filter_duration[1]=int(self.txt_duration_to.get())                        
+            self.filter_duration[1]=float(self.txt_duration_to.get())                        
 
         if self.txt_length_from.get()=='':
             self.filter_length[0]=0
         else:
-            self.filter_length[0]=int(self.txt_length_from.get())
+            self.filter_length[0]=float(self.txt_length_from.get())
 
         if self.txt_length_to.get()=='':
             self.filter_length[1]=10000
         else:
-            self.filter_length[1]=int(self.txt_length_to.get())  
+            self.filter_length[1]=float(self.txt_length_to.get())  
             
         if self.txt_stop_from.get()=='':
             self.filter_stop[0]=0
         else:
-            self.filter_stop[0]=int(self.txt_stop_from.get())
+            self.filter_stop[0]=float(self.txt_stop_from.get())
 
         if self.txt_stop_to.get()=='':
             self.filter_stop[1]=10000
         else:
-            self.filter_stop[1]=int(self.txt_stop_to.get())          
+            self.filter_stop[1]=float(self.txt_stop_to.get())          
             
         print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   stop duration: ", self.filter_stop)
 
@@ -485,12 +532,12 @@ class MainVisual(tk.Frame):
             if len(p['trace'])>0:
                 point_start=p['trace'][0]
                 # check length
-                track_duration=p['frames'][-1]-p['frames'][0]+1
+                track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
                 # check maximum displacement between any two positions in track
-                track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))  
+                track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
                 # check stop length
 
-                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)
+                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)*self.img_resolution
                 
             else:
                 track_duration=0
@@ -525,7 +572,8 @@ class MainVisual(tk.Frame):
             
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
-            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie, self.max_movement_stay)
+            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie, 
+                        self.max_movement_stay, self.img_resolution, self.frame_rate)
             
             
         def detele_track_question():
@@ -641,6 +689,8 @@ class MainVisual(tk.Frame):
 
         deletbutton = tk.Button(master=root, text="ADD TRACK", command=new_track_question, width=15,  bg='green')
         deletbutton.grid(row=10, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        #
 
         
        # plot the tracks from filtered folder 
@@ -738,19 +788,99 @@ class MainVisual(tk.Frame):
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
 
+    def save_data_csv(self):
+        '''
+        save csv file
+        '''
+        # create the data for saving
+        
+        #['TrackID', 'Start frame', 'Total distance travelled',  'Net distance travelled', 
+        #'Maximum distance travelled', 'Total trajectory time',  'Stop duration', 
+        # 'Net direction', 'Average speed', 'Speed of movement' ]
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+            trajectory=track['trace']
+            
+            x=np.asarray(trajectory)[:,0]    
+            y=np.asarray(trajectory)[:,1]
+            x_0=np.asarray(trajectory)[0,0]
+            y_0=np.asarray(trajectory)[0,1]
+            
+            x_e=np.asarray(trajectory)[-1,0]
+            y_e=np.asarray(trajectory)[-1,1]
+            
+            displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
+            #calculate all type of displacements
+            # max displacement
+            max_displacement=np.round(np.max(displacement_array),2)*self.img_resolution
+            
+            # displacement from start to the end
+            net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+            
+            # total displacement
+            x_from=np.asarray(trajectory)[0:-1,0] 
+            y_from=np.asarray(trajectory)[0:-1,1] 
+            x_to=np.asarray(trajectory)[1:,0] 
+            y_to=np.asarray(trajectory)[1:,1] 
+            
+            #direction
+            total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
+            pointB=trajectory[-1]                        
+            pointA=trajectory[0]            
+            net_direction=int(math.degrees(math.atan2((pointB[1] - pointA[1]),(pointB[0] - pointA[0]))) )
+            
+            # speed
+            x_1=np.asarray(trajectory)[1:,0]    
+            y_1=np.asarray(trajectory)[1:,1]   
+    
+            x_2=np.asarray(trajectory)[0:-1,0]    
+            y_2=np.asarray(trajectory)[0:-1,1]           
+            
+            # sum of all the displacements       
+            disp=np.sum(np.sqrt((x_1-x_2)**2+(y_1-y_2)**2))*self.img_resolution
+            
+            # frames        
+            time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
+            
+            #speed        
+            average_speed=np.round(disp/time,5)
+            
+            #stop duration
+            stop_t=FusionEvent.calculate_stand_length(self,trajectory, track['frames'], self.max_movement_stay)*self.img_resolution
+            
+            
+            
+            self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
+                                     max_displacement, time,stop_t, 
+                                     net_direction, average_speed, ''])
+            
+        # select file location and name
+        save_file = tk.filedialog.asksaveasfilename()
+        if not(save_file.endswith(".csv")):
+                save_file += ".csv"
+
+        with open(save_file, 'w') as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerows(self.stat_data)
+
+        csvFile.close()
+         
+        print("csv file has been saved to ", save_file)     
 ############################################################
 
 class TrackViewer(tk.Frame):
     '''
     class for the individual track viewer
     '''
-    def __init__(self, master, track_data, movie, membrane_movie, max_movement_stay):
+    def __init__(self, master, track_data, movie, membrane_movie, max_movement_stay, img_resolution, frame_rate):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
 #        master.geometry("1200x800") #Width x Height
         
         self.viewer = master
+        
+
         
         # save important data
         self.track_data=track_data
@@ -764,9 +894,10 @@ class TrackViewer(tk.Frame):
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
+        self.img_resolution=img_resolution # resolution of the movie
+        self.frame_rate=frame_rate # movie frame rate
         
         self.max_movement_stay=max_movement_stay # evaluate stopped vesicle - movement within the threshold
-        self.frame_freq=4 # movie frame rate
         
         self.pixN_basic=100 # margin size 
         self.vesicle_patch_size=10
@@ -1153,19 +1284,19 @@ class TrackViewer(tk.Frame):
         
        # plot the track positions
              # add to the list
-        listNodes_parameters.insert(tk.END, " Total distance traveled          "+str(self.total_distance)+" px") 
+        listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(self.total_distance*self.img_resolution)+" nm") 
 
-        listNodes_parameters.insert(tk.END, " Net distance traveled            "+str(self.net_displacement)+" px")  
+        listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(self.net_displacement*self.img_resolution)+" nm")  
 #        listNodes_parameters.itemconfig(1, {'bg':'gray'})
-        listNodes_parameters.insert(tk.END, " Maximum distance traveled        "+str(self.max_displacement)+" px")
+        listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(self.max_displacement*self.img_resolution)+" nm")
         
-        listNodes_parameters.insert(tk.END, " Total trajectory time            "+str((self.frames[-1]-self.frames[0]+1))+" frames")
+        listNodes_parameters.insert(tk.END, " Total trajectory time            "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
-        listNodes_parameters.insert(tk.END, " Stop duration                    "+str(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay))+" frames")
+        listNodes_parameters.insert(tk.END, " Stop duration                    "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
 #        listNodes_parameters.itemconfig(3, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Net direction                    "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Mean  speed                      "+str(round(self.calculate_speed(self.trace, self.frames),2))+" px/frame")
+        listNodes_parameters.insert(tk.END, " Average  speed                   "+str(np.round(self.calculate_speed(self.trace, self.frames)*self.img_resolution*self.frame_rate,0))+" nm/sec")
 #Mean curvilinear speed
 #        listNodes_parameters.insert(tk.END, " Mean straight-line speed         "+str(0.00)+" px/frames")
 
@@ -1280,6 +1411,7 @@ class TrackViewer(tk.Frame):
 #        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
 #plt.xlabel("frames", fontsize='small')
         plt.ylabel("intensity", fontsize='small')
+        plt.xlabel("frames", fontsize='small')
         plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-r", label="without segmentation")
         if check_boarder==0:
             plt.title('Vesicle intensity', fontsize='small')
@@ -1328,13 +1460,15 @@ class TrackViewer(tk.Frame):
         self.im = plt.plot(self.frames, self.displacement_array)
         #       plt.xlabel('frames', fontsize='small')
         plt.ylabel('displacement (px)', fontsize='small')
+        plt.xlabel("frames", fontsize='small')
         plt.title('Displacement', fontsize='small')
         
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
         canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
-        
+
+   
         
 class MainApplication(tk.Frame):
     def __init__(self, parent):
