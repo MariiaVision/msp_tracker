@@ -1,12 +1,25 @@
 # gui_tracking
-GUI to review tracks
+the software visualises the detected tracks, provides statistics and allows track modification.
 
-to do list:
-- delete or add track 
-- multiple numbers in track ID filter
-- filter -> show fusion events
-- plot MSD, speed, direction, displacement, etc in the second window
-- change plotting
-- change data storage
-- fix tracks/no tracks switch on second window
+## Software installation:
+
+1) install conda:  https://docs.anaconda.com/anaconda/install/mac-os/
+2) create virual environment: conda env create -f environment.yml
+3) in the teminal type "conda env create -f environment.yml" and press enter. It should install all the required packages
+
+4) activate the environment: source activate gui_tracks
+5) to run the software python gui_trackviewer_2.py:
+  - 1st load protein movie 
+  - then select the tracks (.txt file, json format) 
+  - for fusion event detection select membrane (segmented membrane) 
+
+
+## to do list:
+- change from list to a table with sorting option
+- change plotting to grab the coordinates from the image
+- export excel file with tracks information
+- project all the tracks on one frame
+- insert image resolution value and move from pix and frames
+- change to black and white colours
+- add visualisation of the membrane's skeleton
 - clean the code
