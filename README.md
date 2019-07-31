@@ -17,5 +17,6 @@ the software visualises the detected tracks, provides statistics and allows trac
 ## to do list:
 - change from list to a table with sorting option
 - change plotting to grab the coordinates from the image
-- project all the tracks on one frame
 - clean the code
+- include trajectory segmentation into the speed evaluation
+- count crossing

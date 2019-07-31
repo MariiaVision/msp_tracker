@@ -205,8 +205,13 @@ class MainVisual(tk.Frame):
         
         # button to update changes
         
-        button_save=tk.Button(master=root, text="update", command=self.update_data, width=10)
-        button_save.grid(row=12, column=5, pady=self.pad_val, padx=self.pad_val)
+        button_save=tk.Button(master=root, text="update", command=self.update_data, width=14)
+        button_save.grid(row=9, column=7, pady=self.pad_val, padx=self.pad_val)
+        
+        # button to save all the tracks on the image
+        
+        button_save=tk.Button(master=root, text="save tracks plot", command=self.save_track_plot, width=14)
+        button_save.grid(row=10, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to update changes
         
@@ -289,8 +294,42 @@ class MainVisual(tk.Frame):
         self.track_to_frame()
         
         #update the list
-        self.list_update()    
-              
+        self.list_update()   
+        
+        
+    def save_track_plot(self):
+        '''
+        plot and save the plot of all the tracks on a single frame
+        '''
+        # plot
+        
+        plt.figure()
+        plt.imshow(self.image, cmap="gray")
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+            trace=track['trace']
+            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
+            if self.monitor_switch==0:
+                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(trackID), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
+        
+        if self.memebrane_switch==2:
+            #extract skeleton
+            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+            # create an individual cmap with red colour
+            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+            cmap_new._init() # create the _lut array, with rgba values
+            alphas = np.linspace(0, 0.8, cmap_new.N+3)
+            cmap_new._lut[:,-1] = alphas
+            #plot the membrane boarder on the top
+            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)        
+        
+        # request file name name
+        save_file = tk.filedialog.asksaveasfilename()      
+        
+        # save the image
+        plt.savefig(save_file)
+        # close the image
+        plt.close()     
         
     def save_movie(self):
         length=self.movie.shape[0]
