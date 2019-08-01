@@ -62,8 +62,8 @@ class MainVisual(tk.Frame):
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
         self.stat_data=[] # stat data to save csv file
-        self.stat_data.append(['trackID', 'start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                                 ' Maximum distance travelled (nm)', ' Total distance travelled (nm)', ' Stop duration (sec)', 
+        self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
+                                 ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Stop duration (sec)', 
                                  ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
         #filter parameters
         self.filter_duration=[0, 1000]
@@ -117,8 +117,8 @@ class MainVisual(tk.Frame):
         self.M2 = tk.Radiobutton(root, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
         self.M2.grid(row=3, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)
         
-        self.M2 = tk.Radiobutton(root, text=" with boarder ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M2.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.M3 = tk.Radiobutton(root, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
+        self.M3.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
 #    # # # # # # filter choice:tracks # # # # # # #   
         var = tk.IntVar()
         
@@ -193,7 +193,11 @@ class MainVisual(tk.Frame):
         # button to filter
         
         self.buttonFilter = tk.Button(text="Filter", command=self.filtering, width=10)
-        self.buttonFilter.grid(row=4, column=4, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=4, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        
+        # count membrane crossing
+        self.buttonFilter = tk.Button(text="crossing membrane", command=self.crossing_membrane, width=20)
+        self.buttonFilter.grid(row=4, column=6, columnspan=1,  pady=self.pad_val, padx=self.pad_val)             
         
         # fusion events and statistics
         
@@ -297,6 +301,61 @@ class MainVisual(tk.Frame):
         self.list_update()   
         
         
+    def crossing_membrane(self):
+        '''
+        find trajectories which crossing membrane and travelling between cells
+        '''
+        crossing_membrane=[]
+        # create map
+        membrane=1-self.membrane_movie[self.frame_pos,:,:]
+        cells_labeled=sp.ndimage.label(membrane)[0]
+        regions=np.unique(np.asarray(cells_labeled))
+        print("all regions", regions)
+        # iterate over the track list
+                
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+            
+            # extract trajectory affiliation
+            region_list=[]
+            on_membrane=[]
+            
+            for pos in track['trace']:
+
+                region_list.append(cells_labeled[pos[0], pos[1]])
+                on_membrane.append(membrane[pos[0], pos[1]])
+            
+
+            # check if 3 different area is there
+            regions=np.unique(np.asarray(region_list))
+            number_of_regions=len(regions)
+            
+            
+            #case 1: vesicle travels between cells and not stop on membrane
+            case_1= number_of_regions==2 and np.all(on_membrane)!=0
+            
+            #case 2: vesicle travels between cells 
+            case_2=number_of_regions>=3
+
+            
+            if case_1 or case_2:
+                crossing_membrane.append(track)
+                
+                print(track['trackID'])
+                print("on_membrane", on_membrane)
+                print(region_list)
+                print(regions)
+                print(number_of_regions, "\n")       
+                
+        # replace the filtered list
+        self.track_data_filtered={'tracks': crossing_membrane}
+        
+        # update the view 
+        self.track_to_frame()
+        
+        #update the list
+        self.list_update()           
+        
     def save_track_plot(self):
         '''
         plot and save the plot of all the tracks on a single frame
@@ -320,7 +379,7 @@ class MainVisual(tk.Frame):
             cmap_new._init() # create the _lut array, with rgba values
             alphas = np.linspace(0, 0.8, cmap_new.N+3)
             cmap_new._lut[:,-1] = alphas
-            #plot the membrane boarder on the top
+            #plot the membrane border on the top
             plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)        
         
         # request file name name
@@ -515,7 +574,7 @@ class MainVisual(tk.Frame):
             cmap_new._init() # create the _lut array, with rgba values
             alphas = np.linspace(0, 0.8, cmap_new.N+3)
             cmap_new._lut[:,-1] = alphas
-            #plot the membrane boarder on the top
+            #plot the membrane border on the top
             plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
         
         # DrawingArea
@@ -851,7 +910,7 @@ class MainVisual(tk.Frame):
             displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
             #calculate all type of displacements
             # max displacement
-            max_displacement=np.round(np.max(displacement_array),2)*self.img_resolution
+            max_displacement=np.round(np.max(displacement_array),2)
             
             # displacement from start to the end
             net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
@@ -885,12 +944,12 @@ class MainVisual(tk.Frame):
             average_speed=np.round(disp/time,5)
             
             #stop duration
-            stop_t=FusionEvent.calculate_stand_length(self,trajectory, track['frames'], self.max_movement_stay)*self.img_resolution
+            stop_t=FusionEvent.calculate_stand_length(self,trajectory, track['frames'], self.max_movement_stay)/self.frame_rate
             
             
             
             self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
-                                     max_displacement, time,stop_t, 
+                                     max_displacement, time, stop_t, 
                                      net_direction, average_speed, ''])
             
         # select file location and name
@@ -941,7 +1000,7 @@ class TrackViewer(tk.Frame):
         self.pixN_basic=100 # margin size 
         self.vesicle_patch_size=10
         
-        self.moemebrane_switch=0 # switch between membrane and no membrane
+        self.membrane_switch=0 # switch between membrane and no membrane
         
         #track evaluation 
         self.displacement_array=[]
@@ -1002,16 +1061,19 @@ class TrackViewer(tk.Frame):
         var_membrane = tk.IntVar()
         
         def update_membrane_switch():            
-            self.moemebrane_switch=var_membrane.get()
+            self.membrane_switch=var_membrane.get()
             # change image
             self.plot_image()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.M1 = tk.Radiobutton(master=self.viewer, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
-        self.M1.grid(row=0, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        self.M1.grid(row=0, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)  
         
         self.M2 = tk.Radiobutton(master=self.viewer, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M2.grid(row=0, column=3, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        self.M2.grid(row=0, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        
+        self.M3 = tk.Radiobutton(master=self.viewer, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
+        self.M3.grid(row=0, column=4, pady=self.pad_val, padx=self.pad_val)
         
     # plotting switch 
         var = tk.IntVar()
@@ -1243,10 +1305,12 @@ class TrackViewer(tk.Frame):
         plt.axis('off')
         fig.tight_layout()
         
-        if self.moemebrane_switch==0:
+        if self.membrane_switch==0:
             img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        else:
+        elif self.membrane_switch==1:
             img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+0.1*self.membrane_movie[self.frame_pos,:,:]
+        else:
+            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         #calculate window position
         
         left_point_y=np.min(np.asarray(self.trace)[:,1])-self.pixN_basic
@@ -1303,7 +1367,18 @@ class TrackViewer(tk.Frame):
             
             plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
         plt.title("Displacement")
-
+        
+        #plot the border of the membrane if chosen
+        if self.membrane_switch==2:
+            #extract skeleton self.membrane_movie[self.frame_pos,:,:]
+            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,x_min:x_max, y_min:y_max]).astype(np.int)
+            # create an individual cmap with red colour
+            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+            cmap_new._init() # create the _lut array, with rgba values
+            alphas = np.linspace(0, 0.8, cmap_new.N+3)
+            cmap_new._lut[:,-1] = alphas
+            #plot the membrane border on the top
+            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)     
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
@@ -1323,11 +1398,11 @@ class TrackViewer(tk.Frame):
         
        # plot the track positions
              # add to the list
-        listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(self.total_distance*self.img_resolution)+" nm") 
+        listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
 
-        listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(self.net_displacement*self.img_resolution)+" nm")  
+        listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
 #        listNodes_parameters.itemconfig(1, {'bg':'gray'})
-        listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(self.max_displacement*self.img_resolution)+" nm")
+        listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
         
         listNodes_parameters.insert(tk.END, " Total trajectory time            "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
@@ -1415,7 +1490,7 @@ class TrackViewer(tk.Frame):
         intensity_array_2=[]
         #
         
-        check_boarder=0 # variable for the
+        check_border=0 # variable for the
         for N in range(0,len(frames)):
             frameN=frames[N]
             point=trace[N]
@@ -1438,7 +1513,7 @@ class TrackViewer(tk.Frame):
                 intensity_array_1.append(intensity_1)
                 intensity_array_2.append(intensity_2)
             else:
-                check_boarder=1
+                check_border=1
                 intensity_array_1.append(0)
                 intensity_array_2.append(0)
         
@@ -1450,10 +1525,9 @@ class TrackViewer(tk.Frame):
 #        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
 #plt.xlabel("frames", fontsize='small')
         plt.ylabel("intensity", fontsize='small')
-        plt.xlabel("frames", fontsize='small')
         plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-r", label="without segmentation")
-        if check_boarder==0:
-            plt.title('Vesicle intensity', fontsize='small')
+        if check_border==0:
+            plt.title('Vesicle intensity per frame', fontsize='small')
         else:
             plt.title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
         plt.legend(fontsize='small')   
@@ -1496,11 +1570,11 @@ class TrackViewer(tk.Frame):
 
         #fig.tight_layout()
         
-        self.im = plt.plot(self.frames, self.displacement_array)
+        self.im = plt.plot(self.frames, self.displacement_array*self.img_resolution)
         #       plt.xlabel('frames', fontsize='small')
-        plt.ylabel('displacement (px)', fontsize='small')
-        plt.xlabel("frames", fontsize='small')
-        plt.title('Displacement', fontsize='small')
+        plt.ylabel('displacement (nm)', fontsize='small')
+
+        plt.title('Displacement per frame', fontsize='small')
         
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
