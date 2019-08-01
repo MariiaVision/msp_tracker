@@ -19,4 +19,3 @@ the software visualises the detected tracks, provides statistics and allows trac
 - change plotting to grab the coordinates from the image
 - clean the code
 - include trajectory segmentation into the speed evaluation
-- count crossing
