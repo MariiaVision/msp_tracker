@@ -62,9 +62,7 @@ class MainVisual(tk.Frame):
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
         self.stat_data=[] # stat data to save csv file
-        self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                                 ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Stop duration (sec)', 
-                                 ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
+
         #filter parameters
         self.filter_duration=[0, 1000]
         self.filter_length=[0, 10000]   
@@ -891,7 +889,10 @@ class MainVisual(tk.Frame):
         save csv file
         '''
         # create the data for saving
-        
+        self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
+        self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
+                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Stop duration (sec)', 
+                         ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
         #['TrackID', 'Start frame', 'Total distance travelled',  'Net distance travelled', 
         #'Maximum distance travelled', 'Total trajectory time',  'Stop duration', 
         # 'Net direction', 'Average speed', 'Speed of movement' ]
