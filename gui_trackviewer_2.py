@@ -369,7 +369,7 @@ class MainVisual(tk.Frame):
             trace=track['trace']
             plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
             if self.monitor_switch==0:
-                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(trackID), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
+                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
         
         if self.memebrane_switch==2:
             #extract skeleton
