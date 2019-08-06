@@ -19,10 +19,13 @@ class FusionEvent(object):
     """class for detection and description of the fusion events
     """
     
-    def __init__(self, cargo_movie=np.zeros((10,10)), membrane_movie=np.zeros((10,10)), membrane_mask=np.zeros((10,10)), tracks=[]):
+    def __init__(self, cargo_movie=np.zeros((10,10)), membrane_movie=np.zeros((10,10)), membrane_mask=np.zeros((10,10)), tracks=[], img_resolution=100, frame_rate=4):
         """
         Initialise variables
         """
+        
+        self.img_resolution=img_resolution
+        self.frame_rate=frame_rate
         self.tracks=tracks # output tracks
         self.membrane_movie=membrane_movie
         
@@ -38,8 +41,7 @@ class FusionEvent(object):
         self.track_length_min=2
         self.track_length_max=5000
         self.max_movement_stay=1 # maximum movement which is counted as standing
-        
-        self.frame_freq=4
+
         self.distance_to_membrane=0 # minimum ditsnce to the membrane mask
         #parameters to estimate
         self.final_stop_length_array=[]
@@ -103,7 +105,7 @@ class FusionEvent(object):
         disp=np.sum(sqr_disp_back)
         
         # frames        
-        time=(frames[-1]-frames[0])/self.frame_freq
+        time=(frames[-1]-frames[0])
         
         #speed        
         speed=disp/time
@@ -220,27 +222,27 @@ class FusionEvent(object):
 #        plt.tight_layout()
         
         #length
-        axes[0,0].hist(self.final_stop_length_array, bins=100)
+        axes[0,0].hist(np.round(np.asarray(self.final_stop_length_array)/self.frame_rate,3), bins=100)
         axes[0,0].set_title('stop duration')
         axes[0,0].set_ylabel('number of events')
-        axes[0,0].set_xlabel('frames')
+        axes[0,0].set_xlabel('sec')
         
         #duration
-        axes[0,1].hist(self.duration_array, bins=100)
+        axes[0,1].hist(np.round(np.asarray(self.duration_array)/self.frame_rate,3), bins=100)
         axes[0,1].set_title('track length')
         axes[0,1].set_ylabel('number of events')
-        axes[0,1].set_xlabel('frames')
+        axes[0,1].set_xlabel('sec')
         
         # displacement
-        axes[0,2].hist(self.max_displacement_array, bins=100)
+        axes[0,2].hist(np.asarray(self.max_displacement_array)*self.img_resolution, bins=100)
         axes[0,2].set_title('final displacement')
         axes[0,2].set_ylabel('number of events')
-        axes[0,2].set_xlabel('pix')
+        axes[0,2].set_xlabel('nm')
         # speed
-        axes[1,0].hist(self.speed_array, bins=100)
+        axes[1,0].hist(np.asarray(self.speed_array)*self.img_resolution*self.frame_rate, bins=100)
         axes[1,0].set_title('average speed')
         axes[1,0].set_ylabel('number of events')
-        axes[1,0].set_xlabel('pix/sec')
+        axes[1,0].set_xlabel('nm/sec')
 
         #angle
         axes[1,1].hist(self.angle_array, bins=100)
