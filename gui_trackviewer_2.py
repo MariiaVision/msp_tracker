@@ -308,9 +308,8 @@ class MainVisual(tk.Frame):
         membrane=1-self.membrane_movie[self.frame_pos,:,:]
         cells_labeled=sp.ndimage.label(membrane)[0]
         regions=np.unique(np.asarray(cells_labeled))
-        print("all regions", regions)
+
         # iterate over the track list
-                
         for trackID in range(0, len(self.track_data_filtered['tracks'])):
             track=self.track_data_filtered['tracks'][trackID]
             
@@ -337,13 +336,7 @@ class MainVisual(tk.Frame):
 
             
             if case_1 or case_2:
-                crossing_membrane.append(track)
-                
-                print(track['trackID'])
-                print("on_membrane", on_membrane)
-                print(region_list)
-                print(regions)
-                print(number_of_regions, "\n")       
+                crossing_membrane.append(track)     
                 
         # replace the filtered list
         self.track_data_filtered={'tracks': crossing_membrane}
