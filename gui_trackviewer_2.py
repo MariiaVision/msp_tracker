@@ -158,7 +158,7 @@ class MainVisual(tk.Frame):
 
 
         # duration
-        lbl3 = tk.Label(master=root, text="Duration (sec): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Duration (sec): from ", width=40, bg='white')
         lbl3.grid(row=1, column=5, pady=self.pad_val, padx=self.pad_val)
         self.txt_duration_from = tk.Entry(root, width=10)
         self.txt_duration_from.grid(row=1, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -169,7 +169,7 @@ class MainVisual(tk.Frame):
 
 
         # Length       
-        lbl3 = tk.Label(master=root, text="Max distance (nm): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Max travelled distance (nm): from ", width=40, bg='white')
         lbl3.grid(row=2, column=5)
         self.txt_length_from = tk.Entry(root, width=10)
         self.txt_length_from.grid(row=2, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -179,7 +179,7 @@ class MainVisual(tk.Frame):
         self.txt_length_to.grid(row=2, column=8, pady=self.pad_val, padx=self.pad_val)     
         
         # Stop duration
-        lbl3 = tk.Label(master=root, text="Stop duration (sec): from ", width=30, bg='white')
+        lbl3 = tk.Label(master=root, text="Final stop duration (sec): from ", width=40, bg='white')
         lbl3.grid(row=3, column=5)
         self.txt_stop_from = tk.Entry(root, width=10)
         self.txt_stop_from.grid(row=3, column=6, pady=self.pad_val, padx=self.pad_val)
@@ -188,27 +188,34 @@ class MainVisual(tk.Frame):
         self.txt_stop_to = tk.Entry(root, width=10)
         self.txt_stop_to.grid(row=3, column=8, pady=self.pad_val, padx=self.pad_val)    
         
+        # Stop tolerance set
+        lbl3 = tk.Label(master=root, text="Stop position tolerance (nm): ", width=40, bg='white')
+        lbl3.grid(row=4, column=5)
+        v = tk.StringVar(root, value=str(self.max_movement_stay*self.img_resolution))
+        self.txt_stop_tolerance = tk.Entry(root, width=10, text=v)
+        self.txt_stop_tolerance.grid(row=4, column=6, pady=self.pad_val, padx=self.pad_val)  
+        
         # button to filter
         
         self.buttonFilter = tk.Button(text="Filter", command=self.filtering, width=10)
-        self.buttonFilter.grid(row=4, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=5, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
         
         # count membrane crossing
         self.buttonFilter = tk.Button(text="crossing membrane", command=self.crossing_membrane, width=20)
-        self.buttonFilter.grid(row=4, column=6, columnspan=1,  pady=self.pad_val, padx=self.pad_val)             
+        self.buttonFilter.grid(row=5, column=6, columnspan=1,  pady=self.pad_val, padx=self.pad_val)             
         
         # fusion events and statistics
         
         self.buttonFilter = tk.Button(text="Fusion events: distance", command=self.find_fusion, width=20)
-        self.buttonFilter.grid(row=4, column=7, columnspan=2,  pady=self.pad_val, padx=self.pad_val)           
+        self.buttonFilter.grid(row=5, column=7, columnspan=2,  pady=self.pad_val, padx=self.pad_val)           
         
         self.fusion_distance = tk.Entry(root, width=10)
-        self.fusion_distance.grid(row=4, column=9, pady=self.pad_val, padx=self.pad_val)     
+        self.fusion_distance.grid(row=5, column=9, pady=self.pad_val, padx=self.pad_val)     
         
         # button to update changes
         
         button_save=tk.Button(master=root, text="update", command=self.update_data, width=14)
-        button_save.grid(row=9, column=7, pady=self.pad_val, padx=self.pad_val)
+        button_save.grid(row=4, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to save all the tracks on the image
         
@@ -504,12 +511,18 @@ class MainVisual(tk.Frame):
 
     
     def update_data(self):
+        '''
+        update changed parameters
+        '''
         
         if self.frame_parameter.get()!='':
             self.frame_rate=float(self.frame_parameter.get())
 
         if self.res_parameter.get()!='':
             self.img_resolution=float(self.res_parameter.get())        
+            
+        if self.txt_stop_tolerance.get()!='':
+            self.max_movement_stay=float(self.txt_stop_tolerance.get())/self.img_resolution
         
         
         self.list_update()
@@ -608,7 +621,10 @@ class MainVisual(tk.Frame):
         else:
             self.filter_stop[1]=float(self.txt_stop_to.get())          
             
-        print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   stop duration: ", self.filter_stop)
+        if self.txt_stop_tolerance.get()!='':
+            self.max_movement_stay=float(self.txt_stop_tolerance.get())/self.img_resolution
+            
+        print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   final stop duration: ", self.filter_stop)
 
         # filtering 
         self.track_data_filtered={}
@@ -745,17 +761,17 @@ class MainVisual(tk.Frame):
             
             
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 14, "bold"))
-        lbl2.grid(row=5, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        lbl2.grid(row=6, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         
         # show track statistics
         lbl2 = tk.Label(master=root, text="deleted tracks: "+str(self.deleted_tracks_N), width=30, bg='white',  font=("Times", 12,))
-        lbl2.grid(row=6, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
+        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
 
-        lbl2 = tk.Label(master=root, text="created tracks: "+str(self.created_tracks_N), width=30, bg='white',  font=("Times", 12))
-        lbl2.grid(row=6, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+#        lbl2 = tk.Label(master=root, text="created tracks: "+str(self.created_tracks_N), width=30, bg='white',  font=("Times", 12))
+#        lbl2.grid(row=6, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
 
         lbl2 = tk.Label(master=root, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
-        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+        lbl2.grid(row=7, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
         
         # show the list of data with scroll bar
         
@@ -824,7 +840,9 @@ class MainVisual(tk.Frame):
         filename = tk.filedialog.askopenfilename()
         # read files 
         self.membrane_movie=skimage.io.imread(filename)
-        self.membrane_movie[self.membrane_movie>0]=1
+        #normalise the membrane values
+        self.membrane_movie=self.membrane_movie/np.max(self.membrane_movie)
+#        self.membrane_movie[self.membrane_movie>0]=1
     
     def select_track(self):
         
@@ -884,7 +902,7 @@ class MainVisual(tk.Frame):
         # create the data for saving
         self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
         self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Stop duration (sec)', 
+                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Final stop duration (sec)', 
                          ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
         #['TrackID', 'Start frame', 'Total distance travelled',  'Net distance travelled', 
         #'Maximum distance travelled', 'Total trajectory time',  'Stop duration', 
@@ -1400,7 +1418,7 @@ class TrackViewer(tk.Frame):
         
         listNodes_parameters.insert(tk.END, " Total trajectory time            "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
-        listNodes_parameters.insert(tk.END, " Stop duration                    "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
+        listNodes_parameters.insert(tk.END, " Final stop duration                    "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
 #        listNodes_parameters.itemconfig(3, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Net direction                    "+str(self.calculate_direction(self.trace))+ " degrees")
 
