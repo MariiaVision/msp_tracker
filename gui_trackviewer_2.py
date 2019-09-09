@@ -626,7 +626,7 @@ class MainVisual(tk.Frame):
                 track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
                 # check stop length
 
-                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)*self.img_resolution
+                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)/self.frame_rate
                 
             else:
                 track_duration=0
