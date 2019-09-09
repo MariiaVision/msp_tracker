@@ -155,8 +155,6 @@ class MainVisual(tk.Frame):
         self.txt_track_number = tk.Entry(root, width=10)
         self.txt_track_number.grid(row=0, column=6, pady=self.pad_val, padx=self.pad_val)
 
-
-
         # duration
         lbl3 = tk.Label(master=root, text="Duration (sec): from ", width=40, bg='white')
         lbl3.grid(row=1, column=5, pady=self.pad_val, padx=self.pad_val)
@@ -194,46 +192,53 @@ class MainVisual(tk.Frame):
         v = tk.StringVar(root, value=str(self.max_movement_stay*self.img_resolution))
         self.txt_stop_tolerance = tk.Entry(root, width=10, text=v)
         self.txt_stop_tolerance.grid(row=4, column=6, pady=self.pad_val, padx=self.pad_val)  
+
+        # Fusion events
+        lbl3 = tk.Label(master=root, text="Fusion: distance to membrane (nm): ", width=40, bg='white')
+        lbl3.grid(row=5, column=5)
+        v = tk.StringVar(root, value=str(0))
+        self.fusion_distance = tk.Entry(root, width=10, text=v)
+        self.fusion_distance.grid(row=5, column=6, pady=self.pad_val, padx=self.pad_val)   
+
         
         # button to filter
         
         self.buttonFilter = tk.Button(text="Filter", command=self.filtering, width=10)
-        self.buttonFilter.grid(row=5, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=6, column=4, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
         
         # count membrane crossing
-        self.buttonFilter = tk.Button(text="crossing membrane", command=self.crossing_membrane, width=20)
-        self.buttonFilter.grid(row=5, column=6, columnspan=1,  pady=self.pad_val, padx=self.pad_val)             
+        self.buttonFilter = tk.Button(text="Crossing membrane", command=self.crossing_membrane, width=20)
+        self.buttonFilter.grid(row=6, column=6, columnspan=1,  pady=self.pad_val, padx=self.pad_val)             
         
         # fusion events and statistics
         
-        self.buttonFilter = tk.Button(text="Fusion events: distance", command=self.find_fusion, width=20)
-        self.buttonFilter.grid(row=5, column=7, columnspan=2,  pady=self.pad_val, padx=self.pad_val)           
+        self.buttonFilter = tk.Button(text="Fusion events", command=self.find_fusion, width=20)
+        self.buttonFilter.grid(row=6, column=7, columnspan=2,  pady=self.pad_val, padx=self.pad_val)           
         
-        self.fusion_distance = tk.Entry(root, width=10)
-        self.fusion_distance.grid(row=5, column=9, pady=self.pad_val, padx=self.pad_val)     
+  
         
         # button to update changes
         
         button_save=tk.Button(master=root, text="update", command=self.update_data, width=14)
-        button_save.grid(row=4, column=7, pady=self.pad_val, padx=self.pad_val)
+        button_save.grid(row=4, rowspan=2, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to save all the tracks on the image
         
         button_save=tk.Button(master=root, text="save tracks plot", command=self.save_track_plot, width=14)
-        button_save.grid(row=10, column=7, pady=self.pad_val, padx=self.pad_val)
+        button_save.grid(row=14, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to update changes
         
         button_save=tk.Button(master=root, text="save movie", command=self.save_movie, width=12)
-        button_save.grid(row=9, column=8, pady=self.pad_val, padx=self.pad_val)
+        button_save.grid(row=13, column=8, pady=self.pad_val, padx=self.pad_val)
         
         # save button
      
         button_save=tk.Button(master=root, text="tracks to json", command=self.save_in_file, width=12)
-        button_save.grid(row=12, column=8, pady=self.pad_val, padx=self.pad_val)        
+        button_save.grid(row=16, column=8, pady=self.pad_val, padx=self.pad_val)        
 
         button_save=tk.Button(master=root, text="info to csv", command=self.save_data_csv, width=12)
-        button_save.grid(row=10, column=8, pady=self.pad_val, padx=self.pad_val)  
+        button_save.grid(row=14, column=8, pady=self.pad_val, padx=self.pad_val)  
         
       # # # # # # movie  # # # # # # 
         
@@ -247,25 +252,25 @@ class MainVisual(tk.Frame):
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(fig, master=root)
         self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        self.canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
         
               
    #  #  # # # # next and previous buttons
         
         buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        buttonbefore.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
         
         buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=12, column=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
+        buttonnext.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
         
         buttonnext = tk.Button(text="jump to ", command=self.jump_to, width=10)
-        buttonnext.grid(row=13, column=2, pady=self.pad_val, padx=self.pad_val)
+        buttonnext.grid(row=17, column=2, pady=self.pad_val, padx=self.pad_val)
         
         self.txt_jump_to = tk.Entry(root, width=10)
-        self.txt_jump_to.grid(row=14, column=2, pady=self.pad_val, padx=self.pad_val)
+        self.txt_jump_to.grid(row=18, column=2, pady=self.pad_val, padx=self.pad_val)
         
     
     def find_fusion(self):
@@ -285,7 +290,7 @@ class MainVisual(tk.Frame):
         if self.fusion_distance.get()=='':
             event_count.distance_to_membrane==0
         else:
-            event_count.distance_to_membrane=float(self.fusion_distance.get())
+            event_count.distance_to_membrane=float(self.fusion_distance.get())/self.img_resolution
             
         self.track_data_filtered=event_count.find_fusion()
         
@@ -499,7 +504,7 @@ class MainVisual(tk.Frame):
             self.frame_pos=int(self.txt_jump_to.get())
             self.show_tracks()
             lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-            lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)    
+            lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)    
             self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
@@ -536,7 +541,7 @@ class MainVisual(tk.Frame):
             self.frame_pos-=1
         self.show_tracks()
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
         
     def move_to_next(self):
         
@@ -544,7 +549,7 @@ class MainVisual(tk.Frame):
             self.frame_pos+=1
         self.show_tracks()   
         lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=12, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
         
         
     def show_tracks(self):    
@@ -584,7 +589,7 @@ class MainVisual(tk.Frame):
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
-        canvas.get_tk_widget().grid(row=8, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
     
 
     def filtering(self):
@@ -668,7 +673,7 @@ class MainVisual(tk.Frame):
         
         #plot the filters
         lbl2 = tk.Label(master=root, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
-        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+        lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
 
     def list_update(self):
         
@@ -684,10 +689,10 @@ class MainVisual(tk.Frame):
         def detele_track_question():
             
             self.qdeletetext = tk.Label(master=root, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=25)
-            self.qdeletetext.grid(row=9, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            self.qdeletetext.grid(row=13, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
             
             self.deletbutton = tk.Button(master=root, text=" OK ", command=detele_track, width=5,  bg='red')
-            self.deletbutton.grid(row=9, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.deletbutton.grid(row=13, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
         def detele_track():
             self.deleted_tracks_N+=1
@@ -724,10 +729,10 @@ class MainVisual(tk.Frame):
         def new_track_question():
             
             self.qnewtext = tk.Label(master=root, text="create new track "+str(len(self.track_data_filtered['tracks'])+1)+" ?",  bg='white', font=("Times", 10), width=25)
-            self.qnewtext.grid(row=10, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            self.qnewtext.grid(row=14, column=6, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
             
             self.newbutton = tk.Button(master=root, text=" OK ", command=create_track, width=5,  bg='green')
-            self.newbutton.grid(row=10, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.newbutton.grid(row=14, column=8, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
         def create_track():
             self.created_tracks_N+=1
@@ -761,25 +766,25 @@ class MainVisual(tk.Frame):
             
             
         lbl2 = tk.Label(master=root, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 14, "bold"))
-        lbl2.grid(row=6, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        lbl2.grid(row=7, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         
         # show track statistics
         lbl2 = tk.Label(master=root, text="deleted tracks: "+str(self.deleted_tracks_N), width=30, bg='white',  font=("Times", 12,))
-        lbl2.grid(row=7, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
+        lbl2.grid(row=8, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
 
 #        lbl2 = tk.Label(master=root, text="created tracks: "+str(self.created_tracks_N), width=30, bg='white',  font=("Times", 12))
 #        lbl2.grid(row=6, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
 
         lbl2 = tk.Label(master=root, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
-        lbl2.grid(row=7, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+        lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
         
         # show the list of data with scroll bar
         
         scrollbar = tk.Scrollbar(master=root, orient="vertical")
-        scrollbar.grid(row=8, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
+        scrollbar.grid(row=12, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
 
         listNodes = tk.Listbox(master=root, width=60,  font=("Times", 12), selectmode='single')
-        listNodes.grid(row=8, column=5, columnspan=4, sticky=tk.N+tk.S,padx=self.pad_val)
+        listNodes.grid(row=12, column=5, columnspan=4, sticky=tk.N+tk.S,padx=self.pad_val)
         listNodes.config(yscrollcommand=scrollbar.set)
         listNodes.bind('<Double-1>', tracklist_on_select)
 
@@ -788,12 +793,12 @@ class MainVisual(tk.Frame):
         #delete button
         
         deletbutton = tk.Button(master=root, text="DELETE TRACK", command=detele_track_question, width=15,  bg='red')
-        deletbutton.grid(row=9, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        deletbutton.grid(row=13, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         # add button
 
         deletbutton = tk.Button(master=root, text="ADD TRACK", command=new_track_question, width=15,  bg='green')
-        deletbutton.grid(row=10, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        deletbutton.grid(row=14, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         #
 
