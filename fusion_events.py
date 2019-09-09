@@ -193,7 +193,7 @@ class FusionEvent(object):
                 on_membrane_val=np.min(distance_m)<=self.distance_to_membrane
 
 #                if self.membrane_mask[track['frames'][-1], point[0], point[1]]:
-                if on_membrane_val==True:
+                if on_membrane_val==True and track['frames'][-1]!=self.membrane_mask.shape[0]-1:
                     count+=1
                     #trajectory, frames, max_movement_stay
                     stand_time=self.calculate_stand_length(track['trace'], track['frames'], self.max_movement_stay)
