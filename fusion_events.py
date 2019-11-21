@@ -222,6 +222,7 @@ class FusionEvent(object):
 #        plt.tight_layout()
         
         #length
+        
         axes[0,0].hist(np.round(np.asarray(self.final_stop_length_array)/self.frame_rate,3), bins=100)
         axes[0,0].set_title('stop duration')
         axes[0,0].set_ylabel('number of events')
