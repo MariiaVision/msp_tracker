@@ -283,8 +283,8 @@ class MainVisual(tk.Frame):
 #        membrane_movie_deliated=sp.ndimage.binary_dilation(self.membrane_movie, iterations=1)
         
         # detect events
-        
         event_count=FusionEvent(self.movie, self.movie, self.membrane_movie, self.track_data_filtered)
+        event_count.max_movement_stay=self.max_movement_stay
         
         # assign the distance value
         if self.fusion_distance.get()=='':
