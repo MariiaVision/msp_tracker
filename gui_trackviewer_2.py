@@ -149,7 +149,7 @@ class MainVisual(tk.Frame):
         self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)        
        # list switchL # 0 - all, 1 
 
-        # duration
+        # trackID
         lbl3 = tk.Label(master=root, text="Track ID: ", width=20, bg='white')
         lbl3.grid(row=0, column=5, pady=self.pad_val, padx=self.pad_val)
         self.txt_track_number = tk.Entry(root, width=10)
