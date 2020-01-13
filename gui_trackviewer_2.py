@@ -400,7 +400,7 @@ class MainVisual(tk.Frame):
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
         
-        if self.movie.shape[1]<200 and self.movie.shape[2]<200:
+        if self.movie.shape[1]<300 and self.movie.shape[2]<300 or self.movie.shape[2]<200:
             #save tiff file for small cell solution
             final_img_set=np.zeros((self.movie.shape[0],self.movie.shape[1],self.movie.shape[2], 3))
 
@@ -1002,6 +1002,7 @@ class TrackViewer(tk.Frame):
         self.movie=movie
         self.membrane_movie=membrane_movie
         self.frames=track_data['frames']
+        self.motion=[1]*len(self.frames)
         self.trace=track_data['trace']
         self.id=track_data['trackID']
         self.frame_pos=track_data['frames'][0]
@@ -1100,35 +1101,85 @@ class TrackViewer(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=0, bg='white', command =update_monitor_plot )
-        self.R1.grid(row=1, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)  
-        
+        self.R1.grid(row=1, column=1, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
+
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=3, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
+        self.R2.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        
+        self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
+        self.R3.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
 
 
-    def calculate_speed(self, trajectory, frames):
+    def calculate_speed(self, trajectory, frames, mode="average"): # mode: "average"/"movement"
         '''
-        calculate average vesicle speed
+        calculate speed of vesicle movement
         '''
+        #Mean curvilinear speed
+
         # separated arrays for coordinates
         x_1=np.asarray(trajectory)[1:,0]    
         y_1=np.asarray(trajectory)[1:,1]   
 
         x_2=np.asarray(trajectory)[0:-1,0]    
-        y_2=np.asarray(trajectory)[0:-1,1]           
-        
-        # sum of all the displacements       
-        sqr_disp_back=np.sqrt((x_1-x_2)**2+(y_1-y_2)**2)
-        disp=np.sum(sqr_disp_back)
-        
-        # frames        
-        time=(frames[-1]-frames[0]+1)
-        
+        y_2=np.asarray(trajectory)[0:-1,1]   
+
+        # calculate the discplacement
+
+        sqr_disp_back=np.sqrt((x_1-x_2)**2+(y_1-y_2)**2)        
+
+        if mode=="average":  
+            
+            # sum of all the displacements                   
+            disp=np.sum(sqr_disp_back)
+            
+            # frames        
+            time=(frames[-1]-frames[0])
+
+        else: # movement mode
+            
+            disp=np.sum(np.asarray(self.motion[:-1])*sqr_disp_back)
+            time=np.sum(np.asarray(self.motion)[:-1])
+           
         #speed        
-        speed=disp/time
-    
-        return speed
+        curvilinear_speed=disp/time    
+        
+        # straightline_speed
+        if  mode=="average":
+            
+            straightline_dist=sqr_disp_back=np.sqrt((x_2[0]-x_1[-1])**2+(y_2[0]-y_1[-1])**2)
+            straightline_time=(frames[-1]-frames[0])
+            straightline_speed=straightline_dist/straightline_time
+        else:
+            move_switch=0
+            start=[0,0]
+            end=[0,0]
+            distance=0
+            frame_n=0
+            for pos in range(0, len(self.motion)-1):
+
+                move_pos=self.motion[pos]
+                if move_pos==1 and move_switch==0: # switching to the moving
+                    move_switch=1 # switch to moving mode
+                    start=self.trace[pos]
+                    
+                elif move_pos==0 and move_switch==1: #  end of motion
+                    move_switch=0 # switch off moving mode
+                    end=self.trace[pos]   
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                
+                elif move_pos==1 and move_switch==1and pos!=(len(self.motion)-2): # continue moving
+                    frame_n=frame_n+1
+                    
+                elif move_pos==1 and move_switch==1 and pos==(len(self.motion)-2):
+                    frame_n=frame_n+2
+                    end=self.trace[pos+1]
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+            
+            straightline_speed=distance/frame_n
+
+            
+        return curvilinear_speed, straightline_speed # pix/frame
     
     def calculate_direction(self, trace):
         '''
@@ -1373,7 +1424,8 @@ class TrackViewer(tk.Frame):
         red_c=1-np.linspace(0., 1., len(self.trace))
     
         self.im = plt.imshow(region, cmap="gray")
-        if self.plot_switch==0:
+        
+        if self.plot_switch==0: # print full trajectory
             for pos in range(0, len(self.trace)-1):
                 plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
         
@@ -1382,8 +1434,16 @@ class TrackViewer(tk.Frame):
             
             plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
             
-            plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)  
-        plt.title("Displacement")
+            plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
+            
+        elif self.plot_switch==2: # plotting motion type
+            #define colour
+            red_c= (abs(np.array(self.motion)-1)).tolist()
+            green_c= self.motion
+            for pos in range(0, len(self.trace)-1):
+                plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],green_c[pos],0))
+            
+#        plt.title("Displacement")
         
         #plot the border of the membrane if chosen
         if self.membrane_switch==2:
@@ -1421,13 +1481,22 @@ class TrackViewer(tk.Frame):
 #        listNodes_parameters.itemconfig(1, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
         
-        listNodes_parameters.insert(tk.END, " Total trajectory time            "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
+        listNodes_parameters.insert(tk.END, " Total trajectory time             "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
-        listNodes_parameters.insert(tk.END, " Final stop duration                    "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
+        listNodes_parameters.insert(tk.END, " Final stop duration               "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
 #        listNodes_parameters.itemconfig(3, {'bg':'gray'})
-        listNodes_parameters.insert(tk.END, " Net direction                    "+str(self.calculate_direction(self.trace))+ " degrees")
+        listNodes_parameters.insert(tk.END, " Net direction                     "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Average  speed                   "+str(np.round(self.calculate_speed(self.trace, self.frames)*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average   "+str(np.round(self.calculate_speed(self.trace, self.frames, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average "+str(np.round(self.calculate_speed(self.trace, self.frames, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving    "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving  "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+
+
+
 #Mean curvilinear speed
 #        listNodes_parameters.insert(tk.END, " Mean straight-line speed         "+str(0.00)+" px/frames")
 
