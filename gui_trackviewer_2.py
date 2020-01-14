@@ -69,7 +69,7 @@ class MainVisual(tk.Frame):
         self.filter_stop=[0, 10000] 
         
         self.frame_pos=0
-        self.movie_length=0
+        self.movie_length=1
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.memebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
         self.pad_val=1
@@ -254,24 +254,22 @@ class MainVisual(tk.Frame):
         self.canvas.draw()
         self.canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
         
-              
+    
    #  #  # # # # next and previous buttons
+        def show_values(v):
+            self.frame_pos=int(v)
+            self.show_tracks() 
+          
+        self.scale_movie = tk.Scale(root, from_=0, to=self.movie_length, tickinterval=100, length=400, width=10, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=13, column=1, columnspan=3,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
-        buttonbefore = tk.Button(text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        buttonbefore = tk.Button(text=" << ", command=self.move_to_previous, width=5)
+        buttonbefore.grid(row=13, column=0, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
 
-        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
         
-        buttonnext = tk.Button(text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
-        
-        buttonnext = tk.Button(text="jump to ", command=self.jump_to, width=10)
-        buttonnext.grid(row=17, column=2, pady=self.pad_val, padx=self.pad_val)
-        
-        self.txt_jump_to = tk.Entry(root, width=10)
-        self.txt_jump_to.grid(row=18, column=2, pady=self.pad_val, padx=self.pad_val)
-        
+        buttonnext = tk.Button(text=" >> ", command=self.move_to_next, width=5)
+        buttonnext.grid(row=13, column=4, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
     
     def find_fusion(self):
         '''
@@ -498,14 +496,6 @@ class MainVisual(tk.Frame):
         
         print("movie location: ", save_file)
         
-    def jump_to(self):
-        
-        if self.txt_jump_to.get()!='':
-            self.frame_pos=int(self.txt_jump_to.get())
-            self.show_tracks()
-            lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-            lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)    
-            self.txt_jump_to.delete(0, 'end')
     
     def save_in_file(self):
         
@@ -540,16 +530,14 @@ class MainVisual(tk.Frame):
         if self.frame_pos!=0:
             self.frame_pos-=1
         self.show_tracks()
-        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        self.scale_movie.set(self.frame_pos) 
         
     def move_to_next(self):
         
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
-        self.show_tracks()   
-        lbframe = tk.Label(master=root, text=" frame: "+str(self.frame_pos), width=15, bg='white')
-        lbframe.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        self.show_tracks()
+        self.scale_movie.set(self.frame_pos) 
         
         
     def show_tracks(self):    
@@ -590,7 +578,8 @@ class MainVisual(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=root)
         canvas.draw()
         canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
-    
+        
+        
 
     def filtering(self):
         
@@ -839,6 +828,14 @@ class MainVisual(tk.Frame):
         
         # plot image
         self.show_tracks()
+        
+           #  #  # # # # next and previous buttons
+        def show_values(v):
+            self.frame_pos=int(v)
+            self.show_tracks() 
+        self.scale_movie = tk.Scale(root, from_=0, to=self.movie_length-1, tickinterval=100, length=400, width=10, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=13, column=1, columnspan=3, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
     def select_membrane_movie(self):
         
@@ -1134,16 +1131,30 @@ class TrackViewer(tk.Frame):
         # plot parameters
         self.show_parameters()
         
-        
-        
-        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-        buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
-        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+   #  #  # # # # next and previous buttons
+        def show_values(v):
+            self.frame_pos=int(v)
+            self.plot_image() 
+          
+        self.scale_movie = tk.Scale(master=self.viewer, from_=0, to=self.movie_length, tickinterval=100, length=400, width=5, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
-        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
+        buttonbefore = tk.Button(master=self.viewer, text=" << ", command=self.move_to_previous, width=5)
+        buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
+        
+        buttonnext = tk.Button(master=self.viewer, text=" >> ", command=self.move_to_next, width=5)
+        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)            
+#        
+#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
+#        buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+#
+#        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
+#        lbframe.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+#        
+#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
+#        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
         
      # buttins to change the position
      
@@ -1437,15 +1448,13 @@ class TrackViewer(tk.Frame):
         if self.frame_pos!=0:
             self.frame_pos-=1
         self.plot_image()
-        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=5, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
+        self.scale_movie.set(self.frame_pos)
         
     def move_to_next(self):
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
-        self.plot_image()   
-        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-        lbframe.grid(row=5, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)              
+        self.plot_image() 
+        self.scale_movie.set(self.frame_pos)            
     
     
     def plot_image(self):
