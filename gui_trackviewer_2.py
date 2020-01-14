@@ -867,6 +867,11 @@ class MainVisual(tk.Frame):
             
             for pos in self.track_data_original:
                 p=self.track_data_original[pos]
+                
+                #add motion evaluation
+                
+                motion_type=self.motion_type_evaluate(p)
+                p['motion']=motion_type
                 self.track_data['tracks'].append(p)
                 
             self.track_data_original=self.track_data
@@ -875,8 +880,17 @@ class MainVisual(tk.Frame):
         self.track_data_filtered=self.track_data 
         self.track_to_frame()
             
-        self.list_update()        
+        self.list_update()      
         
+        
+    def motion_type_evaluate(self, track_data_original):
+        '''
+        provide motion type evaluation to select directed movement for speed evaluation
+        '''
+        
+        motion_type=[0]*len(track_data_original['frames'])
+        
+        return motion_type
     
     def track_to_frame(self):
         # change data arrangment from tracks to frames
@@ -1002,7 +1016,7 @@ class TrackViewer(tk.Frame):
         self.movie=movie
         self.membrane_movie=membrane_movie
         self.frames=track_data['frames']
-        self.motion=[1]*len(self.frames)
+        self.motion=track_data['motion']
         self.trace=track_data['trace']
         self.id=track_data['trackID']
         self.frame_pos=track_data['frames'][0]
@@ -1104,10 +1118,10 @@ class TrackViewer(tk.Frame):
         self.R1.grid(row=1, column=1, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
 
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R2.grid(row=1, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R3.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R3.grid(row=1, column=4, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
 
 
@@ -1139,7 +1153,7 @@ class TrackViewer(tk.Frame):
         else: # movement mode
             
             disp=np.sum(np.asarray(self.motion[:-1])*sqr_disp_back)
-            time=np.sum(np.asarray(self.motion)[:-1])
+            time=np.max((1,np.sum(np.asarray(self.motion)[:-1])))
            
         #speed        
         curvilinear_speed=disp/time    
@@ -1176,6 +1190,7 @@ class TrackViewer(tk.Frame):
                     end=self.trace[pos+1]
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
             
+            frame_n=np.max((1, frame_n))
             straightline_speed=distance/frame_n
 
             
