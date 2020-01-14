@@ -888,7 +888,7 @@ class MainVisual(tk.Frame):
         provide motion type evaluation to select directed movement for speed evaluation
         '''
         
-        motion_type=[0]*len(track_data_original['frames'])
+        motion_type=[1]*len(track_data_original['frames'])
         
         return motion_type
     
@@ -922,7 +922,8 @@ class MainVisual(tk.Frame):
         self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
         self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                          ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Final stop duration (sec)', 
-                         ' Net direction (degree)', 'Average speed (nm/sec)', 'Speed of movement (nm/sec)' ]) 
+                         ' Net direction (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
+                         'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
         #['TrackID', 'Start frame', 'Total distance travelled',  'Net distance travelled', 
         #'Maximum distance travelled', 'Total trajectory time',  'Stop duration', 
         # 'Net direction', 'Average speed', 'Speed of movement' ]
@@ -958,22 +959,16 @@ class MainVisual(tk.Frame):
             pointA=trajectory[0]            
             net_direction=int(math.degrees(math.atan2((pointB[1] - pointA[1]),(pointB[0] - pointA[0]))) )
             
-            # speed
-            x_1=np.asarray(trajectory)[1:,0]    
-            y_1=np.asarray(trajectory)[1:,1]   
-    
-            x_2=np.asarray(trajectory)[0:-1,0]    
-            y_2=np.asarray(trajectory)[0:-1,1]           
-            
-            # sum of all the displacements       
-            disp=np.sum(np.sqrt((x_1-x_2)**2+(y_1-y_2)**2))*self.img_resolution
-            
             # frames        
             time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
             
-            #speed        
-            average_speed=np.round(disp/time,5)
+            # speed 
             
+            average_mcs=np.round(self.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
+            average_msls=np.round(self.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
+                                 
+            moving_mcs=np.round(self.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
+            moving_msls=np.round(self.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
             #stop duration
             stop_t=FusionEvent.calculate_stand_length(self,trajectory, track['frames'], self.max_movement_stay)/self.frame_rate
             
@@ -981,7 +976,7 @@ class MainVisual(tk.Frame):
             
             self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                      max_displacement, time, stop_t, 
-                                     net_direction, average_speed, ''])
+                                     net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
             
         # select file location and name
         save_file = tk.filedialog.asksaveasfilename()
@@ -994,7 +989,81 @@ class MainVisual(tk.Frame):
 
         csvFile.close()
          
-        print("csv file has been saved to ", save_file)     
+        print("csv file has been saved to ", save_file)    
+        
+    def calculate_speed(self, track, mode="average"): # mode: "average"/"movement"
+        '''
+        calculate speed of vesicle movement
+        '''
+        trajectory=track['trace']
+        frames=track['frames']
+        motion=track['motion']
+        #Mean curvilinear speed
+
+        # separated arrays for coordinates
+        x_1=np.asarray(trajectory)[1:,0]    
+        y_1=np.asarray(trajectory)[1:,1]   
+
+        x_2=np.asarray(trajectory)[0:-1,0]    
+        y_2=np.asarray(trajectory)[0:-1,1]   
+
+        # calculate the discplacement
+
+        sqr_disp_back=np.sqrt((x_1-x_2)**2+(y_1-y_2)**2)        
+
+        if mode=="average":  
+            
+            # sum of all the displacements                   
+            disp=np.sum(sqr_disp_back)
+            
+            # frames        
+            time=(frames[-1]-frames[0])
+
+        else: # movement mode
+            
+            disp=np.sum(np.asarray(motion[:-1])*sqr_disp_back)
+            time=np.max((1,np.sum(np.asarray(motion)[:-1])))
+           
+        #speed        
+        curvilinear_speed=disp/time    
+        
+        # straightline_speed
+        if  mode=="average":
+            
+            straightline_dist=sqr_disp_back=np.sqrt((x_2[0]-x_1[-1])**2+(y_2[0]-y_1[-1])**2)
+            straightline_time=(frames[-1]-frames[0])
+            straightline_speed=straightline_dist/straightline_time
+        else:
+            move_switch=0
+            start=[0,0]
+            end=[0,0]
+            distance=0
+            frame_n=0
+            for pos in range(0, len(motion)-1):
+
+                move_pos=motion[pos]
+                if move_pos==1 and move_switch==0: # switching to the moving
+                    move_switch=1 # switch to moving mode
+                    start=trajectory[pos]
+                    
+                elif move_pos==0 and move_switch==1: #  end of motion
+                    move_switch=0 # switch off moving mode
+                    end=trajectory[pos]   
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                
+                elif move_pos==1 and move_switch==1and pos!=(len(motion)-2): # continue moving
+                    frame_n=frame_n+1
+                    
+                elif move_pos==1 and move_switch==1 and pos==(len(motion)-2):
+                    frame_n=frame_n+2
+                    end=trajectory[pos+1]
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+            
+            frame_n=np.max((1, frame_n))
+            straightline_speed=distance/frame_n
+
+            
+        return curvilinear_speed, straightline_speed # pix/frame
 ############################################################
 
 class TrackViewer(tk.Frame):
