@@ -1138,7 +1138,7 @@ class TrackViewer(tk.Frame):
             self.plot_image() 
           
         self.scale_movie = tk.Scale(master=self.viewer, from_=0, to=self.movie_length, tickinterval=100, length=400, width=5, orient="horizontal", command=show_values)
-        self.scale_movie.set(0)        
+        self.scale_movie.set(self.frame_pos)        
         self.scale_movie.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         buttonbefore = tk.Button(master=self.viewer, text=" << ", command=self.move_to_previous, width=5)
