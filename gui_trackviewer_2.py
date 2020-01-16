@@ -933,7 +933,9 @@ class MainVisual(tk.Frame):
         #['TrackID', 'Start frame', 'Total distance travelled',  'Net distance travelled', 
         #'Maximum distance travelled', 'Total trajectory time',  'Stop duration', 
         # 'Net direction', 'Average speed', 'Speed of movement' ]
+        print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
         for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            print(" track ", trackID+1)
             track=self.track_data_filtered['tracks'][trackID]
             trajectory=track['trace']
             
@@ -969,7 +971,9 @@ class MainVisual(tk.Frame):
             time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
             
             # speed 
-            
+                    
+            #evaluate motion 
+            track['motion']=self.motion_type_evaluate(track)
             average_mcs=np.round(self.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
             average_msls=np.round(self.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
                                  
@@ -1003,9 +1007,8 @@ class MainVisual(tk.Frame):
         '''
         trajectory=track['trace']
         frames=track['frames']
-        #evaluate motion 
-        
-        motion=self.motion_type_evaluate(track)
+        motion=track['motion']
+
         
         #Mean curvilinear speed
 
