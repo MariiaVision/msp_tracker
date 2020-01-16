@@ -10,8 +10,8 @@ The software visualises the detected tracks, provides statistics and allows trac
 
 ## Usage
 1. In a terminal, activate the environment: `source activate gui_tracks`
-1a. In necessary update the environment: `conda env update --file environment.yml`
-2. To run the software: `python gui_trackviewer_2.py`:
+2. In necessary update the environment: `conda env update --file environment.yml`
+3. To run the software: `python gui_trackviewer_2.py`:
   - 1st load protein movie
   - then select the tracks (.txt file, json format)
   - for fusion event detection select membrane (segmented membrane)
