@@ -35,6 +35,8 @@ from skimage.feature import peak_local_max
 
 from fusion_events import FusionEvent 
 
+from trajectory_segmentation_msd import TrajectorySegment
+
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
     def __init__(self, master):
@@ -62,6 +64,10 @@ class MainVisual(tk.Frame):
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
         self.stat_data=[] # stat data to save csv file
+        
+        # segmentation 
+        self.tg = TrajectorySegment()     
+        self.tg.window_length=10
 
         #filter parameters
         self.filter_duration=[0, 1000]
@@ -671,7 +677,13 @@ class MainVisual(tk.Frame):
             
             # creating a new window with class TrackViewer
             self.new_window = tk.Toplevel(self.master)
-            TrackViewer(self.new_window, self.track_data_filtered['tracks'][position_in_list], self.movie, self.membrane_movie, 
+             
+            # create the track set with motion
+            this_track=self.track_data_filtered['tracks'][position_in_list]
+            motion_type=self.motion_type_evaluate(this_track)
+            this_track['motion']=motion_type
+            
+            TrackViewer(self.new_window, this_track, self.movie, self.membrane_movie, 
                         self.max_movement_stay, self.img_resolution, self.frame_rate)
             
             
@@ -864,11 +876,6 @@ class MainVisual(tk.Frame):
             
             for pos in self.track_data_original:
                 p=self.track_data_original[pos]
-                
-                #add motion evaluation
-                
-                motion_type=self.motion_type_evaluate(p)
-                p['motion']=motion_type
                 self.track_data['tracks'].append(p)
                 
             self.track_data_original=self.track_data
@@ -884,8 +891,10 @@ class MainVisual(tk.Frame):
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
-        
-        motion_type=[1]*len(track_data_original['frames'])
+
+        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+        motion_type=segmentation_result[:len(track_data_original['frames'])]
+        #motion_type=[1]*len(track_data_original['frames'])
         
         return motion_type
     
@@ -994,7 +1003,10 @@ class MainVisual(tk.Frame):
         '''
         trajectory=track['trace']
         frames=track['frames']
-        motion=track['motion']
+        #evaluate motion 
+        
+        motion=self.motion_type_evaluate(track)
+        
         #Mean curvilinear speed
 
         # separated arrays for coordinates
@@ -1699,12 +1711,12 @@ class TrackViewer(tk.Frame):
         # plotting
         fig1 = plt.figure(figsize=self.figsize_value)
         #        fig1.tight_layout()
-        plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-g", label="segmented vesicle")
+        plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-b", label="segmented vesicle")
 #        self.im =  plt.plot(frames, intensity_array_2/np.max(intensity_array_2), "-r", frames, intensity_array_1/np.max(intensity_array_1), "-g")
 #        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
 #plt.xlabel("frames", fontsize='small')
         plt.ylabel("intensity", fontsize='small')
-        plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-r", label="without segmentation")
+        plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-k", label="without segmentation")
         if check_border==0:
             plt.title('Vesicle intensity per frame', fontsize='small')
         else:
@@ -1746,10 +1758,18 @@ class TrackViewer(tk.Frame):
         self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
         
         fig = plt.figure(figsize=self.figsize_value)
-
-        #fig.tight_layout()
         
-        self.im = plt.plot(self.frames, self.displacement_array*self.img_resolution)
+        disaplcement=self.displacement_array*self.img_resolution
+#        self.im = plt.plot(self.frames, disaplcement) 
+        
+        # plot dosplacement colour
+        for i in range(0, len(self.motion)-1):
+            if self.motion[i]==0:
+                colourV='r'
+            else:
+                colourV='g'
+            plt.plot((self.frames[i],self.frames[i+1]), (disaplcement[i],disaplcement[i+1]), colourV)
+            
         #       plt.xlabel('frames', fontsize='small')
         plt.ylabel('displacement (nm)', fontsize='small')
 
