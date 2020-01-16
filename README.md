@@ -10,6 +10,7 @@ The software visualises the detected tracks, provides statistics and allows trac
 
 ## Usage
 1. In a terminal, activate the environment: `source activate gui_tracks`
+1a. In necessary update the environment: `conda env update --file environment.yml`
 2. To run the software: `python gui_trackviewer_2.py`:
   - 1st load protein movie
   - then select the tracks (.txt file, json format)
@@ -17,7 +18,7 @@ The software visualises the detected tracks, provides statistics and allows trac
 
 
 ## to do list:
+- [ ] include motion map with A-P orientation
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
 - [ ] clean the code
-- [ ] include trajectory segmentation into the speed evaluation
