@@ -90,6 +90,7 @@ class MainVisual(tk.Frame):
         self.filtered_tracks_N=0
         
         self.max_movement_stay=1.0
+        self.ap_axis=90
      # # # # # # menu to choose files and print data # # # # # #
         
         self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=20)
@@ -153,6 +154,20 @@ class MainVisual(tk.Frame):
         v = tk.StringVar(root, value=str(self.frame_rate))
         self.frame_parameter = tk.Entry(root, width=10, text=v)
         self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)        
+        
+            
+        # AP axis 
+        ap_lb = tk.Label(master=root, text=" AP axis: ", width=20, bg='white')
+        ap_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
+        v = tk.StringVar(root, value=str(self.ap_axis))
+        self.ap_parameter = tk.Entry(root, width=10, text=v)
+        self.ap_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
+            
+        lbl3 = tk.Label(master=root, text="frame rate (f/sec) : ", width=20, bg='white')
+        lbl3.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val)
+        v = tk.StringVar(root, value=str(self.frame_rate))
+        self.frame_parameter = tk.Entry(root, width=10, text=v)
+        self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)   
        # list switchL # 0 - all, 1 
 
         # trackID
@@ -227,6 +242,14 @@ class MainVisual(tk.Frame):
         
         button_save=tk.Button(master=root, text="update", command=self.update_data, width=14)
         button_save.grid(row=4, rowspan=2, column=7, pady=self.pad_val, padx=self.pad_val)
+
+
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+        # motion map 
+
+        button_save=tk.Button(master=root, text="motion map", command=self.plot_motion_map, width=14)
+        button_save.grid(row=13, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to save all the tracks on the image
         
@@ -396,6 +419,69 @@ class MainVisual(tk.Frame):
         plt.savefig(save_file)
         # close the image
         plt.close()     
+        
+    def plot_motion_map(self):
+        '''
+        plot motion map woth given AP
+        '''
+        def from_cartesian_to_polar(x,y):
+            r=math.sqrt(x**2+y**2)
+            angle=math.degrees(math.atan2(y,x))
+            return r, (angle+360)%360
+        orintation_array=[]
+        orientation_array_length_related=[]
+        
+        fig = plt.figure(figsize=(15,6))
+        plt.axis('off')
+        ax = fig.add_subplot(121)
+        ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
+               
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+        #    calculate parameters
+            point_start=track['trace'][0]
+            point_end=track['trace'][-1]
+
+            # calculate orientation
+            r, orintation_move=from_cartesian_to_polar(point_end[0]-point_start[0], point_end[1]-point_start[1])
+            
+            for pos in range(int(r*100)):
+                orientation_array_length_related.append(orintation_move)
+            
+            orintation_array.append(orintation_move)
+   
+            color='r'
+            plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
+                      fc=color, ec=color, length_includes_head = True)
+        
+        bin_size=10
+        a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
+        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
+        
+        ax = fig.add_subplot(122, projection='polar')
+#        plt.xticks(np.radians(range(0, 30, 180)),['0', '30', '60', '90', '120', '150', '180'])
+        #read ap axis
+        if self.ap_parameter.get()!='':
+            self.ap_axis=int(self.ap_parameter.get())
+
+        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330,  (self.ap_axis+90)%360, (self.ap_axis+270)%360)),
+                   ['270', '300', '330', '0' , '30', '60','90', '120', '150', '180', '210', '240', '\n \n AP', '\n AP'])
+        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+        ax.set_theta_zero_location("S")
+        ax.set_theta_direction(1)
+        ax.set_title(" movement orientation \n based on track count ")
+        
+#        plt.show()
+        
+        # request file name
+        save_file = tk.filedialog.asksaveasfilename() 
+
+        if not(save_file.endswith(".png")):
+            save_file += ".png"        
+#        filename='/home/mariaa/NANOSCOPY/VESICLE_TRACKING/tracking_result/spinning_disk/movement_map/movement_map_'+file_name+'_cell_'+str(cellN)+'.png'
+        plt.savefig(save_file) 
+        
+        
         
     def save_movie(self):
         length=self.movie.shape[0]
