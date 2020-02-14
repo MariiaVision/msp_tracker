@@ -615,14 +615,14 @@ class MainVisual(tk.Frame):
         
         if self.frame_pos!=0:
             self.frame_pos-=1
-        self.show_tracks()
+ #       self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
     def move_to_next(self):
         
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
-        self.show_tracks()
+  #      self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
         
