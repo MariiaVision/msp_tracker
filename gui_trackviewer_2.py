@@ -19,7 +19,6 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
-
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
@@ -57,7 +56,7 @@ class MainVisual(tk.Frame):
         
         self.movie_file=" " # path to the move file
         self.track_file=" "# path to the file with tracking data (json format)
-        self.movie=[] # matrix with data
+        self.movie=np.ones((1,200,200)) # matrix with data
         self.membrane_movie=[]
         self.track_data_original={}
         self.track_data={'tracks':[]} # original tracking data
@@ -272,16 +271,11 @@ class MainVisual(tk.Frame):
       # # # # # # movie  # # # # # # 
         
         # plot bg
-        bg_img=np.ones((200,200))*0.8
-        fig = plt.figure(figsize=self.figsize_value)
-        plt.axis('off')
-        self.im = plt.imshow(bg_img, cmap="gray") # for later use self.im.set_data(new_data)
-
-
-        # DrawingArea
-        self.canvas = FigureCanvasTkAgg(fig, master=root)
-        self.canvas.draw()
-        self.canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value)
+        self.ax.axis('off')
+        self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        
+        self.show_tracks() 
         
     
    #  #  # # # # next and previous buttons
@@ -643,9 +637,9 @@ class MainVisual(tk.Frame):
         else:
             self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
-        fig = plt.figure(figsize=self.figsize_value)
-        plt.axis('off')
-        self.im = plt.imshow(self.image, cmap="gray") # for later use self.im.set_data(new_data)
+        self.ax.clear() # clean the plot 
+        self.ax.imshow(self.image, cmap="gray")
+        self.ax.axis('off')
         
         if  self.track_data_framed and self.monitor_switch<=1:
             # plot tracks
@@ -667,9 +661,15 @@ class MainVisual(tk.Frame):
             plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
         
         # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=root)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+        self.canvas.get_tk_widget().grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        self.canvas.draw()
+        # toolbar
+        toolbarFrame = tk.Frame(master=root)
+        toolbarFrame.grid(row=18, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
+        self.toolbar.set_message=lambda x:"" # remove message with coordinates
+        self.toolbar.update()
         
         
 
