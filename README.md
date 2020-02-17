@@ -18,6 +18,7 @@ The software visualises the detected tracks, provides statistics and allows trac
 
 
 ## to do list:
+- [ ] make scaling transit from frame to frame -> self.ax.set_ylim(val) doesn't allow "home" button
 - [ ] change to different system to read the tracks
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
