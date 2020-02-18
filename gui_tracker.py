@@ -417,8 +417,11 @@ class LinkingViewer(tk.Frame):
         self.img_width=self.window_height*0.8
         self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
         self.button_length=np.max((10,int(self.window_width/100)))
+        self.track_data_framed={} 
         
-        
+        self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
+            "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
+            "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]        
         #############################################
 
 
@@ -592,20 +595,37 @@ class LinkingViewer(tk.Frame):
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_track_duration_limit))
         self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
         self.l_tracklinking_path1_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+ 
     
-    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+
+    # test range 
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Testing from frame  ",  bg='white')
+        lbl3.grid(row=16, column=0)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.start_frame))
+        self.start_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
+
+        lbl3 = tk.Label(master=self.parametersFrame, text=" to frame  ", bg='white')
+        lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.end_frame))
+        self.end_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
+        
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
-        lbl3.grid(row=16, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
-        lbl3.grid(row=17, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=18, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
         
   # # # # # # # # # # # # # # # # # # # # # # # # #       
         
@@ -638,7 +658,28 @@ class LinkingViewer(tk.Frame):
   #      self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
+    def track_to_frame(self, data):
+        # change data arrangment from tracks to frames
+        self.track_data_framed={}
+        self.track_data_framed.update({'frames':[]})
         
+        for n_frame in range(0,self.movie_length):
+            
+            frame_dict={}
+            frame_dict.update({'frame': n_frame})
+            frame_dict.update({'tracks': []})
+            
+            #rearrange the data
+            for p in data:
+                if n_frame in p['frames']: # if the frame is in the track
+                    frame_index=p['frames'].index(n_frame) # find position in the track
+                    
+                    new_trace=p['trace'][0:frame_index+1] # copy all the traces before the frame
+                    frame_dict['tracks'].append({'trackID': p['trackID'], 'trace': new_trace}) # add to the list
+                    
+                    
+            self.track_data_framed['frames'].append(frame_dict) # add the dictionary
+            
     def show_frame(self):    
 
         # plot image
@@ -648,21 +689,23 @@ class LinkingViewer(tk.Frame):
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')  
         
-        # plot results
-        
+        # define the tracks to plot
    
-        if self.monitor_switch==1: # candidates
-            if len(self.detector.detection_candidates)>0:
-                for i in range(0, len(np.asarray(self.detector.detection_candidates))):
-                    circle=plt.Circle((np.asarray(self.detector.detection_candidates)[i,1], np.asarray(self.detector.detection_candidates)[i,0]), 3, color="b", fill=False)
-                    self.ax.add_artist(circle)    
-        elif self.monitor_switch==2: # detection
-            if len(self.detector.detection_vesicles)>0:
-                for i in range(0, len(np.asarray(self.detector.detection_vesicles))):
-                    circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="b", fill=False)
-                    self.ax.add_artist(circle)    
-
-
+        if self.monitor_switch==1: # tracklets
+            self.track_to_frame(self.detector.tracklets)
+        elif self.monitor_switch==2: # tracks
+            self.track_to_frame(self.detector.tracks)
+            
+        
+        # plotting
+        if  bool(self.track_data_framed): # if the dict is not empty
+            # plot tracks
+#            print("self.frame_pos ", self.frame_pos)
+#            print(self.track_data_framed['frames'][self.frame_pos])
+            for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
+                trace=p['trace']
+                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
+                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame)
