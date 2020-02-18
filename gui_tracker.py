@@ -191,55 +191,58 @@ class DetectionViewer(tk.Frame):
   # # # # # # # # # # # # # # # # # # # # # # # # # 
 
         lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES DETECTION ",  bg='white')
-        lbl3.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # substract_bg_step background substraction step 
 
         lbl3 = tk.Label(master=self.parametersFrame, text=" Background evaluation: N frames ",  bg='white')
-        lbl3.grid(row=2, column=0) 
+        lbl3.grid(row=1, column=0) 
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.substract_bg_step))
         self.d_substract_bg_step = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_substract_bg_step.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_substract_bg_step.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # threshold coef
 
         lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient  ",  bg='white')
-        lbl3.grid(row=3, column=0) 
+        lbl3.grid(row=2, column=0) 
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.c))
         self.d_c = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_c.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_c.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
 
     # sigma
         lbl3 = tk.Label(master=self.parametersFrame, text=" Sigma : from  ",  bg='white')
-        lbl3.grid(row=4, column=0)
+        lbl3.grid(row=3, column=0)
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_min))
         self.d_sigma_min = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_sigma_min.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_sigma_min.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
          
         lbl3 = tk.Label(master=self.parametersFrame, text=" to ", bg='white')
-        lbl3.grid(row=4, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3.grid(row=3, column=2, pady=self.pad_val, padx=self.pad_val)
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_max))
         self.d_sigma_max = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_sigma_max.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
     # min_distance min distance minimum distance between two max after MSSEF
 
         lbl3 = tk.Label(master=self.parametersFrame, text=" Minimum distance between detections  ",  bg='white')
-        lbl3.grid(row=5, column=0) 
+        lbl3.grid(row=4, column=0) 
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.min_distance))
         self.d_min_distance = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_min_distance.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_min_distance.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # self.threshold_rel min pix value in relation to the image
     
         lbl3 = tk.Label(master=self.parametersFrame, text=" Relevant peak height ",  bg='white')
-        lbl3.grid(row=6, column=0) 
+        lbl3.grid(row=5, column=0) 
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.threshold_rel))
         self.d_threshold_rel = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_threshold_rel.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
 
             
-        
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)        
+                
         
         lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES PRUNING ",  bg='white')
         lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
@@ -250,7 +253,8 @@ class DetectionViewer(tk.Frame):
         v=tk.StringVar(self.parametersFrame, value=str(self.detector.box_size))
         self.d_box_size = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
         self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
-    
+
+
     # detection_threshold threshold for the CNN based classification
         lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient ",  bg='white')
         lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
@@ -435,21 +439,21 @@ class LinkingViewer(tk.Frame):
         self.button_mv = tk.Button(self.viewFrame,text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=20)
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
 
-        var_plot_detection = tk.IntVar()
+        var_plot_linking = tk.IntVar()
         
-        def update_detection_switch():            
-            self.monitor_switch=var_plot_detection.get()
+        def update_linking_switch():            
+            self.monitor_switch=var_plot_linking.get()
             # change image
             self.show_frame()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(self.viewFrame, text=" original image ", variable=var_plot_detection, value=0, bg='white', command =update_detection_switch )
+        self.M1 = tk.Radiobutton(self.viewFrame, text=" original image ", variable=var_plot_linking, value=0, bg='white', command =update_linking_switch )
         self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
         
-        self.M2 = tk.Radiobutton(self.viewFrame, text=" tracklets ", variable=var_plot_detection, value=1, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M2 = tk.Radiobutton(self.viewFrame, text=" tracklets ", variable=var_plot_linking, value=1, bg='white',command = update_linking_switch ) #  command=sel)
         self.M2.grid(row=3, column=3, columnspan=3,  pady=self.pad_val, padx=self.pad_val)
         
-        self.M3 = tk.Radiobutton(self.viewFrame, text=" tracks ", variable=var_plot_detection, value=2, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M3 = tk.Radiobutton(self.viewFrame, text=" tracks ", variable=var_plot_linking, value=2, bg='white',command = update_linking_switch ) #  command=sel)
         self.M3.grid(row=3, column=6, columnspan=3, pady=self.pad_val, padx=self.pad_val)
   
         
@@ -480,105 +484,132 @@ class LinkingViewer(tk.Frame):
         
   # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES DETECTION ",  bg='white')
-        lbl3.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        lbl3 = tk.Label(master=self.parametersFrame, text=" TRACKER: STEP 1 ",  bg='white')
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
-    # substract_bg_step background substraction step 
+    # Maximum distance to link 
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Background evaluation: N frames ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum distance to link, pix ",  bg='white')
+        lbl3.grid(row=1, column=0) 
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_distance_threshold))
+        self.l_tracker_distance_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracker_distance_threshold.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+    # Maximum skipped frames
+
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum skipped frames  ",  bg='white')
         lbl3.grid(row=2, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.substract_bg_step))
-        self.d_substract_bg_step = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_substract_bg_step.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_max_skipped_frame))
+        self.l_tracker_max_skipped_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracker_max_skipped_frame.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    # Maximum track length
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum track length  ",  bg='white')
+        lbl3.grid(row=3, column=0)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_max_track_length))
+        self.l_tracker_max_track_length = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracker_max_track_length.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
         
-    # threshold coef
+        
+        
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
+        
+        lbl3 = tk.Label(master=self.parametersFrame, text=" TRACKER: step 2 - tracklinking ",  bg='white')
+        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Topology
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient  ",  bg='white')
-        lbl3.grid(row=3, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.c))
-        self.d_c = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_c.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Bayesian network topology ",  bg='white')
+        lbl3.grid(row=7, column=0)     
+        comboTopology = ttk.Combobox(master=self.parametersFrame, 
+                            values=[
+                                    "complete", 
+                                    "no_intensity",
+                                    "no_orientation",
+                                    "no_motion",
+                                    "no_gap"]) # comboTopology.get()
+        comboTopology.grid(row=7, column=1) 
+        comboTopology.current(0)
 
-    # sigma
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Sigma : from  ",  bg='white')
-        lbl3.grid(row=4, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_min))
-        self.d_sigma_min = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_sigma_min.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_connectivity_threshold 
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Connectivity threshold [0,1]  ",  bg='white')
+        lbl3.grid(row=8, column=0)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_connectivity_threshold))
+        self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        
+    # tracklinking_path1_frame_gap_0 
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Small temporal gap, frames  ",  bg='white')
+        lbl3.grid(row=9, column=0)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_frame_gap_0))
+        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
          
-        lbl3 = tk.Label(master=self.parametersFrame, text=" to ", bg='white')
-        lbl3.grid(row=4, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_max))
-        self.d_sigma_max = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_sigma_max.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
-        
-    # min_distance min distance minimum distance between two max after MSSEF
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Minimum distance between detections  ",  bg='white')
-        lbl3.grid(row=5, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.min_distance))
-        self.d_min_distance = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_min_distance.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
-        
-    # self.threshold_rel min pix value in relation to the image
+        #tracklinking_path1_frame_gap_1
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Large temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_frame_gap_1))
+        self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
     
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Relevant peak height ",  bg='white')
-        lbl3.grid(row=6, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.threshold_rel))
-        self.d_threshold_rel = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_threshold_rel.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
-
-            
-        
-        
-        lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES PRUNING ",  bg='white')
-        lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    #self.box_size=16 # bounding box size for detection
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Region of Interest size ",  bg='white')
-        lbl3.grid(row=8, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.box_size))
-        self.d_box_size = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
-    
-    # detection_threshold threshold for the CNN based classification
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient ",  bg='white')
-        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.detection_threshold))
-        self.d_detection_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
-    
-    # gaussian_fit gaussian fit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Gaussian fit (True/False) ",  bg='white')
+    #  tracklinking_path1_distance_limit
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Distance limit, pix ",  bg='white')
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.gaussian_fit))
-        self.d_gaussian_fit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_distance_limit))
+        self.l_tracklinking_path1_distance_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
     
-    # cnn_model cnn model 
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)  
-        lbl3 = tk.Label(master=self.parametersFrame, text=self.detector.cnn_model_path,  bg='white')
-        lbl3.grid(row=11, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+    # tracklinking_path1_direction_limit
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Orientation similarity limit, degrees ",  bg='white')
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_direction_limit))
+        self.l_tracklinking_path1_direction_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    # tracklinking_path1_speed_limit
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Speed siimilarity limit ",  bg='white')
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_speed_limit))
+        self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    # tracklinking_path1_intensity_limit
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Intensity similarity limit, partition ",  bg='white')
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_intensity_limit))
+        self.l_tracklinking_path1_intensity_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    
+        
+    # tracklinking_path1_track_duration_limit
+        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold of track length, frames ",  bg='white')
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_track_duration_limit))
+        self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        self.l_tracklinking_path1_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+    
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
-        lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=16, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
-        lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=17, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=18, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
         
   # # # # # # # # # # # # # # # # # # # # # # # # #       
         
-    def load_cnn_model(self):
-        
-        print("\n loading model here! \n")
+
         
     def run_test(self):
         
