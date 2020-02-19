@@ -298,15 +298,15 @@ class MainApplication(tk.Frame):
     
         lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Bayesian network topology ",  bg='white')
         lbl3.grid(row=7, column=0)     
-        comboTopology = ttk.Combobox(master=self.parametersFrame_linking, 
+        self.comboTopology = ttk.Combobox(master=self.parametersFrame_linking, 
                             values=[
                                     "complete", 
                                     "no_intensity",
                                     "no_orientation",
                                     "no_motion",
                                     "no_gap"]) # comboTopology.get()
-        comboTopology.grid(row=7, column=1) 
-        comboTopology.current(0)
+        self.comboTopology.grid(row=7, column=1) 
+        self.comboTopology.current(0)
     
     
     # tracklinking_path1_connectivity_threshold 
@@ -576,12 +576,12 @@ class MainApplication(tk.Frame):
         self.collect_detection_parameters()
         
         # choose the file
-        self.detection_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        self.detector.detection_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
         
         # save into the file
-        self.detection.detection_parameter_to_file()
+        self.detector.detection_parameter_to_file()
         
-        print(" Parameters are in the file ", self.detection_parameter_path)
+        print(" Parameters are in the file ", self.detector.detection_parameter_path)
 
     def read_from_file_detection(self):
         
@@ -589,28 +589,13 @@ class MainApplication(tk.Frame):
         filename = tk.filedialog.askopenfilename(title = "Open file with parameters ")
         # read from the file
         
-        self.detection.detection_parameters_from_file(filename)
+        self.detector.detection_parameters_from_file(filename)
         
         # update frame
         self.set_detection_parameters_frame()
         
         print(" Parameters are read from the file ", filename)
 
-        
-    def move_to_previous(self):
-        
-        if self.frame_pos!=0:
-            self.frame_pos-=1
- #       self.show_tracks()
-        self.scale_movie.set(self.frame_pos) 
-        
-    def move_to_next(self):
-        
-        if self.frame_pos<self.movie_length-1:
-            self.frame_pos+=1
-  #      self.show_tracks()
-        self.scale_movie.set(self.frame_pos) 
-        
         
     def show_frame_detection(self):    
         
@@ -722,28 +707,106 @@ class MainApplication(tk.Frame):
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
           
  
-
+    def collect_linking_parameters(self):
+        
+        # parameters: TRACKER: STEP 1
+        if self.l_tracker_distance_threshold.get()!='':
+            self.detector.tracker_distance_threshold=int(self.l_tracker_distance_threshold.get())
+            
+        if self.l_tracker_max_skipped_frame.get()!='':
+            self.detector.tracker_max_skipped_frame=int(self.l_tracker_max_skipped_frame.get())
+            
+        if self.l_tracker_max_track_length.get()!='':
+            self.detector.tracker_max_track_length=int(self.l_tracker_max_track_length.get())
+            
+            
+        # parameters: TRACKER: step 2 - tracklinking    
+        if self.comboTopology.get()!='':
+            self.detector.topology=str(self.comboTopology.get())
+            
+        if self.l_tracklinking_path1_connectivity_threshold.get()!='':
+            self.detector.tracklinking_path1_connectivity_threshold=float(self.l_tracklinking_path1_connectivity_threshold.get())
+            
+        if self.l_tracklinking_path1_frame_gap_0.get()!='':
+            self.detector.tracklinking_path1_frame_gap_0=int(self.l_tracklinking_path1_frame_gap_0.get())
+            
+        if self.l_tracklinking_path1_frame_gap_1.get()!='':
+            self.detector.tracklinking_path1_frame_gap_1=int(self.l_tracklinking_path1_frame_gap_1.get())
+            
+        if self.l_tracklinking_path1_distance_limit.get()!='':
+            self.detector.tracklinking_path1_distance_limit=float(self.l_tracklinking_path1_distance_limit.get())
+            
+        if self.l_tracklinking_path1_direction_limit.get()!='':
+            self.detector.tracklinking_path1_direction_limit=float(self.l_tracklinking_path1_direction_limit.get())
+            
+        if self.l_tracklinking_path1_speed_limit.get()!='':
+            self.detector.tracklinking_path1_speed_limit=float(self.l_tracklinking_path1_speed_limit.get())
+            
+        if self.l_tracklinking_path1_intensity_limit.get()!='':
+            self.detector.tracklinking_path1_intensity_limit=float(self.l_tracklinking_path1_intensity_limit.get())
+            
+        # start and end frame
+            
+        if self.start_frame.get()!='':
+            self.detector.start_frame=int(self.start_frame.get())
+            
+        if self.end_frame.get()!='':
+            self.detector.end_frame=int(self.end_frame.get())
+        
         
     def run_test_linking(self):
+        # read parameters from the buttons
+
+        self.collect_linking_parameters()
+
+        # movie 
+        self.detector.movie=self.movie
+        print("----------------parameters -----------------")
+        print(" tracker_distance_threshold", self.detector.tracker_distance_threshold)
+        print(" tracker_max_skipped_frame", self.detector.tracker_max_skipped_frame)
+        print(" tracker_max_track_length \n", self.detector.tracker_max_track_length)
         
-        print("\n run_test! \n")
+        print(" topology", self.detector.topology)
+        print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
+        print(" tracklinking_path1_frame_gap_0", self.detector.tracklinking_path1_frame_gap_0)
+        print(" tracklinking_path1_frame_gap_1", self.detector.tracklinking_path1_frame_gap_1)
+        print(" tracklinking_path1_distance_limit", self.detector.tracklinking_path1_distance_limit)
+        print(" tracklinking_path1_direction_limit", self.detector.tracklinking_path1_direction_limit)
+        print(" tracklinking_path1_speed_limit", self.detector.tracklinking_path1_speed_limit)
+        print(" tracklinking_path1_intensity_limit /n", self.detector.tracklinking_path1_intensity_limit)
+        
+        print(" start_frame", self.detector.start_frame)
+        print(" end_frame", self.detector.end_frame)
+        
+        print("\n running linking ...")
+
+        self.detector.linking()
+        self.show_frame_linking()        
     
     def save_to_file_linking(self):
+        # update parameters
+        self.collect_linking_parameters()
+
+        # choose the file
+        self.detector.linking_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
         
-        print("\n save_to_file! \n")
-    
+        if self.detector.linking_parameter_to_file()!="":
+            self.detector.linking_parameter_to_file()
+        
     def read_from_file_linking(self):
         
-        print("\n read_from_file! \n")
-    
+        # choose file
+        filename = tk.filedialog.askopenfilename(title = "Open file with  linking parameters ")
         
-    def move_to_previous_linking(self):
+        # read from the file  
+        if filename!="":
+            self.detector.linking_parameters_from_file(filename)
         
-        if self.frame_pos!=0:
-            self.frame_pos-=1
-     #       self.show_tracks()
-        self.scale_movie.set(self.frame_pos) 
+            # update frame
+            self.set_linking_parameters_frame()
         
+        print(" Parameters are read from the file ", filename)
+
         
     def track_to_frame(self, data):
         # change data arrangment from tracks to frames
@@ -755,9 +818,10 @@ class MainApplication(tk.Frame):
             frame_dict={}
             frame_dict.update({'frame': n_frame})
             frame_dict.update({'tracks': []})
-            
+
             #rearrange the data
-            for p in data:
+            for trackID in data:
+                p=data[trackID]
                 if n_frame in p['frames']: # if the frame is in the track
                     frame_index=p['frames'].index(n_frame) # find position in the track
                     
