@@ -54,12 +54,16 @@ class MainApplication(tk.Frame):
         #set the window size        
         self.window_width = int(parent.winfo_screenwidth()/2) # half the monitor width
         self.window_height = int(parent.winfo_screenheight()*0.8)  # 0.9 of the monitor height
-#        print("window_width : ", self.window_width, ", window_height : ", self.window_height) #Width x Height
 #        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
+
         
+        # set movie and class for parameter settings
+        self.movie=np.ones((1,200,200))
+        self.detector=TrackingSetUp()
+
         
         # TABs 
-        # set the stryle 
+        # set the style 
         style = ttk.Style()
         style.configure("TNotebook", foreground="black", background="white")
         
@@ -74,47 +78,41 @@ class MainApplication(tk.Frame):
         
         tab_membrane = ttk.Frame(tab_parent)
         tab_parent.add(tab_membrane, text=" Membrane segmentation ")
-    
-            
+
+        
+        tab_run = ttk.Frame(tab_parent)
+        tab_parent.add(tab_run, text=" Run tracking ")        
+        
         tab_parent.pack(expand=1, fill='both')
         
         
         # detection
         detectionFrame = tk.Frame(master=tab_detection)
         detectionFrame.pack(expand=1, fill='both')
-        DetectionViewer(detectionFrame)
         
         # linking 
         linkingFrame = tk.Frame(master=tab_linking)
         linkingFrame.pack(expand=1, fill='both')
-        LinkingViewer(linkingFrame)
-                        
-        #closing the window
-        parent.protocol('WM_DELETE_WINDOW', self.close_app)
+        
+        # membrane
+        membraneFrame = tk.Frame(master=tab_membrane)
+        membraneFrame.pack(expand=1, fill='both')
+        
+        
+        # run 
+        runFrame = tk.Frame(master=tab_run)
+        runFrame.pack(expand=1, fill='both')
+        
 
-        tk.mainloop()
 
-
-    def close_app(self):
-        self.quit()
-
-class DetectionViewer(tk.Frame):
-    '''
-    class for the detection
-    '''
-    def __init__(self, master):
-        tk.Frame.__init__(self, master)
-
-        #set the window size        
-        self.window_width = int(master.winfo_screenwidth()/2) # half the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.8)  # 0.8 of the monitor height
-        master.configure(background='white')
+    ########################## DETECTION ######################
+     # # # # # # # # # # # # # # # # # # # # # #   
+        detectionFrame.configure(background='white')
         
         ############################################
-        self.movie=np.ones((1,200,200)) # matrix with data
+
         self.frame_pos=0
-        self.movie_length=0
-        self.detector=TrackingSetUp()
+        self.movie_length=1
         self.monitor_switch=0
         self.pad_val=5
         self.dpi=100
@@ -124,25 +122,22 @@ class DetectionViewer(tk.Frame):
         
         
         #############################################
-        
-#        firstLabelTabOne = tk.Label(viewFrame, text=" Setting detection parameters", bg="white")
-#        firstLabelTabOne.grid(row=0, column=0, padx=15, pady=15)
 
         # Framework: place monitor and view point
-        self.viewFrame = tk.Frame(master=self.master, width=int(self.window_width*0.6), height=self.window_height, bg="white")
-        self.viewFrame.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
+        self.viewFrame_detection = tk.Frame(master=detectionFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_detection.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
 
            
         # place parameters and buttons
-        self.parametersFrame = tk.Frame(master=self.master, width=int(self.window_width*0.4), height=self.window_height, bg="white")
-        self.parametersFrame.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
+        self.parametersFrame_detection = tk.Frame(master=detectionFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_detection.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
 
 
 
 
      # # # # # # # # # # # # # # # # # # # # # #    
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame,text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=20)
+        self.button_mv = tk.Button(self.viewFrame_detection,text="   Select vesicle movie   ", command=self.select_vesicle_movie_detection, width=20)
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
 
         var_plot_detection = tk.IntVar()
@@ -150,16 +145,16 @@ class DetectionViewer(tk.Frame):
         def update_detection_switch():            
             self.monitor_switch=var_plot_detection.get()
             # change image
-            self.show_frame()
+            self.show_frame_detection()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(self.viewFrame, text=" original image ", variable=var_plot_detection, value=0, bg='white', command =update_detection_switch )
+        self.M1 = tk.Radiobutton(self.viewFrame_detection, text=" original image ", variable=var_plot_detection, value=0, bg='white', command =update_detection_switch )
         self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
         
-        self.M2 = tk.Radiobutton(self.viewFrame, text=" candidates ", variable=var_plot_detection, value=1, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M2 = tk.Radiobutton(self.viewFrame_detection, text=" candidates ", variable=var_plot_detection, value=1, bg='white',command = update_detection_switch ) #  command=sel)
         self.M2.grid(row=3, column=3, columnspan=3,  pady=self.pad_val, padx=self.pad_val)
         
-        self.M3 = tk.Radiobutton(self.viewFrame, text=" detection ", variable=var_plot_detection, value=2, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M3 = tk.Radiobutton(self.viewFrame_detection, text=" detection ", variable=var_plot_detection, value=2, bg='white',command = update_detection_switch ) #  command=sel)
         self.M3.grid(row=3, column=6, columnspan=3, pady=self.pad_val, padx=self.pad_val)
   
         
@@ -169,126 +164,337 @@ class DetectionViewer(tk.Frame):
         self.ax.axis('off')
         self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
-        self.show_frame() 
+        self.show_frame_detection() 
 
    #   next and previous buttons
-        def show_values(v):
+        def show_values_detection(v):
             self.frame_pos=int(v)
             self.show_tracks() 
           
-        self.scale_movie = tk.Scale(self.viewFrame, from_=0, to=self.movie_length, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie = tk.Scale(self.viewFrame_detection, from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values_detection)
         self.scale_movie.set(0)        
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
-        buttonbefore = tk.Button(self.viewFrame, text=" << ", command=self.move_to_previous, width=5)
-        buttonbefore.grid(row=7, column=1, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
-
-        
-        buttonnext = tk.Button(self.viewFrame, text=" >> ", command=self.move_to_next, width=5)
-        buttonnext.grid(row=7, column=7, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
 
         
   # # # # # # # # # # # # # # # # # # # # # # # # # 
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES DETECTION ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES DETECTION ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # substract_bg_step background substraction step 
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Background evaluation: N frames ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Background evaluation: N frames ",  bg='white')
         lbl3.grid(row=1, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.substract_bg_step))
-        self.d_substract_bg_step = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.substract_bg_step))
+        self.d_substract_bg_step = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_substract_bg_step.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # threshold coef
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient  ",  bg='white')
         lbl3.grid(row=2, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.c))
-        self.d_c = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.c))
+        self.d_c = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_c.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
 
     # sigma
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Sigma : from  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Sigma : from  ",  bg='white')
         lbl3.grid(row=3, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_min))
-        self.d_sigma_min = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_min))
+        self.d_sigma_min = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_sigma_min.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
          
-        lbl3 = tk.Label(master=self.parametersFrame, text=" to ", bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" to ", bg='white')
         lbl3.grid(row=3, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.sigma_max))
-        self.d_sigma_max = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_max))
+        self.d_sigma_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
     # min_distance min distance minimum distance between two max after MSSEF
 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Minimum distance between detections  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
         lbl3.grid(row=4, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.min_distance))
-        self.d_min_distance = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
+        self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_min_distance.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # self.threshold_rel min pix value in relation to the image
     
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Relevant peak height ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Relevant peak height ",  bg='white')
         lbl3.grid(row=5, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.threshold_rel))
-        self.d_threshold_rel = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.threshold_rel))
+        self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
 
             
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)        
                 
         
-        lbl3 = tk.Label(master=self.parametersFrame, text=" CANDIDATES PRUNING ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
         lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     #self.box_size=16 # bounding box size for detection
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Region of Interest size ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region of Interest size ",  bg='white')
         lbl3.grid(row=8, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.box_size))
-        self.d_box_size = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size))
+        self.d_box_size = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
 
 
     # detection_threshold threshold for the CNN based classification
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold coefficient ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient ",  bg='white')
         lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.detection_threshold))
-        self.d_detection_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.detection_threshold))
+        self.d_detection_threshold = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # gaussian_fit gaussian fit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Gaussian fit (True/False) ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Gaussian fit (True/False) ",  bg='white')
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.gaussian_fit))
-        self.d_gaussian_fit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.gaussian_fit))
+        self.d_gaussian_fit = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # cnn_model cnn model 
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
         lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)  
-        lbl3 = tk.Label(master=self.parametersFrame, text=self.detector.cnn_model_path,  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path,  bg='white')
         lbl3.grid(row=11, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
     
   # # # # # #  # #
 
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
         lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
         lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
         
-  # # # # # # # # # # # # # # # # # # # # # # # # #       
+  # # # # # # # # # # # # # # # # # # # # # # # # # 
+
+############################ Linking #################
+
+        #set the window size        
+        linkingFrame.configure(background='white')
+        
+        ############################################
+    
+        self.frame_pos=0
+        self.monitor_switch=0
+        self.pad_val=5
+        self.dpi=100
+        self.img_width=self.window_height*0.8
+        self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
+        self.button_length=np.max((10,int(self.window_width/100)))
+        self.track_data_framed={} 
+    
+        
+        self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
+            "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
+            "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]        
+        #############################################
+    
+    
+        # Framework: place monitor and view point
+        self.viewFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_linking.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
+    
+           
+        # place parameters and buttons
+        self.parametersFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_linking.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
+    
+  
+        # Framework: place monitor 
+        self.button_mv = tk.Button(self.viewFrame_linking,text="   Select vesicle movie   ", command=self.select_vesicle_movie_linking, width=20)
+        self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
+    
+        var_plot_linking = tk.IntVar()
+        
+        def update_linking_switch():            
+            self.monitor_switch=var_plot_linking.get()
+            # change image
+            self.show_frame_linking()
+    
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.M1 = tk.Radiobutton(self.viewFrame_linking, text=" original image ", variable=var_plot_linking, value=0, bg='white', command =update_linking_switch )
+        self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.M2 = tk.Radiobutton(self.viewFrame_linking, text=" tracklets ", variable=var_plot_linking, value=1, bg='white',command = update_linking_switch ) #  command=sel)
+        self.M2.grid(row=3, column=3, columnspan=3,  pady=self.pad_val, padx=self.pad_val)
+        
+        self.M3 = tk.Radiobutton(self.viewFrame_linking, text=" tracks ", variable=var_plot_linking, value=2, bg='white',command = update_linking_switch ) #  command=sel)
+        self.M3.grid(row=3, column=6, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+      
+        
+    
+        # plot bg
+        self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
+        self.ax.axis('off')
+        self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        
+        self.show_frame_linking() 
+    
+       #   next and previous buttons
+        def show_values_linking(v):
+            self.frame_pos=int(v)
+            self.show_frame_linking() 
+          
+        self.scale_movie = tk.Scale(self.viewFrame_linking, from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values_linking)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+    
+        
+      # # # # # # # # # # # # # # # # # # # # # # # # # 
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" TRACKER: STEP 1 ",  bg='white')
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Maximum distance to link 
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum distance to link, pix ",  bg='white')
+        lbl3.grid(row=1, column=0) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_distance_threshold))
+        self.l_tracker_distance_threshold = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracker_distance_threshold.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+    # Maximum skipped frames
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum skipped frames  ",  bg='white')
+        lbl3.grid(row=2, column=0) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_max_skipped_frame))
+        self.l_tracker_max_skipped_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracker_max_skipped_frame.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # Maximum track length
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum track length  ",  bg='white')
+        lbl3.grid(row=3, column=0)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_max_track_length))
+        self.l_tracker_max_track_length = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracker_max_track_length.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+        
+        
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
+        
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" TRACKER: step 2 - tracklinking ",  bg='white')
+        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Topology
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Bayesian network topology ",  bg='white')
+        lbl3.grid(row=7, column=0)     
+        comboTopology = ttk.Combobox(master=self.parametersFrame_linking, 
+                            values=[
+                                    "complete", 
+                                    "no_intensity",
+                                    "no_orientation",
+                                    "no_motion",
+                                    "no_gap"]) # comboTopology.get()
+        comboTopology.grid(row=7, column=1) 
+        comboTopology.current(0)
+    
+    
+    # tracklinking_path1_connectivity_threshold 
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Connectivity threshold [0,1]  ",  bg='white')
+        lbl3.grid(row=8, column=0)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_connectivity_threshold))
+        self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        
+    # tracklinking_path1_frame_gap_0 
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Small temporal gap, frames  ",  bg='white')
+        lbl3.grid(row=9, column=0)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_frame_gap_0))
+        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
+         
+        #tracklinking_path1_frame_gap_1
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Large temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_frame_gap_1))
+        self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+    
+    #  tracklinking_path1_distance_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Distance limit, pix ",  bg='white')
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_distance_limit))
+        self.l_tracklinking_path1_distance_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_direction_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Orientation similarity limit, degrees ",  bg='white')
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_direction_limit))
+        self.l_tracklinking_path1_direction_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_speed_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Speed siimilarity limit ",  bg='white')
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_speed_limit))
+        self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_intensity_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Intensity similarity limit, partition ",  bg='white')
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_intensity_limit))
+        self.l_tracklinking_path1_intensity_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    
+        
+    # tracklinking_path1_track_duration_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Threshold of track length, frames ",  bg='white')
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_track_duration_limit))
+        self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.l_tracklinking_path1_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+     
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # test range 
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Testing from frame  ",  bg='white')
+        lbl3.grid(row=16, column=0)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.start_frame))
+        self.start_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" to frame  ", bg='white')
+        lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.end_frame))
+        self.end_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
+        
+      # # # # # #  # #
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
+         # buttons   
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
+        lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
+        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+        
+      # # # # # # # # # # # # # # # # # # # # # # # # #       
+
         
     def load_cnn_model(self):
         
@@ -316,14 +522,14 @@ class DetectionViewer(tk.Frame):
         
     def move_to_next(self):
         
-        if self.frame_pos!=self.movie_length:
+        if self.frame_pos<self.movie_length-1:
             self.frame_pos+=1
   #      self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
         
-    def show_frame(self):    
-
+    def show_frame_detection(self):    
+        
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
@@ -348,20 +554,19 @@ class DetectionViewer(tk.Frame):
 
         
         # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame_detection)
         self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
         
         # toolbar
-        toolbarFrame = tk.Frame(master=self.viewFrame)
+        toolbarFrame = tk.Frame(master=self.viewFrame_detection)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
       
-            
 #            
-    def select_vesicle_movie(self):
+    def select_vesicle_movie_linking(self):
         
         filename = tk.filedialog.askopenfilename()
         self.movie_file=filename
@@ -369,294 +574,92 @@ class DetectionViewer(tk.Frame):
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
         self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=self.viewFrame, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+          
+        lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_file.split("/")[-1], bg='white')
         lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
         
         # create a none-membrane movie
         self.membrane_movie=np.ones(self.movie.shape)
         
         # plot image
-        self.show_frame()
+        self.show_frame_linking()
         
         
    #  #  # # # # next and previous buttons
         def show_values(v):
             self.frame_pos=int(v)
-            self.show_frame() 
+            self.show_frame_linking() 
+            self.show_frame_detection()
           
-        self.scale_movie = tk.Scale(self.viewFrame,  from_=0, to=self.movie_length, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie = tk.Scale(self.viewFrame_linking,  from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
         self.scale_movie.set(0)        
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
-        buttonbefore = tk.Button(self.viewFrame, text=" << ", command=self.move_to_previous, width=5)
-        buttonbefore.grid(row=7, column=1, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
-        
-        buttonnext = tk.Button(self.viewFrame, text=" >> ", command=self.move_to_next, width=5)
-        buttonnext.grid(row=7, column=7, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)   
+        self.scale_movie = tk.Scale(self.viewFrame_detection,  from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
  
-class LinkingViewer(tk.Frame):
-    '''
-    class for the detection
-    '''
-    def __init__(self, master):
-        tk.Frame.__init__(self, master)
-
-        #set the window size        
-        self.window_width = int(master.winfo_screenwidth()/2) # half the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.8)  # 0.8 of the monitor height
-        master.configure(background='white')
+            
+#            
+    def select_vesicle_movie_detection(self):
         
-        ############################################
-        self.movie=np.ones((1,200,200)) # matrix with data
-        self.frame_pos=0
-        self.movie_length=0
-        self.detector=TrackingSetUp()
-        self.monitor_switch=0
-        self.pad_val=5
-        self.dpi=100
-        self.img_width=self.window_height*0.8
-        self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
-        self.button_length=np.max((10,int(self.window_width/100)))
-        self.track_data_framed={} 
+        filename = tk.filedialog.askopenfilename()
+        self.movie_file=filename
         
-        self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
-            "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
-            "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]        
-        #############################################
-
-
-        # Framework: place monitor and view point
-        self.viewFrame = tk.Frame(master=self.master, width=int(self.window_width*0.6), height=self.window_height, bg="white")
-        self.viewFrame.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
-
-           
-        # place parameters and buttons
-        self.parametersFrame = tk.Frame(master=self.master, width=int(self.window_width*0.4), height=self.window_height, bg="white")
-        self.parametersFrame.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
-
-
-
-
-     # # # # # # # # # # # # # # # # # # # # # #    
-        # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame,text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=20)
-        self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
-
-        var_plot_linking = tk.IntVar()
+        # read files 
+        self.movie=skimage.io.imread(self.movie_file)
+        self.movie_length=self.movie.shape[0]  
+        lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+          
+        lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
+        # create a none-membrane movie
+        self.membrane_movie=np.ones(self.movie.shape)
         
-        def update_linking_switch():            
-            self.monitor_switch=var_plot_linking.get()
-            # change image
-            self.show_frame()
-
-        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(self.viewFrame, text=" original image ", variable=var_plot_linking, value=0, bg='white', command =update_linking_switch )
-        self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
+        # plot image
+        self.show_frame_detection()
         
-        self.M2 = tk.Radiobutton(self.viewFrame, text=" tracklets ", variable=var_plot_linking, value=1, bg='white',command = update_linking_switch ) #  command=sel)
-        self.M2.grid(row=3, column=3, columnspan=3,  pady=self.pad_val, padx=self.pad_val)
         
-        self.M3 = tk.Radiobutton(self.viewFrame, text=" tracks ", variable=var_plot_linking, value=2, bg='white',command = update_linking_switch ) #  command=sel)
-        self.M3.grid(row=3, column=6, columnspan=3, pady=self.pad_val, padx=self.pad_val)
-  
-        
-
-        # plot bg
-        self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
-        self.ax.axis('off')
-        self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-        
-        self.show_frame() 
-
-   #   next and previous buttons
+   #  #  # # # # next and previous buttons
         def show_values(v):
             self.frame_pos=int(v)
-            self.show_tracks() 
+            self.show_frame_detection() 
+            self.show_frame_linking()
           
-        self.scale_movie = tk.Scale(self.viewFrame, from_=0, to=self.movie_length, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie = tk.Scale(self.viewFrame_detection,  from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
         self.scale_movie.set(0)        
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
-        buttonbefore = tk.Button(self.viewFrame, text=" << ", command=self.move_to_previous, width=5)
-        buttonbefore.grid(row=7, column=1, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
 
-        
-        buttonnext = tk.Button(self.viewFrame, text=" >> ", command=self.move_to_next, width=5)
-        buttonnext.grid(row=7, column=7, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
-
-        
-  # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" TRACKER: STEP 1 ",  bg='white')
-        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Maximum distance to link 
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum distance to link, pix ",  bg='white')
-        lbl3.grid(row=1, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_distance_threshold))
-        self.l_tracker_distance_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracker_distance_threshold.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
-        
-    # Maximum skipped frames
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum skipped frames  ",  bg='white')
-        lbl3.grid(row=2, column=0) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_max_skipped_frame))
-        self.l_tracker_max_skipped_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracker_max_skipped_frame.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
-
-    # Maximum track length
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Maximum track length  ",  bg='white')
-        lbl3.grid(row=3, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracker_max_track_length))
-        self.l_tracker_max_track_length = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracker_max_track_length.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
-        
-        
-        
-          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
-        
-        lbl3 = tk.Label(master=self.parametersFrame, text=" TRACKER: step 2 - tracklinking ",  bg='white')
-        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Topology
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Bayesian network topology ",  bg='white')
-        lbl3.grid(row=7, column=0)     
-        comboTopology = ttk.Combobox(master=self.parametersFrame, 
-                            values=[
-                                    "complete", 
-                                    "no_intensity",
-                                    "no_orientation",
-                                    "no_motion",
-                                    "no_gap"]) # comboTopology.get()
-        comboTopology.grid(row=7, column=1) 
-        comboTopology.current(0)
-
-    
-    # tracklinking_path1_connectivity_threshold 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Connectivity threshold [0,1]  ",  bg='white')
-        lbl3.grid(row=8, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_connectivity_threshold))
-        self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
-        
-        
-    # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Small temporal gap, frames  ",  bg='white')
-        lbl3.grid(row=9, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_frame_gap_0))
-        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
-         
-        #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Large temporal gap, frames ", bg='white')
-        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_frame_gap_1))
-        self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
-    
-    #  tracklinking_path1_distance_limit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Distance limit, pix ",  bg='white')
-        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_distance_limit))
-        self.l_tracklinking_path1_distance_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
-    
-    # tracklinking_path1_direction_limit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Orientation similarity limit, degrees ",  bg='white')
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_direction_limit))
-        self.l_tracklinking_path1_direction_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
-
-    # tracklinking_path1_speed_limit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Speed siimilarity limit ",  bg='white')
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_speed_limit))
-        self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
-
-    # tracklinking_path1_intensity_limit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Intensity similarity limit, partition ",  bg='white')
-        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_intensity_limit))
-        self.l_tracklinking_path1_intensity_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
-
-    
-        
-    # tracklinking_path1_track_duration_limit
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Threshold of track length, frames ",  bg='white')
-        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.tracklinking_path1_track_duration_limit))
-        self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.l_tracklinking_path1_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.scale_movie = tk.Scale(self.viewFrame_linking,  from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+          
  
-    
-         # empty space
-        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/4))
-        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
-
-    # test range 
-        lbl3 = tk.Label(master=self.parametersFrame, text=" Testing from frame  ",  bg='white')
-        lbl3.grid(row=16, column=0)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.start_frame))
-        self.start_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
-
-        lbl3 = tk.Label(master=self.parametersFrame, text=" to frame  ", bg='white')
-        lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame, value=str(self.detector.end_frame))
-        self.end_frame = tk.Entry(self.parametersFrame, width=self.button_length, text=v)
-        self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
-        
-  # # # # # #  # #
-
-         # empty space
-        lbl3 = tk.Label(master=self.parametersFrame, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
-         # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
-        lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
-        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
-        
-  # # # # # # # # # # # # # # # # # # # # # # # # #       
-        
 
         
-    def run_test(self):
+    def run_test_linking(self):
         
         print("\n run_test! \n")
-
-    def save_to_file(self):
+    
+    def save_to_file_linking(self):
         
         print("\n save_to_file! \n")
-
-    def read_from_file(self):
+    
+    def read_from_file_linking(self):
         
         print("\n read_from_file! \n")
-
+    
         
-    def move_to_previous(self):
+    def move_to_previous_linking(self):
         
         if self.frame_pos!=0:
             self.frame_pos-=1
- #       self.show_tracks()
+     #       self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
-    def move_to_next(self):
-        
-        if self.frame_pos!=self.movie_length:
-            self.frame_pos+=1
-  #      self.show_tracks()
-        self.scale_movie.set(self.frame_pos) 
         
     def track_to_frame(self, data):
         # change data arrangment from tracks to frames
@@ -680,8 +683,8 @@ class LinkingViewer(tk.Frame):
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
             
-    def show_frame(self):    
-
+    def show_frame_linking(self):    
+    
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
@@ -690,70 +693,42 @@ class LinkingViewer(tk.Frame):
         self.ax.axis('off')  
         
         # define the tracks to plot
-   
+       
         if self.monitor_switch==1: # tracklets
             self.track_to_frame(self.detector.tracklets)
         elif self.monitor_switch==2: # tracks
             self.track_to_frame(self.detector.tracks)
-            
-        
+    
         # plotting
         if  bool(self.track_data_framed): # if the dict is not empty
             # plot tracks
-#            print("self.frame_pos ", self.frame_pos)
-#            print(self.track_data_framed['frames'][self.frame_pos])
+    #            print("self.frame_pos ", self.frame_pos)
+    #            print(self.track_data_framed['frames'][self.frame_pos])
             for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
                 trace=p['trace']
                 plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
         
         # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame_linking)
         self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
         
         # toolbar
-        toolbarFrame = tk.Frame(master=self.viewFrame)
+        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
-      
-            
-#            
-    def select_vesicle_movie(self):
-        
-        filename = tk.filedialog.askopenfilename()
-        self.movie_file=filename
-        
-        # read files 
-        self.movie=skimage.io.imread(self.movie_file)
-        self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=self.viewFrame, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
-        
-        # create a none-membrane movie
-        self.membrane_movie=np.ones(self.movie.shape)
-        
-        # plot image
-        self.show_frame()
-
-   #  #  # # # # next and previous buttons
-        def show_values(v):
-            self.frame_pos=int(v)
-            self.show_frame() 
-          
-        self.scale_movie = tk.Scale(self.viewFrame,  from_=0, to=self.movie_length, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
-        self.scale_movie.set(0)        
-        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
-        buttonbefore = tk.Button(self.viewFrame, text=" << ", command=self.move_to_previous, width=5)
-        buttonbefore.grid(row=7, column=1, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
-        
-        buttonnext = tk.Button(self.viewFrame, text=" >> ", command=self.move_to_next, width=5)
-        buttonnext.grid(row=7, column=7, rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)   
-               
+           
     
 if __name__ == "__main__":
     root = tk.Tk()
     MainApplication(root)
+    
+    def close_app():
+        quit()
+    #closing the window
+    root.protocol('WM_DELETE_WINDOW', close_app)
+
+    tk.mainloop()
