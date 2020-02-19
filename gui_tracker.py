@@ -175,106 +175,9 @@ class MainApplication(tk.Frame):
         self.scale_movie.set(0)        
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
+        self.set_detection_parameters_frame()
         
-  # # # # # # # # # # # # # # # # # # # # # # # # # 
-
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES DETECTION ",  bg='white')
-        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # substract_bg_step background substraction step 
-
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Background evaluation: N frames ",  bg='white')
-        lbl3.grid(row=1, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.substract_bg_step))
-        self.d_substract_bg_step = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_substract_bg_step.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
-        
-    # threshold coef
-
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient  ",  bg='white')
-        lbl3.grid(row=2, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.c))
-        self.d_c = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_c.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
-
-    # sigma
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Sigma : from  ",  bg='white')
-        lbl3.grid(row=3, column=0)
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_min))
-        self.d_sigma_min = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_sigma_min.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
-         
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" to ", bg='white')
-        lbl3.grid(row=3, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_max))
-        self.d_sigma_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
-        
-    # min_distance min distance minimum distance between two max after MSSEF
-
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
-        lbl3.grid(row=4, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
-        self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_min_distance.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
-        
-    # self.threshold_rel min pix value in relation to the image
-    
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Relevant peak height ",  bg='white')
-        lbl3.grid(row=5, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.threshold_rel))
-        self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
-
-            
-          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)        
-                
-        
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
-        lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    #self.box_size=16 # bounding box size for detection
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region of Interest size ",  bg='white')
-        lbl3.grid(row=8, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size))
-        self.d_box_size = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
-
-
-    # detection_threshold threshold for the CNN based classification
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient ",  bg='white')
-        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.detection_threshold))
-        self.d_detection_threshold = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
-    
-    # gaussian_fit gaussian fit
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Gaussian fit (True/False) ",  bg='white')
-        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.gaussian_fit))
-        self.d_gaussian_fit = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
-    
-    # cnn_model cnn model 
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)  
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path,  bg='white')
-        lbl3.grid(row=11, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
-    
-  # # # # # #  # #
-
-         # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
-         # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
-        lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
-        lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+  # # # # # # # # # # # # # # # # # # # # # # # # #
         
   # # # # # # # # # # # # # # # # # # # # # # # # # 
 
@@ -350,9 +253,12 @@ class MainApplication(tk.Frame):
         self.scale_movie.set(0)        
         self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
+        self.set_linking_parameters_frame()
         
       # # # # # # # # # # # # # # # # # # # # # # # # # 
-    
+  
+    def set_linking_parameters_frame(self):
+
         lbl3 = tk.Label(master=self.parametersFrame_linking, text=" TRACKER: STEP 1 ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
@@ -486,31 +392,209 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Run test ", command=self.run_test, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
         lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Save to file ", command=self.save_to_file, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
         lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Read from file ", command=self.read_from_file, width=self.button_length*2, bg="#80818a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
-        
+            
       # # # # # # # # # # # # # # # # # # # # # # # # #       
+
+    def set_detection_parameters_frame(self):
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES DETECTION ",  bg='white')
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # substract_bg_step background substraction step 
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Background evaluation: N frames ",  bg='white')
+        lbl3.grid(row=1, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.substract_bg_step))
+        self.d_substract_bg_step = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_substract_bg_step.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+    # threshold coef
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient  ",  bg='white')
+        lbl3.grid(row=2, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.c))
+        self.d_c = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_c.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    # sigma
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Sigma : from  ",  bg='white')
+        lbl3.grid(row=3, column=0)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_min))
+        self.d_sigma_min = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_sigma_min.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
+         
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" to ", bg='white')
+        lbl3.grid(row=3, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.sigma_max))
+        self.d_sigma_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
+        
+    # min_distance min distance minimum distance between two max after MSSEF
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
+        lbl3.grid(row=4, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
+        self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_min_distance.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+    # self.threshold_rel min pix value in relation to the image
+    
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Relevant peak height ",  bg='white')
+        lbl3.grid(row=5, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.threshold_rel))
+        self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+
+            
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)        
+                
+        
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
+        lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    #self.box_size=16 # bounding box size for detection
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region of Interest size ",  bg='white')
+        lbl3.grid(row=8, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size))
+        self.d_box_size = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
+
+
+    # detection_threshold threshold for the CNN based classification
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient ",  bg='white')
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.detection_threshold))
+        self.d_detection_threshold = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # gaussian_fit gaussian fit
+        def clickgaussian_fit():
+            self.detector.gaussian_fit=self.gaussianValue.get()
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Gaussian fit (True/False) ",  bg='white')
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+        self.gaussianValue=tk.BooleanVar()
+        self.gaussianValue.set(True)
+        self.d_gaussian_fit = tk.Checkbutton(self.parametersFrame_detection, text='', var=self.gaussianValue, command=clickgaussian_fit)
+        self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    
+    # cnn_model cnn model 
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)  
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
+        lbl3.grid(row=11, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+    
+  # # # # # #  # #
+
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+         # buttons   
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#02f17a")
+        lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file_detection, width=self.button_length*2, bg="#00917a")
+        lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Read from file ", command=self.read_from_file_detection, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+    
 
         
     def load_cnn_model(self):
+        # choose the file
+        filename = tk.filedialog.askopenfilename(title = "Select CNN model")
         
-        print("\n loading model here! \n")
+        # save in parameters
+        if filename!="":
+            self.detector.cnn_model_path=filename
+            self.set_detection_parameters_frame()
         
-    def run_test(self):
+    def collect_detection_parameters(self):
         
-        print("\n run_test! \n")
+        # parameters: candidate detection
+        if self.d_substract_bg_step.get()!='':
+            self.detector.substract_bg_step=int(self.d_substract_bg_step.get())
+            
+        if self.d_c.get()!='':
+            self.detector.c=float(self.d_c.get())   
+            
+        if self.d_sigma_min.get()!='':
+            self.detector.sigma_min=float(self.d_sigma_min.get())
+            
+        if self.d_sigma_max.get()!='':
+            self.detector.sigma_max=float(self.d_sigma_max.get())
+            
+        if self.d_min_distance.get()!='':
+            self.detector.min_distance=float(self.d_min_distance.get())
+            
+        if self.d_threshold_rel.get()!='':
+            self.detector.threshold_rel=float(self.d_threshold_rel.get())
+            
+        # parameters: candidate pruning    
+        if self.d_box_size.get()!='':
+            self.detector.box_size=int(self.d_box_size.get())
+            
+        if self.d_detection_threshold.get()!='':
+            self.detector.detection_threshold=float(self.d_detection_threshold.get())
+        
+    def run_test_detection(self):
+        
+        # read parameters from the buttons
 
-    def save_to_file(self):
-        
-        print("\n save_to_file! \n")
+        self.collect_detection_parameters()
 
-    def read_from_file(self):
+        # movie 
+        self.detector.movie=self.movie
+        print("----------------parameters -----------------")
+        print(" substract_bg_step", self.detector.substract_bg_step)
+        print(" c", self.detector.c)
+        print(" sigma_min", self.detector.sigma_min)
+        print(" sigma_max", self.detector.sigma_max)
+        print(" min_distance", self.detector.min_distance)
+        print(" threshold_rel", self.detector.threshold_rel)
+        print(" box_size", self.detector.box_size)
+        print(" detection_threshold", self.detector.detection_threshold)
+        print(" gaussian_fit", self.detector.gaussian_fit)
+        print(" cnn_model", self.detector.cnn_model_path)
         
-        print("\n read_from_file! \n")
+        print("\n running detection for frame ", self.frame_pos, " ...")
+
+        self.detector.detection(int(self.frame_pos))
+        self.show_frame_detection()        
+        
+
+    def save_to_file_detection(self):
+        
+        # update parameters
+        self.collect_detection_parameters()
+        
+        # choose the file
+        self.detection_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        
+        # save into the file
+        self.detection.detection_parameter_to_file()
+        
+        print(" Parameters are in the file ", self.detection_parameter_path)
+
+    def read_from_file_detection(self):
+        
+        # choose file
+        filename = tk.filedialog.askopenfilename(title = "Open file with parameters ")
+        # read from the file
+        
+        self.detection.detection_parameters_from_file(filename)
+        
+        # update frame
+        self.set_detection_parameters_frame()
+        
+        print(" Parameters are read from the file ", filename)
 
         
     def move_to_previous(self):
@@ -548,7 +632,7 @@ class MainApplication(tk.Frame):
         elif self.monitor_switch==2: # detection
             if len(self.detector.detection_vesicles)>0:
                 for i in range(0, len(np.asarray(self.detector.detection_vesicles))):
-                    circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="b", fill=False)
+                    circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False)
                     self.ax.add_artist(circle)    
 
 
