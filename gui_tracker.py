@@ -56,13 +56,67 @@ class MainApplication(tk.Frame):
         self.window_height = int(parent.winfo_screenheight()*0.8)  # 0.9 of the monitor height
 #        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
 
+        # menu
+        menu = tk.Menu(parent)
+        parent.config(menu=menu)
+        parent.configure(background='white')
+        helpmenu=tk.Menu(menu)        
+        menu.add_cascade(label="Help", menu=helpmenu)
+        
+        def HelpAbout():
+            # create a new window
+            self.new_window_help = tk.Toplevel(self.master)
+            self.new_window_help.title("About ")
+#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+            self.new_window_help.configure(background='white')
+            # widget in there with a text 
+            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software ",  bg='white')
+            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)            
+            
+        def HelpDetection():
+            # create a new window
+            self.new_window_help = tk.Toplevel(self.master)
+            self.new_window_help.title("Detection ")
+#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+            self.new_window_help.configure(background='white')
+            # widget in there with a text 
+            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Detection ",  bg='white')
+            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)       
+            
+        def HelpLinking():
+            # create a new window
+            self.new_window_help = tk.Toplevel(self.master)
+            self.new_window_help.title("Linking ")
+#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+            self.new_window_help.configure(background='white')
+            # widget in there with a text 
+            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Linking ",  bg='white')
+            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)         
+            
+            
+        def HelpTracking():
+            # create a new window
+            self.new_window_help = tk.Toplevel(self.master)
+            self.new_window_help.title("Tracking ")
+#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+            self.new_window_help.configure(background='white')
+            # widget in there with a text 
+            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Tracking ",  bg='white')
+            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)       
+            
+            
+        helpmenu.add_command(label="About...", command=HelpAbout)
+        helpmenu.add_command(label="Detection", command=HelpDetection)
+        helpmenu.add_command(label="Linking", command=HelpLinking)
+        helpmenu.add_command(label="Run tracking", command=HelpTracking)
         
         # set movie and class for parameter settings
         self.movie=np.ones((1,200,200))
         self.detector=TrackingSetUp()
+        
+        
 
         # main paths          
-        self.movie_membrane_path="not defined"
         self.movie_protein_path="not defined"
         self.result_path="not defined"
         
@@ -79,9 +133,6 @@ class MainApplication(tk.Frame):
         
         tab_linking = ttk.Frame(tab_parent)
         tab_parent.add(tab_linking, text=" Linking ")
-        
-        tab_membrane = ttk.Frame(tab_parent)
-        tab_parent.add(tab_membrane, text=" Membrane segmentation ")
 
         
         tab_run = ttk.Frame(tab_parent)
@@ -98,11 +149,6 @@ class MainApplication(tk.Frame):
         linkingFrame = tk.Frame(master=tab_linking)
         linkingFrame.pack(expand=1, fill='both')
         
-        # membrane
-        membraneFrame = tk.Frame(master=tab_membrane)
-        membraneFrame.pack(expand=1, fill='both')
-
-        
         # run 
         runFrame = tk.Frame(master=tab_run)
         runFrame.pack(expand=1, fill='both')
@@ -117,7 +163,7 @@ class MainApplication(tk.Frame):
 
         self.frame_pos=0
         self.movie_length=1
-        self.monitor_switch=0
+        self.monitor_switch_detection=0
         self.pad_val=5
         self.dpi=100
         self.img_width=self.window_height*0.8
@@ -147,7 +193,7 @@ class MainApplication(tk.Frame):
         var_plot_detection = tk.IntVar()
         
         def update_detection_switch():            
-            self.monitor_switch=var_plot_detection.get()
+            self.monitor_switch_detection=var_plot_detection.get()
             # change image
             self.show_frame_detection()
 
@@ -164,9 +210,9 @@ class MainApplication(tk.Frame):
         
 
         # plot bg
-        self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
-        self.ax.axis('off')
-        self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        self.figd, self.axd = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
+        self.axd.axis('off')
+        self.figd.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
         self.show_frame_detection() 
 
@@ -190,9 +236,8 @@ class MainApplication(tk.Frame):
         linkingFrame.configure(background='white')
         
         ############################################
-    
-        self.frame_pos=0
-        self.monitor_switch=0
+
+        self.monitor_switch_linking=0
         self.pad_val=5
         self.dpi=100
         self.img_width=self.window_height*0.8
@@ -224,7 +269,7 @@ class MainApplication(tk.Frame):
         var_plot_linking = tk.IntVar()
         
         def update_linking_switch():            
-            self.monitor_switch=var_plot_linking.get()
+            self.monitor_switch_linking=var_plot_linking.get()
             # change image
             self.show_frame_linking()
     
@@ -241,9 +286,9 @@ class MainApplication(tk.Frame):
         
     
         # plot bg
-        self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
-        self.ax.axis('off')
-        self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        self.figl, self.axl = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
+        self.axl.axis('off')
+        self.figl.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
         self.show_frame_linking() 
     
@@ -258,30 +303,6 @@ class MainApplication(tk.Frame):
     
         self.set_linking_parameters_frame()
         
-        
-    
-#############################  membrane segmentation: tab_membrane ########################## 
-        
-        # set start and end frame
-        
-        # Framework: place monitor and view point
-        self.viewFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
-        self.viewFrame_membrane.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
-
-           
-        # place parameters and buttons
-        self.parametersFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
-        self.parametersFrame_membrane.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
-
-        
-        # button to run tracking
-        
-        
-        # button to run membrane segmentation
-        
-        
-        # result bar
-#        run_tracking   
 
 
 #################################  run tracking: runFrame ##############################
@@ -332,11 +353,11 @@ class MainApplication(tk.Frame):
             self.show_parameters()
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Choose result path ", command=define_result_path, width=self.button_length, bg="gray")
+        lbl3 = tk.Button(master=self.action_frame, text=" Where to save results ", command=define_result_path, width=int(self.button_length*1.5), bg="gray")
         lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=self.button_length, bg="gray")
+        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=int(self.button_length*1.5), bg="gray")
         lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
           # empty space
         lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/4))
@@ -345,10 +366,6 @@ class MainApplication(tk.Frame):
         # button to run tracking        
         lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=self.run_tracking, width=self.button_length*2, bg="#02a17a")
         lbl3.grid(row=7, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
-        
-        # button to run membrane segmentation        
-        lbl3 = tk.Button(master=self.action_frame, text=" RUN MEMBRANE SEGMENTATION  ", command=self.run_membrane_segmentation, width=self.button_length*2, bg="#02a17a")
-        lbl3.grid(row=8, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)         
 
         # show parameters
         self.show_parameters()
@@ -360,12 +377,9 @@ class MainApplication(tk.Frame):
         #### show parameters : parametersFrame_linking
         
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white')
-        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*3, padx=self.pad_val*3) 
+        lbl3.grid(row=1, column=0, columnspan=4, pady=self.pad_val*3, padx=self.pad_val*3) 
         
         lbl3 = tk.Label(master=self.information_frame, text=" Original protein channel:  "+ self.movie_protein_path,  bg='white')
-        lbl3.grid(row=1, column=0, pady=self.pad_val, padx=self.pad_val) 
-        
-        lbl3 = tk.Label(master=self.information_frame, text=" Original membrane channel:  "+ self.movie_membrane_path,  bg='white')
         lbl3.grid(row=2, column=0, pady=self.pad_val, padx=self.pad_val) 
         
         lbl3 = tk.Label(master=self.information_frame, text=" Final result fill be saved to: "+ self.result_path,  bg='white')
@@ -864,28 +878,28 @@ class MainApplication(tk.Frame):
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
-        self.ax.clear() # clean the plot 
-        self.ax.imshow(self.image, cmap="gray")
-        self.ax.axis('off')  
+        self.axd.clear() # clean the plot 
+        self.axd.imshow(self.image, cmap="gray")
+        self.axd.axis('off')  
         
         # plot results
         
    
-        if self.monitor_switch==1: # candidates
+        if self.monitor_switch_detection==1: # candidates
             if len(self.detector.detection_candidates)>0:
                 for i in range(0, len(np.asarray(self.detector.detection_candidates))):
                     circle=plt.Circle((np.asarray(self.detector.detection_candidates)[i,1], np.asarray(self.detector.detection_candidates)[i,0]), 3, color="b", fill=False)
-                    self.ax.add_artist(circle)    
-        elif self.monitor_switch==2: # detection
+                    self.axd.add_artist(circle)    
+        elif self.monitor_switch_detection==2: # detection
             if len(self.detector.detection_vesicles)>0:
                 for i in range(0, len(np.asarray(self.detector.detection_vesicles))):
                     circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False)
-                    self.ax.add_artist(circle)    
+                    self.axd.add_artist(circle)    
 
 
         
         # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame_detection)
+        self.canvas = FigureCanvasTkAgg(self.figd, master=self.viewFrame_detection)
         self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
         
@@ -917,7 +931,7 @@ class MainApplication(tk.Frame):
         
         # plot image
         self.show_frame_linking()
-        
+        self.show_frame_detection()
         
    #  #  # # # # next and previous buttons
         def show_values(v):
@@ -954,6 +968,7 @@ class MainApplication(tk.Frame):
             
         
             # plot image
+            self.show_frame_linking()
             self.show_frame_detection()
             
         
@@ -1077,7 +1092,7 @@ class MainApplication(tk.Frame):
             self.set_linking_parameters_frame()
 
         
-    def track_to_frame(self, data):
+    def track_to_frame(self, data={}):
         # change data arrangment from tracks to frames
         self.track_data_framed={}
         self.track_data_framed.update({'frames':[]})
@@ -1105,15 +1120,17 @@ class MainApplication(tk.Frame):
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
-        self.ax.clear() # clean the plot 
-        self.ax.imshow(self.image, cmap="gray")
-        self.ax.axis('off')  
+        self.axl.clear() # clean the plot 
+        self.axl.imshow(self.image, cmap="gray")
+        self.axl.axis('off')  
         
         # define the tracks to plot
        
-        if self.monitor_switch==1: # tracklets
+        if self.monitor_switch_linking==0: # none
+            self.track_to_frame()
+        elif self.monitor_switch_linking==1: # tracklets
             self.track_to_frame(self.detector.tracklets)
-        elif self.monitor_switch==2: # tracks
+        elif self.monitor_switch_linking==2: # tracks
             self.track_to_frame(self.detector.tracks)
     
         # plotting
@@ -1127,7 +1144,7 @@ class MainApplication(tk.Frame):
                 plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
         
         # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=self.viewFrame_linking)
+        self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
         self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
         
@@ -1158,16 +1175,6 @@ class MainApplication(tk.Frame):
         # save tracks        
         with open(self.result_path, 'w') as f:
             json.dump(self.final_tracks, f, ensure_ascii=False)
-
-            
- ############### Membrane segmentation ##################
-
-    def run_membrane_segmentation(self):
-        '''
-        running the membrane segmentation
-        '''
-        
-        print("! ! ! Membrane is not being segmented yet ! ! !")
         
     
 if __name__ == "__main__":
