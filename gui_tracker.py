@@ -61,6 +61,10 @@ class MainApplication(tk.Frame):
         self.movie=np.ones((1,200,200))
         self.detector=TrackingSetUp()
 
+        # main paths          
+        self.movie_membrane_path="not defined"
+        self.movie_protein_path="not defined"
+        self.result_path="not defined"
         
         # TABs 
         # set the style 
@@ -97,7 +101,7 @@ class MainApplication(tk.Frame):
         # membrane
         membraneFrame = tk.Frame(master=tab_membrane)
         membraneFrame.pack(expand=1, fill='both')
-        
+
         
         # run 
         runFrame = tk.Frame(master=tab_run)
@@ -119,7 +123,7 @@ class MainApplication(tk.Frame):
         self.img_width=self.window_height*0.8
         self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
         self.button_length=np.max((10,int(self.window_width/100)))
-        
+        self.filename_final_tracking="unnamed_tracking_results.txt"
         
         #############################################
 
@@ -179,11 +183,10 @@ class MainApplication(tk.Frame):
         
   # # # # # # # # # # # # # # # # # # # # # # # # #
         
-  # # # # # # # # # # # # # # # # # # # # # # # # # 
 
 ############################ Linking #################
 
-        #set the window size        
+        #set the window colour        
         linkingFrame.configure(background='white')
         
         ############################################
@@ -255,6 +258,253 @@ class MainApplication(tk.Frame):
     
         self.set_linking_parameters_frame()
         
+        
+    
+#############################  membrane segmentation: tab_membrane ########################## 
+        
+        # set start and end frame
+        
+        # Framework: place monitor and view point
+        self.viewFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_membrane.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
+
+           
+        # place parameters and buttons
+        self.parametersFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_membrane.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
+
+        
+        # button to run tracking
+        
+        
+        # button to run membrane segmentation
+        
+        
+        # result bar
+#        run_tracking   
+
+
+#################################  run tracking: runFrame ##############################
+        
+        #set the window colour        
+        runFrame.configure(background='white')
+
+        # Framework: place monitor and view point
+        self.action_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.action_frame.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
+
+        # place parameters and buttons
+        self.gap_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.1), height=self.window_height, bg="white")
+        self.gap_frame.grid(row=0, column=1, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)      
+
+        lbl3 = tk.Label(master=self.gap_frame, text=" ",  bg='white', width=int(self.button_length), height=int(self.button_length/1.5))
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val)   
+        
+        
+        # place parameters and buttons
+        self.information_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.information_frame.grid(row=0, column=2, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
+        
+        # set start and end frame
+        lb_start = tk.Label(master=self.action_frame, text=" start frame ",  bg='white')
+        lb_start.grid(row=0, column=0) 
+        v=tk.StringVar(self.action_frame, value=str(self.detector.start_frame))
+        self.r_start_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
+        self.r_start_frame.grid(row=0, column=1, pady=self.pad_val, padx=self.pad_val)        
+ 
+        lb_start = tk.Label(master=self.action_frame, text=" end frame ",  bg='white')
+        lb_start.grid(row=0, column=2) 
+        v=tk.StringVar(self.action_frame, value=str(self.movie.shape[0]))
+        self.r_end_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
+        self.r_end_frame.grid(row=0, column=3, pady=self.pad_val, padx=self.pad_val)    
+
+        def define_result_path():
+            
+            filename=tk.filedialog.asksaveasfilename(title = "Save tracking results ")
+            # save in parameters
+            if not filename:
+                print("file was not given")
+            else:
+                self.result_path=filename
+                self.show_parameters()
+                
+        def update_info():
+            self.show_parameters()
+
+        # button to set 
+        lbl3 = tk.Button(master=self.action_frame, text=" Choose result path ", command=define_result_path, width=self.button_length, bg="gray")
+        lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+
+        # button to set 
+        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=self.button_length, bg="gray")
+        lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+          # empty space
+        lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)  
+        
+        # button to run tracking        
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=self.run_tracking, width=self.button_length*2, bg="#02a17a")
+        lbl3.grid(row=7, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        
+        # button to run membrane segmentation        
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN MEMBRANE SEGMENTATION  ", command=self.run_membrane_segmentation, width=self.button_length*2, bg="#02a17a")
+        lbl3.grid(row=8, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)         
+
+        # show parameters
+        self.show_parameters()
+        
+        ####################################################
+        
+    # parameters 
+    def show_parameters(self):
+        #### show parameters : parametersFrame_linking
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white')
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*3, padx=self.pad_val*3) 
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" Original protein channel:  "+ self.movie_protein_path,  bg='white')
+        lbl3.grid(row=1, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" Original membrane channel:  "+ self.movie_membrane_path,  bg='white')
+        lbl3.grid(row=2, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" Final result fill be saved to: "+ self.result_path,  bg='white')
+        lbl3.grid(row=3, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" - - - - - PARAMETERS - - - - - ",  bg='white')
+        lbl3.grid(row=4, column=0, columnspan=4, pady=self.pad_val*3, padx=self.pad_val*3) 
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES DETECTION ",  bg='white')
+        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
+        
+    # substract_bg_step background substraction step 
+
+        lbl3 = tk.Label(master=self.information_frame, text=" Background subtraction based on  "+ str(self.detector.substract_bg_step)+" frames",  bg='white')
+        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+    # threshold coef
+
+        lbl3 = tk.Label(master=self.information_frame, text=" Threshold coefficient  "+ str(self.detector.c),  bg='white')
+        lbl3.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val) 
+
+    # sigma
+        lbl3 = tk.Label(master=self.information_frame, text=" Sigma from  "+ str(self.detector.sigma_min)+" to "+str(self.detector.sigma_max),  bg='white')
+        lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val)
+        
+    # min_distance min distance minimum distance between two max after MSSEF
+
+        lbl3 = tk.Label(master=self.information_frame, text=" Minimum distance between detections "+str(self.detector.min_distance)+" pix",  bg='white')
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+    # self.threshold_rel min pix value in relation to the image
+    
+        lbl3 = tk.Label(master=self.information_frame, text=" Relevant peak height "+str(self.detector.threshold_rel),  bg='white')
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+
+            
+          # empty space
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)        
+                
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES PRUNING ",  bg='white')
+        lbl3.grid(row=12, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
+        
+    #self.box_size=16 # bounding box size for detection
+        lbl3 = tk.Label(master=self.information_frame, text=" Region of Interest size "+str(self.detector.box_size)+" pix",  bg='white')
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+
+
+    # detection_threshold threshold for the CNN based classification
+        lbl3 = tk.Label(master=self.information_frame, text=" Threshold coefficient "+str(self.detector.detection_threshold),  bg='white')
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+    # gaussian_fit gaussian fit
+        lbl3 = tk.Label(master=self.information_frame, text=" Gaussian fit:  "+str(self.detector.gaussian_fit),  bg='white')
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # cnn_model cnn model 
+        lbl3 = tk.Label(master=self.information_frame, text=" Loaded CNN model: "+self.detector.cnn_model_path.split("/")[-1],  bg='white')
+        lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+  # # # # # #  # #
+
+         # empty space
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val) 
+
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 1 ",  bg='white')
+        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
+        
+    # Maximum distance to link 
+    
+        lbl3 = tk.Label(master=self.information_frame, text=" Maximum distance to link "+str(self.detector.tracker_distance_threshold)+" pix",  bg='white')
+        lbl3.grid(row=21, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Maximum skipped frames
+    
+        lbl3 = tk.Label(master=self.information_frame, text=" Maximum skipped frames  "+str(self.detector.tracker_max_skipped_frame),  bg='white')
+        lbl3.grid(row=22, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # Maximum track length
+        lbl3 = tk.Label(master=self.information_frame, text=" Maximum track length  "+str(self.detector.tracker_max_track_length)+" frames",  bg='white')
+        lbl3.grid(row=23, column=0, pady=self.pad_val, padx=self.pad_val)
+        
+        
+          # empty space
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=24, column=0, pady=self.pad_val, padx=self.pad_val)        
+        
+        lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking ",  bg='white')
+        lbl3.grid(row=25, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
+        
+    # Topology
+    
+        lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path1_topology,  bg='white')
+        lbl3.grid(row=26, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+    
+    # tracklinking_path1_connectivity_threshold 
+        lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path1_connectivity_threshold),  bg='white')
+        lbl3.grid(row=27, column=0, pady=self.pad_val, padx=self.pad_val)        
+        
+    # tracklinking_path1_frame_gap_0 
+        lbl3 = tk.Label(master=self.information_frame, text=" Small temporal gap "+str(self.detector.tracklinking_path1_frame_gap_0) +" frames  ",  bg='white')
+        lbl3.grid(row=28, column=0, pady=self.pad_val, padx=self.pad_val)
+        
+         
+        #tracklinking_path1_frame_gap_1
+        lbl3 = tk.Label(master=self.information_frame, text=" Large temporal gap "+str(self.detector.tracklinking_path1_frame_gap_1)+" frames ", bg='white')
+        lbl3.grid(row=29, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+    #  tracklinking_path1_distance_limit
+        lbl3 = tk.Label(master=self.information_frame, text=" Distance limit "+str(self.detector.tracklinking_path1_distance_limit)+" pix ",  bg='white')
+        lbl3.grid(row=30, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_direction_limit
+        lbl3 = tk.Label(master=self.information_frame, text=" Orientation similarity limit "+str(self.detector.tracklinking_path1_direction_limit)+" degrees ",  bg='white')
+        lbl3.grid(row=31, column=0, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_speed_limit
+        lbl3 = tk.Label(master=self.information_frame, text=" Speed similarity limit "+str(self.detector.tracklinking_path1_speed_limit),  bg='white')
+        lbl3.grid(row=32, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # tracklinking_path1_intensity_limit
+        lbl3 = tk.Label(master=self.information_frame, text=" Intensity similarity limit "+str(self.detector.tracklinking_path1_intensity_limit),  bg='white')
+        lbl3.grid(row=33, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+        
+    # tracklinking_path1_track_duration_limit
+        lbl3 = tk.Label(master=self.information_frame, text=" Threshold of track length "+str(self.detector.tracklinking_path1_track_duration_limit)+" frames ",  bg='white')
+        lbl3.grid(row=34, column=0, pady=self.pad_val, padx=self.pad_val) 
+     
+    
+         # empty space
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=35, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+     
       # # # # # # # # # # # # # # # # # # # # # # # # # 
   
     def set_linking_parameters_frame(self):
@@ -512,7 +762,9 @@ class MainApplication(tk.Frame):
         filename = tk.filedialog.askopenfilename(title = "Select CNN model")
         
         # save in parameters
-        if filename!="":
+        if not filename:
+            print("file was not chosen")
+        else:
             self.detector.cnn_model_path=filename
             self.set_detection_parameters_frame()
         
@@ -543,6 +795,8 @@ class MainApplication(tk.Frame):
             
         if self.d_detection_threshold.get()!='':
             self.detector.detection_threshold=float(self.d_detection_threshold.get())
+            
+        self.show_parameters()
         
     def run_test_detection(self):
         
@@ -576,25 +830,33 @@ class MainApplication(tk.Frame):
         self.collect_detection_parameters()
         
         # choose the file
-        self.detector.detection_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        filename=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        
         
         # save into the file
-        self.detector.detection_parameter_to_file()
+        if not filename:
+            print("file was not chosen. Nothing will be saved")
+        else:
+            self.detector.detection_parameter_path= filename
+            self.set_detection_parameters_frame()
+            self.detector.detection_parameter_to_file()
         
-        print(" Parameters are in the file ", self.detector.detection_parameter_path)
+            print(" Parameters are in the file ", self.detector.detection_parameter_path)
 
     def read_from_file_detection(self):
         
         # choose file
         filename = tk.filedialog.askopenfilename(title = "Open file with parameters ")
         # read from the file
+        if not filename:
+            print("file was not chosen")
+        else:
+            self.detector.detection_parameters_from_file(filename)     
         
-        self.detector.detection_parameters_from_file(filename)
+            # update frame
+            self.set_detection_parameters_frame()
         
-        # update frame
-        self.set_detection_parameters_frame()
-        
-        print(" Parameters are read from the file ", filename)
+            print(" Parameters are read from the file ", filename)
 
         
     def show_frame_detection(self):    
@@ -638,19 +900,20 @@ class MainApplication(tk.Frame):
     def select_vesicle_movie_linking(self):
         
         filename = tk.filedialog.askopenfilename()
-        self.movie_file=filename
+        if not filename:
+            print("File was not chosen")
+        else:   
+            self.movie_protein_path=filename
         
-        # read files 
-        self.movie=skimage.io.imread(self.movie_file)
-        self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
-          
-        lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
-        
-        # create a none-membrane movie
-        self.membrane_movie=np.ones(self.movie.shape)
+            # read files 
+            self.movie=skimage.io.imread(self.movie_protein_path)
+            self.movie_length=self.movie.shape[0]  
+            lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+              
+            lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            
         
         # plot image
         self.show_frame_linking()
@@ -675,22 +938,24 @@ class MainApplication(tk.Frame):
     def select_vesicle_movie_detection(self):
         
         filename = tk.filedialog.askopenfilename()
-        self.movie_file=filename
+        if not filename:
+            print("File was not chosen")
+        else:   
+            self.movie_protein_path=filename
         
-        # read files 
-        self.movie=skimage.io.imread(self.movie_file)
-        self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
-          
-        lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
-        # create a none-membrane movie
-        self.membrane_movie=np.ones(self.movie.shape)
+            # read files 
+            self.movie=skimage.io.imread(self.movie_protein_path)
+            self.movie_length=self.movie.shape[0]  
+            lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+              
+            lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            
         
-        # plot image
-        self.show_frame_detection()
-        
+            # plot image
+            self.show_frame_detection()
+            
         
    #  #  # # # # next and previous buttons
         def show_values(v):
@@ -722,7 +987,7 @@ class MainApplication(tk.Frame):
             
         # parameters: TRACKER: step 2 - tracklinking    
         if self.comboTopology.get()!='':
-            self.detector.topology=str(self.comboTopology.get())
+            self.detector.tracklinking_path1_topology=str(self.comboTopology.get())
             
         if self.l_tracklinking_path1_connectivity_threshold.get()!='':
             self.detector.tracklinking_path1_connectivity_threshold=float(self.l_tracklinking_path1_connectivity_threshold.get())
@@ -753,6 +1018,7 @@ class MainApplication(tk.Frame):
         if self.end_frame.get()!='':
             self.detector.end_frame=int(self.end_frame.get())
         
+        self.show_parameters()
         
     def run_test_linking(self):
         # read parameters from the buttons
@@ -766,7 +1032,7 @@ class MainApplication(tk.Frame):
         print(" tracker_max_skipped_frame", self.detector.tracker_max_skipped_frame)
         print(" tracker_max_track_length \n", self.detector.tracker_max_track_length)
         
-        print(" topology", self.detector.topology)
+        print(" topology", self.detector.tracklinking_path1_topology)
         print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
         print(" tracklinking_path1_frame_gap_0", self.detector.tracklinking_path1_frame_gap_0)
         print(" tracklinking_path1_frame_gap_1", self.detector.tracklinking_path1_frame_gap_1)
@@ -788,9 +1054,12 @@ class MainApplication(tk.Frame):
         self.collect_linking_parameters()
 
         # choose the file
-        self.detector.linking_parameter_path=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        filename=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
         
-        if self.detector.linking_parameter_to_file()!="":
+        if not filename:
+            print("File was not chosen. Nothing will be saved! ")
+        else:   
+            self.detector.linking_parameter_path=filename
             self.detector.linking_parameter_to_file()
         
     def read_from_file_linking(self):
@@ -799,13 +1068,13 @@ class MainApplication(tk.Frame):
         filename = tk.filedialog.askopenfilename(title = "Open file with  linking parameters ")
         
         # read from the file  
-        if filename!="":
+        if not filename:
+            print("File was not chosen. ")
+        else:
             self.detector.linking_parameters_from_file(filename)
         
             # update frame
             self.set_linking_parameters_frame()
-        
-        print(" Parameters are read from the file ", filename)
 
         
     def track_to_frame(self, data):
@@ -868,7 +1137,38 @@ class MainApplication(tk.Frame):
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
-           
+
+
+ ############# Running the code  ##################
+
+    def run_tracking(self):
+        '''
+        running the final tracking 
+        '''
+        if self.r_start_frame.get()!='':
+            self.detector.start_frame=int(self.r_start_frame.get())
+            
+        if self.r_end_frame.get()!='':
+            self.detector.end_frame=int(self.r_end_frame.get())
+        
+        self.detector.movie=self.movie
+        self.final_tracks=self.detector.linking()
+        
+        
+        # save tracks        
+        with open(self.result_path, 'w') as f:
+            json.dump(self.final_tracks, f, ensure_ascii=False)
+
+            
+ ############### Membrane segmentation ##################
+
+    def run_membrane_segmentation(self):
+        '''
+        running the membrane segmentation
+        '''
+        
+        print("! ! ! Membrane is not being segmented yet ! ! !")
+        
     
 if __name__ == "__main__":
     root = tk.Tk()
