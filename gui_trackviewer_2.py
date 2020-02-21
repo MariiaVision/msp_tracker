@@ -887,7 +887,6 @@ class MainVisual(tk.Frame):
         deletbutton = tk.Button(master=root, text="ADD TRACK", command=new_track_question, width=15,  bg='green')
         deletbutton.grid(row=14, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
-        #
 
         
        # plot the tracks from filtered folder 
@@ -895,13 +894,8 @@ class MainVisual(tk.Frame):
             
             #calculate length and duration
             if len(p['trace'])>0:
-                point_start=p['trace'][0]
-                track_duration=p['frames'][-1]-p['frames'][0]+1    
-                track_length=round(np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2)),1)
                 start_track_frame=p['frames'][0]
             else:
-                track_duration=0
-                track_length=0
                 start_track_frame=0
             
             # add to the list
