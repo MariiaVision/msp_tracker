@@ -1,9 +1,39 @@
 # gui_tracking
-This repository presents two GUI for 1) tracking protein vesicles  (set parameters, check the results, run on complete movie)  2) track viewer to visualise the detected tracks, provides statistics and it also allows track modification.
+This repository presents two GUIs: 
+1) tracking protein vesicles  (set parameters, check the results, run on complete movie)  
+2) track viewer to visualise the detected tracks, provides statistics and it also allows track modification.
+
+## Tracker 
+
+### Software installation
+#### Mac
+1. Install conda:  https://docs.anaconda.com/anaconda/install/mac-os/
+2. Open the folder which contains the software in finder.
+3. In finder, right click on code folder and select `New Terminal at Folder`
+4. In the terminal type `conda env create -f environment_tracker.yml` and press enter. It should install all the required packages
+
+#### Linux
+1. Install conda: https://docs.anaconda.com/anaconda/install/linux/
+2. In the terminal open the directory with the software
+3. In the terminal type `conda env create -f environment_tracker.yml` and press enter. It should install all the required packages
+
+### Usage
+1. In a terminal, activate the environment: `source activate gui_tracker`
+2. In necessary update the environment: `conda env update --file environment_tracker.yml`
+3. To run the software: `python gui_tracker.py`
+  
+### to do list:
+- [ ] check on a video or two
+- [ ] set colours
+- [ ] fix zooming from frame to frame
+- [ ] clean the code 
+- [ ] create a proper description in "help"
+
+
 
 ## Trackviewer
 ### Software installation
-
+#### Mac
 1. Install conda:  https://docs.anaconda.com/anaconda/install/mac-os/
 2. Open the folder which contains the software in finder.
 3. In finder, right click on code folder and select `New Terminal at Folder`
@@ -24,19 +54,3 @@ This repository presents two GUI for 1) tracking protein vesicles  (set paramete
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
 - [ ] clean the code
-
-## Tracker 
-
-### Software installation
-
-### Usage
-
-### to do list:
-- [ ] remove membrane part
-- [ ] create environment
-- [ ] check on a video or two
-- [ ] set colours
-- [ ] fix zooming from frame to frame
-- [ ] clean the code 
-- [ ] make a proper description
-
