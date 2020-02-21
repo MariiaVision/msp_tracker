@@ -23,7 +23,7 @@ This repository presents two GUIs:
 3. To run the software: `python gui_tracker.py`
   
 ### to do list:
-- [ ] check on a video or two
+- [ ] add progress bar
 - [ ] set colours
 - [ ] fix zooming from frame to frame
 - [ ] clean the code 
