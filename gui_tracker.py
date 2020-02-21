@@ -12,7 +12,6 @@ sys.path.append('./tracking_lib/')
 import numpy as np
 import scipy as sp
 
-import copy
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
@@ -24,22 +23,10 @@ matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.backend_bases import key_press_handler
-from matplotlib.figure import Figure
 
 import skimage
 from skimage import io
-from scipy.ndimage import gaussian_filter1d
-import json        
-import cv2
-import imageio
-import math
-from skimage.feature import peak_local_max
-
-from fusion_events import FusionEvent 
-
-from trajectory_segmentation_msd import TrajectorySegment
-from sys import platform as _platform
+import json 
 
 from set_tracking import  TrackingSetUp
 
