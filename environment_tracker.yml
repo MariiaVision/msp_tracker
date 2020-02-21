@@ -1,0 +1,23 @@
+name: gui_tracker
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python==3.7.0
+  - pip
+  - pip:
+    - opencv-python
+    - trackpy
+    - pgmpy==0.1.9
+    - tqdm
+  - numpy
+  - scipy
+  - matplotlib
+  - scikit-image
+  - tk
+  - pandas
+  - keras==2.3.1
+  - pytorch==1.0.1
+  - joblib==0.14.1
+  
+
