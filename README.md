@@ -23,11 +23,12 @@ This repository presents two GUIs:
 3. To run the software: `python gui_tracker.py`
   
 ### to do list:
-- [ ] check on a video or two
+- [ ] add progress bar
 - [ ] set colours
 - [ ] fix zooming from frame to frame
 - [ ] clean the code 
 - [ ] create a proper description in "help"
+- [ ] give a proper name
 
 
 
@@ -54,3 +55,4 @@ This repository presents two GUIs:
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
 - [ ] clean the code
+- [ ] give a proper name
