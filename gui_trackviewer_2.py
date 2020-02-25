@@ -629,7 +629,6 @@ class MainVisual(tk.Frame):
     def show_tracks(self):    
 
         # plot image
-        print("\n membrane ", self.memebrane_switch)
         if self.memebrane_switch==0:
             self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         elif self.memebrane_switch==1:
@@ -641,15 +640,11 @@ class MainVisual(tk.Frame):
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')
         
-        print("monitor_switch ", self.monitor_switch)
-        
-        print(self.track_data_framed and self.monitor_switch<=1)
         if  self.track_data_framed and self.monitor_switch<=1:
-            print("inside if")
+
             # plot tracks
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
             for p in plot_info:
-                print("plotting")
                 trace=p['trace']
                 self.ax.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 if self.monitor_switch==0:
