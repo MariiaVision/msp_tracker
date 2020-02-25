@@ -484,7 +484,7 @@ class MainVisual(tk.Frame):
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
         
-        if self.movie.shape[1]<300 and self.movie.shape[2]<300 or self.movie.shape[2]<200:
+        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
             #save tiff file for small cell solution
             final_img_set=np.zeros((self.movie.shape[0],self.movie.shape[1],self.movie.shape[2], 3))
 
@@ -629,7 +629,7 @@ class MainVisual(tk.Frame):
     def show_tracks(self):    
 
         # plot image
-
+        print("\n membrane ", self.memebrane_switch)
         if self.memebrane_switch==0:
             self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         elif self.memebrane_switch==1:
@@ -641,14 +641,19 @@ class MainVisual(tk.Frame):
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')
         
+        print("monitor_switch ", self.monitor_switch)
+        
+        print(self.track_data_framed and self.monitor_switch<=1)
         if  self.track_data_framed and self.monitor_switch<=1:
+            print("inside if")
             # plot tracks
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
             for p in plot_info:
+                print("plotting")
                 trace=p['trace']
-                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
+                self.ax.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 if self.monitor_switch==0:
-                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+                    self.ax.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
         if self.memebrane_switch==2:
             #extract skeleton
             skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
@@ -658,7 +663,7 @@ class MainVisual(tk.Frame):
             alphas = np.linspace(0, 0.8, cmap_new.N+3)
             cmap_new._lut[:,-1] = alphas
             #plot the membrane border on the top
-            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
+            self.ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
