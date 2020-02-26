@@ -423,16 +423,20 @@ class MainApplication(tk.Frame):
     # gaussian_fit gaussian fit
         lbl3 = tk.Label(master=self.information_frame, text=" Gaussian fit:  "+str(self.detector.gaussian_fit),  bg='white')
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
-    
+
+    # expected_radius gaussian fit radius 
+        lbl3 = tk.Label(master=self.information_frame, text=" Expected particle radius:  "+str(self.detector.expected_radius),  bg='white')
+        lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
     # cnn_model cnn model 
         lbl3 = tk.Label(master=self.information_frame, text=" Loaded CNN model: "+self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val)
+        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val)
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
-        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
 
         
         lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 1 ",  bg='white')
@@ -726,7 +730,7 @@ class MainApplication(tk.Frame):
         self.d_detection_threshold = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
     
-    # gaussian_fit gaussian fit
+    # gaussian_fit 
         def clickgaussian_fit():
             self.detector.gaussian_fit=self.gaussianValue.get()
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Gaussian fit (True/False) ",  bg='white')
@@ -735,19 +739,25 @@ class MainApplication(tk.Frame):
         self.gaussianValue.set(True)
         self.d_gaussian_fit = tk.Checkbutton(self.parametersFrame_detection, text='', var=self.gaussianValue, command=clickgaussian_fit)
         self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
-
+        
+    # expected_radius
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Expected particle radius ",  bg='white')
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.expected_radius))
+        self.d_expected_radius = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_expected_radius.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # cnn_model cnn model 
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val)  
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val)  
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        lbl3.grid(row=11, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#02f17a")
         lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
@@ -817,6 +827,7 @@ class MainApplication(tk.Frame):
         print(" box_size", self.detector.box_size)
         print(" detection_threshold", self.detector.detection_threshold)
         print(" gaussian_fit", self.detector.gaussian_fit)
+        print(" expected_radius", self.detector.expected_radius)
         print(" cnn_model", self.detector.cnn_model_path)
         
         print("\n running detection for frame ", self.frame_pos, " ...")
