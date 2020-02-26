@@ -69,7 +69,8 @@ class TrackingSetUp(object):
         self.substract_bg_step =100   
         
         #option for Gaussian fit
-        self.gaussian_fit=True        
+        self.gaussian_fit=True    
+        self.expected_radius=5
         self.cnn_model_path="dl_weight/cnn-weights-spiral_disk-39-0.95.hdf5"
         
     # # # # # LINKING parameters # # # # #
@@ -124,6 +125,7 @@ class TrackingSetUp(object):
         
         #option for Gaussian fit
         detector.gaussian_fit=self.gaussian_fit
+        detector.expected_radius=self.expected_radius
 
         # loading CNN        
         cnn_model=load_model(self.cnn_model_path) 
@@ -149,7 +151,7 @@ class TrackingSetUp(object):
         parameters={'c':self.c, 'k_max':self.k_max , 'k_min':self.k_min,
                     'sigma_min':self.sigma_min,  'sigma_max':self.sigma_max,  'min_distance':self.min_distance,
                     'threshold_rel':self.threshold_rel,'box_size':self.box_size,'detection_threshold':self.detection_threshold, 
-                    'substract_bg_step':self.substract_bg_step, 'gaussian_fit': self.gaussian_fit, 'cnn_model_path':self.cnn_model_path}
+                    'substract_bg_step':self.substract_bg_step, 'gaussian_fit': self.gaussian_fit, 'expected_radius':self.expected_radius, 'cnn_model_path':self.cnn_model_path}
         data={'parameters':parameters}
         
         # save the parameters       
@@ -188,6 +190,7 @@ class TrackingSetUp(object):
         
         #option for Gaussian fit
         self.gaussian_fit=settings['gaussian_fit']
+        self.expected_radius=settings['expected_radius']
         
         self.cnn_model_path=settings['cnn_model_path']
             
@@ -223,6 +226,7 @@ class TrackingSetUp(object):
         
         #option for Gaussian fit
         detector.gaussian_fit=self.gaussian_fit
+        detector.expected_radius=self.expected_radius
 
         # loading CNN        
         cnn_model=load_model(self.cnn_model_path) 

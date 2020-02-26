@@ -119,6 +119,7 @@ class Detectors(object):
         
         #option for Gaussian fit
         self.gaussian_fit=False
+        self.expected_radius=5 # expected radius of the paricle
         
         self.cnn_model_path=""
         
@@ -378,8 +379,8 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                 img_roi= np.copy(img[lm[0]-int(self.box_size/3): lm[0]+int(self.box_size/3), lm[1]-int(self.box_size/3):lm[1]+int(self.box_size/3)])  
                 
                 # radial fit
-                rad=5
-                x,y=self.new_fit( img_roi, rad)
+                
+                x,y=self.new_fit( img_roi, self.expected_radius)
 #                x,y=self.radialsym_centre(img_roi)
                 if math.isnan(x):
                     x=lm[0]
@@ -500,8 +501,13 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         return x, y
     
     def new_fit(self, img, rad):
+        
+        
         features = tp.locate(img, rad, topn=1, engine='python')
-        pos=features[['x', 'y']].iloc[0].values
+        if features.empty:
+            pos=(float(img.shape[0]/2), float(img.shape[1]/2))
+        else:
+            pos=features[['x', 'y']].iloc[0].values
         
 #        print("!!!!!!!!",pos)
 #        plt.figure()
