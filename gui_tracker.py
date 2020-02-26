@@ -100,7 +100,7 @@ class MainApplication(tk.Frame):
         # set movie and class for parameter settings
         self.movie=np.ones((1,200,200))
         self.detector=TrackingSetUp()
-        
+        self.Npath=1 # number of tracklinking paths
         
 
         # main paths          
@@ -140,6 +140,7 @@ class MainApplication(tk.Frame):
         runFrame = tk.Frame(master=tab_run)
         runFrame.pack(expand=1, fill='both')
         
+        
 
 
     ########################## DETECTION ######################
@@ -168,9 +169,7 @@ class MainApplication(tk.Frame):
         # place parameters and buttons
         self.parametersFrame_detection = tk.Frame(master=detectionFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.parametersFrame_detection.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
-
-
-
+        
 
      # # # # # # # # # # # # # # # # # # # # # #    
         # Framework: place monitor 
@@ -241,14 +240,72 @@ class MainApplication(tk.Frame):
     
         # Framework: place monitor and view point
         self.viewFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
-        self.viewFrame_linking.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
-    
+        self.viewFrame_linking.grid(row=0, column=0, rowspan=2,  pady=self.pad_val, padx=self.pad_val)   
+
+
+        # place number of paths choice
+        self.parametersFrame_linking_path = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_linking_path.grid(row=0, column=11, columnspan=1, rowspan=1, pady=self.pad_val, padx=self.pad_val)   
            
         # place parameters and buttons
         self.parametersFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
-        self.parametersFrame_linking.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
-    
-  
+        self.parametersFrame_linking.grid(row=1, column=11, columnspan=1, rowspan=1, pady=self.pad_val, padx=self.pad_val)    
+
+        # choose the path number 
+        
+                # choice of the path number 
+        
+        var_path_number = tk.IntVar()
+        
+        def update_detection_switch():            
+            self.Npath=var_path_number.get()
+            self.detector.tracklinking_Npass=var_path_number.get()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.M1 = tk.Radiobutton(self.parametersFrame_linking_path, text=" single path ", variable=var_path_number, value=1, bg='white', command =update_detection_switch )
+        self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.M2 = tk.Radiobutton(self.parametersFrame_linking_path, text=" two paths ", variable=var_path_number, value=2, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M2.grid(row=3, column=3, columnspan=3,  pady=self.pad_val, padx=self.pad_val)
+        
+        self.M3 = tk.Radiobutton(self.parametersFrame_linking_path, text=" three paths ", variable=var_path_number, value=3, bg='white',command = update_detection_switch ) #  command=sel)
+        self.M3.grid(row=3, column=6, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        
+        
+        # TABs parameters
+        
+        #set the window colour
+        
+        self.tab_parametersFrame_linking = ttk.Notebook(self.parametersFrame_linking) # create tabs
+        
+        self.tab_parametersFrame_linking_step1 = ttk.Frame(self.tab_parametersFrame_linking, style="TNotebook")        
+        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step1, text=" main ")
+        
+        
+        self.tab_parametersFrame_linking_step2 = ttk.Frame(self.parametersFrame_linking)
+        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step2, text=" 2nd path ")
+
+        
+        self.tab_parametersFrame_linking_step3 = ttk.Frame(self.parametersFrame_linking)
+        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step3, text=" 3d path ")        
+        
+        self.tab_parametersFrame_linking.pack(expand=1, fill='both')    
+        
+        # linking step 1
+        self.parametersFrame_linking_step1 = tk.Frame(master=self.tab_parametersFrame_linking_step1)
+        self.parametersFrame_linking_step1.pack(expand=1, fill='both')
+        self.parametersFrame_linking_step1.configure(background='white')
+
+        # linking step 2
+        self.parametersFrame_linking_step2 = tk.Frame(master=self.tab_parametersFrame_linking_step2)
+        self.parametersFrame_linking_step2.pack(expand=1, fill='both')
+        self.parametersFrame_linking_step2.configure(background='white')
+        
+        # linking step 3
+        self.parametersFrame_linking_step3 = tk.Frame(master=self.tab_parametersFrame_linking_step3)
+        self.parametersFrame_linking_step3.pack(expand=1, fill='both')
+        self.parametersFrame_linking_step3.configure(background='white')
+        
         # Framework: place monitor 
         self.button_mv = tk.Button(self.viewFrame_linking,text="   Select vesicle movie   ", command=self.select_vesicle_movie_linking, width=20)
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
@@ -358,7 +415,7 @@ class MainApplication(tk.Frame):
         self.show_parameters()
         
         ####################################################
-        
+     
     # parameters 
     def show_parameters(self):
         #### show parameters : parametersFrame_linking
@@ -513,147 +570,381 @@ class MainApplication(tk.Frame):
       # # # # # # # # # # # # # # # # # # # # # # # # # 
   
     def set_linking_parameters_frame(self):
+        
+        ##### step 1 #####
 
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" TRACKER: STEP 1 ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: STEP 1 ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # Maximum distance to link 
     
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum distance to link, pix ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Maximum distance to link, pix ",  bg='white')
         lbl3.grid(row=1, column=0) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_distance_threshold))
-        self.l_tracker_distance_threshold = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracker_distance_threshold))
+        self.l_tracker_distance_threshold = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracker_distance_threshold.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # Maximum skipped frames
     
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum skipped frames  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Maximum skipped frames  ",  bg='white')
         lbl3.grid(row=2, column=0) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_max_skipped_frame))
-        self.l_tracker_max_skipped_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracker_max_skipped_frame))
+        self.l_tracker_max_skipped_frame = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracker_max_skipped_frame.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # Maximum track length
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Maximum track length  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Maximum track length  ",  bg='white')
         lbl3.grid(row=3, column=0)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracker_max_track_length))
-        self.l_tracker_max_track_length = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracker_max_track_length))
+        self.l_tracker_max_track_length = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracker_max_track_length.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
         
         
         
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
         
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" TRACKER: step 2 - tracklinking ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: first path of tracklinking ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # Topology
     
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Bayesian network topology ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Bayesian network topology ",  bg='white')
         lbl3.grid(row=7, column=0)     
-        self.comboTopology = ttk.Combobox(master=self.parametersFrame_linking, 
+        self.comboTopology_1 = ttk.Combobox(master=self.parametersFrame_linking_step1, 
                             values=[
                                     "complete", 
                                     "no_intensity",
                                     "no_orientation",
                                     "no_motion",
                                     "no_gap"]) # comboTopology.get()
-        self.comboTopology.grid(row=7, column=1) 
-        self.comboTopology.current(0)
+        self.comboTopology_1.grid(row=7, column=1) 
+        self.comboTopology_1.current(0)
     
     
     # tracklinking_path1_connectivity_threshold 
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Connectivity threshold [0,1]  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Connectivity threshold [0,1]  ",  bg='white')
         lbl3.grid(row=8, column=0)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_connectivity_threshold))
-        self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_connectivity_threshold))
+        self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
         
         
     # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Small temporal gap, frames  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Small temporal gap, frames  ",  bg='white')
         lbl3.grid(row=9, column=0)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_frame_gap_0))
-        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_frame_gap_0))
+        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
          
         #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Large temporal gap, frames ", bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Large temporal gap, frames ", bg='white')
         lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_frame_gap_1))
-        self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_frame_gap_1))
+        self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
     
     #  tracklinking_path1_distance_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Distance limit, pix ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Distance limit, pix ",  bg='white')
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_distance_limit))
-        self.l_tracklinking_path1_distance_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_distance_limit))
+        self.l_tracklinking_path1_distance_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_direction_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Orientation similarity limit, degrees ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Orientation similarity limit, degrees ",  bg='white')
         lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_direction_limit))
-        self.l_tracklinking_path1_direction_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_direction_limit))
+        self.l_tracklinking_path1_direction_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_speed_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Speed siimilarity limit ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Speed siimilarity limit ",  bg='white')
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_speed_limit))
-        self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_speed_limit))
+        self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_intensity_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Intensity similarity limit, partition ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Intensity similarity limit, partition ",  bg='white')
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_intensity_limit))
-        self.l_tracklinking_path1_intensity_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_intensity_limit))
+        self.l_tracklinking_path1_intensity_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
     
     
         
     # tracklinking_path1_track_duration_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Threshold of track length, frames ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Threshold of track length, frames ",  bg='white')
         lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.tracklinking_path1_track_duration_limit))
-        self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_track_duration_limit))
+        self.l_tracklinking_path1_track_duration_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
      
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/4))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
     
     # test range 
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" Testing from frame  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Testing from frame  ",  bg='white')
         lbl3.grid(row=16, column=0)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.start_frame))
-        self.start_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.start_frame))
+        self.start_frame = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
     
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" to frame  ", bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" to frame  ", bg='white')
         lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
-        v=tk.StringVar(self.parametersFrame_linking, value=str(self.detector.end_frame))
-        self.end_frame = tk.Entry(self.parametersFrame_linking, width=self.button_length, text=v)
+        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.end_frame))
+        self.end_frame = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
         
       # # # # # #  # #
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
         lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
         lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+
+
+        
+        ##### step 2 #####          
+        
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
+        
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" TRACKER: second path of tracklinking ",  bg='white')
+        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Topology
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Bayesian network topology ",  bg='white')
+        lbl3.grid(row=7, column=0)     
+        self.comboTopology_2 = ttk.Combobox(master=self.parametersFrame_linking_step2, 
+                            values=[
+                                    "complete", 
+                                    "no_intensity",
+                                    "no_orientation",
+                                    "no_motion",
+                                    "no_gap"]) # comboTopology.get()
+        self.comboTopology_2.grid(row=7, column=1) 
+        self.comboTopology_2.current(0)
+    
+    
+    # tracklinking_path1_connectivity_threshold 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Connectivity threshold [0,1]  ",  bg='white')
+        lbl3.grid(row=8, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_connectivity_threshold))
+        self.l_tracklinking_path2_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        
+    # tracklinking_path1_frame_gap_0 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Small temporal gap, frames  ",  bg='white')
+        lbl3.grid(row=9, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_frame_gap_0))
+        self.l_tracklinking_path2_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
+         
+        #tracklinking_path1_frame_gap_1
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Large temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_frame_gap_1))
+        self.l_tracklinking_path2_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+    
+    #  tracklinking_path1_distance_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Distance limit, pix ",  bg='white')
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_distance_limit))
+        self.l_tracklinking_path2_distance_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_direction_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Orientation similarity limit, degrees ",  bg='white')
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_direction_limit))
+        self.l_tracklinking_path2_direction_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_speed_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Speed siimilarity limit ",  bg='white')
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_speed_limit))
+        self.l_tracklinking_path2_speed_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_intensity_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Intensity similarity limit, partition ",  bg='white')
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_intensity_limit))
+        self.l_tracklinking_path2_intensity_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    
+        
+    # tracklinking_path1_track_duration_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Threshold of track length, frames ",  bg='white')
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_track_duration_limit))
+        self.l_tracklinking_path2_track_duration_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.l_tracklinking_path2_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+     
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # test range 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Testing from frame  ",  bg='white')
+        lbl3.grid(row=16, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.start_frame))
+        self.start_frame = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" to frame  ", bg='white')
+        lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.end_frame))
+        self.end_frame = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
+        self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
+        
+      # # # # # #  # #
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
+         # buttons   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
             
+
+        
+        ##### step 3 #####
+        
+          # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)      
+        
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" TRACKER: third path of tracklinking ",  bg='white')
+        lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+    # Topology
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Bayesian network topology ",  bg='white')
+        lbl3.grid(row=7, column=0)     
+        self.comboTopology_3 = ttk.Combobox(master=self.parametersFrame_linking_step3, 
+                            values=[
+                                    "complete", 
+                                    "no_intensity",
+                                    "no_orientation",
+                                    "no_motion",
+                                    "no_gap"]) # comboTopology.get()
+        self.comboTopology_3.grid(row=7, column=1) 
+        self.comboTopology_3.current(0)
+    
+    
+    # tracklinking_path1_connectivity_threshold 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Connectivity threshold [0,1]  ",  bg='white')
+        lbl3.grid(row=8, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_connectivity_threshold))
+        self.l_tracklinking_path3_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        
+    # tracklinking_path1_frame_gap_0 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Small temporal gap, frames  ",  bg='white')
+        lbl3.grid(row=9, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_frame_gap_0))
+        self.l_tracklinking_path3_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
+         
+        #tracklinking_path1_frame_gap_1
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Large temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_frame_gap_1))
+        self.l_tracklinking_path3_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+    
+    #  tracklinking_path1_distance_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Distance limit, pix ",  bg='white')
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_distance_limit))
+        self.l_tracklinking_path3_distance_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_distance_limit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_direction_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Orientation similarity limit, degrees ",  bg='white')
+        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_direction_limit))
+        self.l_tracklinking_path3_direction_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_speed_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Speed siimilarity limit ",  bg='white')
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_speed_limit))
+        self.l_tracklinking_path3_speed_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_speed_limit.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    # tracklinking_path1_intensity_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Intensity similarity limit, partition ",  bg='white')
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_intensity_limit))
+        self.l_tracklinking_path3_intensity_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_intensity_limit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+    
+        
+    # tracklinking_path1_track_duration_limit
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Threshold of track length, frames ",  bg='white')
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_track_duration_limit))
+        self.l_tracklinking_path3_track_duration_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.l_tracklinking_path3_track_duration_limit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
+     
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
+    
+    # test range 
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Testing from frame  ",  bg='white')
+        lbl3.grid(row=16, column=0)
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.start_frame))
+        self.start_frame = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.start_frame.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" to frame  ", bg='white')
+        lbl3.grid(row=16, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.end_frame))
+        self.end_frame = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
+        self.end_frame.grid(row=16, column=3, pady=self.pad_val, padx=self.pad_val)
+        
+      # # # # # #  # #
+    
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
+         # buttons   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+                        
       # # # # # # # # # # # # # # # # # # # # # # # # #       
 
     def set_detection_parameters_frame(self):
@@ -987,7 +1278,7 @@ class MainApplication(tk.Frame):
  
     def collect_linking_parameters(self):
         
-        # parameters: TRACKER: STEP 1
+        # parameters: TRACKER: create tracklets
         if self.l_tracker_distance_threshold.get()!='':
             self.detector.tracker_distance_threshold=int(self.l_tracker_distance_threshold.get())
             
@@ -998,9 +1289,9 @@ class MainApplication(tk.Frame):
             self.detector.tracker_max_track_length=int(self.l_tracker_max_track_length.get())
             
             
-        # parameters: TRACKER: step 2 - tracklinking    
-        if self.comboTopology.get()!='':
-            self.detector.tracklinking_path1_topology=str(self.comboTopology.get())
+        # parameters: TRACKER: 1st path of tracklinking    
+        if self.comboTopology_1.get()!='':
+            self.detector.tracklinking_path1_topology=str(self.comboTopology_1.get())
             
         if self.l_tracklinking_path1_connectivity_threshold.get()!='':
             self.detector.tracklinking_path1_connectivity_threshold=float(self.l_tracklinking_path1_connectivity_threshold.get())
@@ -1022,7 +1313,57 @@ class MainApplication(tk.Frame):
             
         if self.l_tracklinking_path1_intensity_limit.get()!='':
             self.detector.tracklinking_path1_intensity_limit=float(self.l_tracklinking_path1_intensity_limit.get())
+
+        # parameters: TRACKER: 2nd path of tracklinking    
+        if self.comboTopology_2.get()!='':
+            self.detector.tracklinking_path2_topology=str(self.comboTopology_2.get())
             
+        if self.l_tracklinking_path2_connectivity_threshold.get()!='':
+            self.detector.tracklinking_path2_connectivity_threshold=float(self.l_tracklinking_path2_connectivity_threshold.get())
+            
+        if self.l_tracklinking_path2_frame_gap_0.get()!='':
+            self.detector.tracklinking_path2_frame_gap_0=int(self.l_tracklinking_path2_frame_gap_0.get())
+            
+        if self.l_tracklinking_path2_frame_gap_1.get()!='':
+            self.detector.tracklinking_path2_frame_gap_1=int(self.l_tracklinking_path2_frame_gap_1.get())
+            
+        if self.l_tracklinking_path2_distance_limit.get()!='':
+            self.detector.tracklinking_path2_distance_limit=float(self.l_tracklinking_path2_distance_limit.get())
+            
+        if self.l_tracklinking_path2_direction_limit.get()!='':
+            self.detector.tracklinking_path2_direction_limit=float(self.l_tracklinking_path2_direction_limit.get())
+            
+        if self.l_tracklinking_path2_speed_limit.get()!='':
+            self.detector.tracklinking_path2_speed_limit=float(self.l_tracklinking_path2_speed_limit.get())
+            
+        if self.l_tracklinking_path2_intensity_limit.get()!='':
+            self.detector.tracklinking_path2_intensity_limit=float(self.l_tracklinking_path2_intensity_limit.get())
+
+
+        # parameters: TRACKER: 3d path of tracklinking    
+        if self.comboTopology_3.get()!='':
+            self.detector.tracklinking_path3_topology=str(self.comboTopology_3.get())
+            
+        if self.l_tracklinking_path3_connectivity_threshold.get()!='':
+            self.detector.tracklinking_path3_connectivity_threshold=float(self.l_tracklinking_path3_connectivity_threshold.get())
+            
+        if self.l_tracklinking_path3_frame_gap_0.get()!='':
+            self.detector.tracklinking_path3_frame_gap_0=int(self.l_tracklinking_path3_frame_gap_0.get())
+            
+        if self.l_tracklinking_path3_frame_gap_1.get()!='':
+            self.detector.tracklinking_path3_frame_gap_1=int(self.l_tracklinking_path3_frame_gap_1.get())
+            
+        if self.l_tracklinking_path3_distance_limit.get()!='':
+            self.detector.tracklinking_path3_distance_limit=float(self.l_tracklinking_path3_distance_limit.get())
+            
+        if self.l_tracklinking_path3_direction_limit.get()!='':
+            self.detector.tracklinking_path3_direction_limit=float(self.l_tracklinking_path3_direction_limit.get())
+            
+        if self.l_tracklinking_path3_speed_limit.get()!='':
+            self.detector.tracklinking_path3_speed_limit=float(self.l_tracklinking_path3_speed_limit.get())
+            
+        if self.l_tracklinking_path3_intensity_limit.get()!='':
+            self.detector.tracklinking_path3_intensity_limit=float(self.l_tracklinking_path3_intensity_limit.get())            
         # start and end frame
             
         if self.start_frame.get()!='':
@@ -1040,11 +1381,12 @@ class MainApplication(tk.Frame):
 
         # movie 
         self.detector.movie=self.movie
-        print("----------------parameters -----------------")
+        print("\n ----------------parameters -----------------")
         print(" tracker_distance_threshold", self.detector.tracker_distance_threshold)
         print(" tracker_max_skipped_frame", self.detector.tracker_max_skipped_frame)
         print(" tracker_max_track_length \n", self.detector.tracker_max_track_length)
         
+        print(" number of paths, ", self.detector.tracklinking_Npass)
         print(" topology", self.detector.tracklinking_path1_topology)
         print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
         print(" tracklinking_path1_frame_gap_0", self.detector.tracklinking_path1_frame_gap_0)
@@ -1053,6 +1395,26 @@ class MainApplication(tk.Frame):
         print(" tracklinking_path1_direction_limit", self.detector.tracklinking_path1_direction_limit)
         print(" tracklinking_path1_speed_limit", self.detector.tracklinking_path1_speed_limit)
         print(" tracklinking_path1_intensity_limit /n", self.detector.tracklinking_path1_intensity_limit)
+        
+        if self.detector.tracklinking_Npass>1:
+            print("\n topology 2", self.detector.tracklinking_path2_topology)
+            print(" tracklinking_path2_connectivity_threshold", self.detector.tracklinking_path2_connectivity_threshold)
+            print(" tracklinking_path2_frame_gap_0", self.detector.tracklinking_path2_frame_gap_0)
+            print(" tracklinking_path2_frame_gap_1", self.detector.tracklinking_path2_frame_gap_1)
+            print(" tracklinking_path2_distance_limit", self.detector.tracklinking_path2_distance_limit)
+            print(" tracklinking_path2_direction_limit", self.detector.tracklinking_path2_direction_limit)
+            print(" tracklinking_path2_speed_limit", self.detector.tracklinking_path2_speed_limit)
+            print(" tracklinking_path2_intensity_limit /n", self.detector.tracklinking_path2_intensity_limit)
+
+        if self.detector.tracklinking_Npass>2:
+            print("\n topology 3", self.detector.tracklinking_path1_topology)
+            print(" tracklinking_path3_connectivity_threshold", self.detector.tracklinking_path3_connectivity_threshold)
+            print(" tracklinking_path3_frame_gap_0", self.detector.tracklinking_path3_frame_gap_0)
+            print(" tracklinking_path3_frame_gap_1", self.detector.tracklinking_path3_frame_gap_1)
+            print(" tracklinking_path3_distance_limit", self.detector.tracklinking_path3_distance_limit)
+            print(" tracklinking_path3_direction_limit", self.detector.tracklinking_path3_direction_limit)
+            print(" tracklinking_path3_speed_limit", self.detector.tracklinking_path3_speed_limit)
+            print(" tracklinking_path3_intensity_limit /n", self.detector.tracklinking_path3_intensity_limit)
         
         print(" start_frame", self.detector.start_frame)
         print(" end_frame", self.detector.end_frame)

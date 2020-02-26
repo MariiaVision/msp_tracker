@@ -75,27 +75,61 @@ class TrackingSetUp(object):
         
     # # # # # LINKING parameters # # # # #
     
-        # tracking: short tracks         
+        # tracking: short tracks      
+        
         self.tracker_distance_threshold=2
         self.tracker_max_skipped_frame=1
         self.tracker_max_track_length=3
         
-        # tracking: tracklinking
+        # tracking
         self.tracklinking_Npass=1 # number of tracklinking passes
+        
+        # tracking: tracklinking path 1
         self.tracklinking_path1_topology='complete' # topology type      
         self.tracklinking_path1_frame_gap_0=1
-        self.tracklinking_path1_frame_gap_1=4        
+        self.tracklinking_path1_frame_gap_1=2        
         self.tracklinking_path1_direction_limit=50
-        self.tracklinking_path1_distance_limit=1.5 # distance in pix between two tracklets to be connected 
+        self.tracklinking_path1_distance_limit=3 # distance in pix between two tracklets to be connected 
         self.tracklinking_path1_connectivity_threshold=0.7
         self.tracklinking_path1_speed_limit=0.5
         self.tracklinking_path1_intensity_limit=0.4
         
         # filter final tracks
         self.tracklinking_path1_track_displacement_limit=0 # minimum displacement of the final track
-        self.tracklinking_path1_track_duration_limit=3 # minimum number of frames per final track
+        self.tracklinking_path1_track_duration_limit=0 # minimum number of frames per final track
                 
         
+        
+        # tracking: tracklinking path 2
+        self.tracklinking_path2_topology='complete' # topology type      
+        self.tracklinking_path2_frame_gap_0=1
+        self.tracklinking_path2_frame_gap_1=3        
+        self.tracklinking_path2_direction_limit=90
+        self.tracklinking_path2_distance_limit=5 # distance in pix between two tracklets to be connected 
+        self.tracklinking_path2_connectivity_threshold=0.7
+        self.tracklinking_path2_speed_limit=0.2
+        self.tracklinking_path2_intensity_limit=0.2
+        
+        # filter final tracks
+        self.tracklinking_path2_track_displacement_limit=0 # minimum displacement of the final track
+        self.tracklinking_path2_track_duration_limit=0 # minimum number of frames per final track
+
+
+
+
+        # tracking: tracklinking path 3
+        self.tracklinking_path3_topology='complete' # topology type      
+        self.tracklinking_path3_frame_gap_0=1
+        self.tracklinking_path3_frame_gap_1=2        
+        self.tracklinking_path3_direction_limit=90
+        self.tracklinking_path3_distance_limit=7 # distance in pix between two tracklets to be connected 
+        self.tracklinking_path3_connectivity_threshold=0.7
+        self.tracklinking_path3_speed_limit=0.2
+        self.tracklinking_path3_intensity_limit=0.2
+        
+        # filter final tracks
+        self.tracklinking_path3_track_displacement_limit=0 # minimum displacement of the final track
+        self.tracklinking_path3_track_duration_limit=3 # minimum number of frames per final track        
         
 
     def detection(self, frameN):
@@ -233,33 +267,8 @@ class TrackingSetUp(object):
   
         ###########
         
-        # first linking
+        # stel 1: linking
         tracker = Tracker(self.tracker_distance_threshold, self.tracker_max_skipped_frame, self.tracker_max_track_length, 0)
-        
-        #tracklinking pass 1
-        tracklink=GraphicalModelTracking()
-        
-        tracklink.topology=self.tracklinking_path1_topology
-        tracklink.tracklets_pgm()
-        
-        tracklink.frame_gap_tracklinking_0=self.tracklinking_path1_frame_gap_0
-        tracklink.frame_gap_tracklinking_1=self.tracklinking_path1_frame_gap_1        
-        tracklink.direction_limit_tracklinking=self.tracklinking_path1_direction_limit
-        tracklink.distance_limit_tracklinking=self.tracklinking_path1_distance_limit
-        tracklink.connectivity_threshold=self.tracklinking_path1_connectivity_threshold
-        tracklink.speed_limit_tracklinking=self.tracklinking_path1_speed_limit
-        tracklink.intensity_limit_tracklinking=self.tracklinking_path1_intensity_limit
-
-        tracklink.frame_search_range=tracklink.frame_gap_tracklinking_1+2 
-        tracklink.distance_search_range=tracklink.distance_limit_tracklinking+1
-        
-        # filter final tracks
-        tracklink.track_displacement_limit=self.tracklinking_path1_track_displacement_limit
-        tracklink.track_duration_limit=self.tracklinking_path1_track_duration_limit 
-        tracklink.movie=self.movie
-        
-        # run tracking
-        # step 1
 
         for frameN in range(self.start_frame,self.end_frame):
             #detection
@@ -281,7 +290,35 @@ class TrackingSetUp(object):
                     }})
             
         self.tracklets=data
-        # step 2 tracklinking pass 1
+
+        # step 2 tracklinking
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+        
+        # # # # # # # # tracklinking path 1  # # # # # # # # # 
+        
+        # set parameters
+        tracklink=GraphicalModelTracking()
+        
+        tracklink.topology=self.tracklinking_path1_topology
+        tracklink.tracklets_pgm()
+        
+        tracklink.frame_gap_tracklinking_0=self.tracklinking_path1_frame_gap_0
+        tracklink.frame_gap_tracklinking_1=self.tracklinking_path1_frame_gap_1        
+        tracklink.direction_limit_tracklinking=self.tracklinking_path1_direction_limit
+        tracklink.distance_limit_tracklinking=self.tracklinking_path1_distance_limit
+        tracklink.connectivity_threshold=self.tracklinking_path1_connectivity_threshold
+        tracklink.speed_limit_tracklinking=self.tracklinking_path1_speed_limit
+        tracklink.intensity_limit_tracklinking=self.tracklinking_path1_intensity_limit
+
+        tracklink.frame_search_range=tracklink.frame_gap_tracklinking_1+2 
+        tracklink.distance_search_range=tracklink.distance_limit_tracklinking+1
+        
+        # filter final tracks
+        tracklink.track_displacement_limit=self.tracklinking_path1_track_displacement_limit
+        tracklink.track_duration_limit=self.tracklinking_path1_track_duration_limit 
+        tracklink.movie=self.movie
+        
+
         
         # set tracklets
         tracklink.rearrange_track_to_frame_start_end(data, self.movie)
@@ -291,6 +328,85 @@ class TrackingSetUp(object):
         
         #final tracks
         self.tracks=tracklink.tracks
+
+
+        # # # # # # # # tracklinking path 2  # # # # # # # # # 
+        
+        if self.tracklinking_Npass>1:
+            data=self.tracks
+            self.tracks=[]
+            
+            # set parameters
+            tracklink=GraphicalModelTracking()
+            
+            tracklink.topology=self.tracklinking_path2_topology
+            tracklink.tracklets_pgm()
+            
+            tracklink.frame_gap_tracklinking_0=self.tracklinking_path2_frame_gap_0
+            tracklink.frame_gap_tracklinking_1=self.tracklinking_path2_frame_gap_1        
+            tracklink.direction_limit_tracklinking=self.tracklinking_path2_direction_limit
+            tracklink.distance_limit_tracklinking=self.tracklinking_path2_distance_limit
+            tracklink.connectivity_threshold=self.tracklinking_path2_connectivity_threshold
+            tracklink.speed_limit_tracklinking=self.tracklinking_path2_speed_limit
+            tracklink.intensity_limit_tracklinking=self.tracklinking_path2_intensity_limit
+    
+            tracklink.frame_search_range=tracklink.frame_gap_tracklinking_1+2 
+            tracklink.distance_search_range=tracklink.distance_limit_tracklinking+1
+            
+            # filter final tracks
+            tracklink.track_displacement_limit=self.tracklinking_path2_track_displacement_limit
+            tracklink.track_duration_limit=self.tracklinking_path2_track_duration_limit 
+            tracklink.movie=self.movie
+            
+            # set tracklets
+            tracklink.rearrange_track_to_frame_start_end(data, self.movie)
+                
+            #connect tracklets       
+            tracklink.connect_tracklet_time()
+            
+            #final tracks
+            self.tracks=tracklink.tracks
+
+        
+
+        # # # # # # # # tracklinking path 3  # # # # # # # # # 
+        if self.tracklinking_Npass>2:
+            data=self.tracks
+            self.tracks=[]
+            
+            # set parameters
+            tracklink=GraphicalModelTracking()
+            
+            tracklink.topology=self.tracklinking_path3_topology
+            tracklink.tracklets_pgm()
+            
+            tracklink.frame_gap_tracklinking_0=self.tracklinking_path3_frame_gap_0
+            tracklink.frame_gap_tracklinking_1=self.tracklinking_path3_frame_gap_1        
+            tracklink.direction_limit_tracklinking=self.tracklinking_path3_direction_limit
+            tracklink.distance_limit_tracklinking=self.tracklinking_path3_distance_limit
+            tracklink.connectivity_threshold=self.tracklinking_path3_connectivity_threshold
+            tracklink.speed_limit_tracklinking=self.tracklinking_path3_speed_limit
+            tracklink.intensity_limit_tracklinking=self.tracklinking_path3_intensity_limit
+    
+            tracklink.frame_search_range=tracklink.frame_gap_tracklinking_1+2 
+            tracklink.distance_search_range=tracklink.distance_limit_tracklinking+1
+            
+            # filter final tracks
+            tracklink.track_displacement_limit=self.tracklinking_path3_track_displacement_limit
+            tracklink.track_duration_limit=self.tracklinking_path3_track_duration_limit 
+            tracklink.movie=self.movie
+
+            
+            # set tracklets
+            tracklink.rearrange_track_to_frame_start_end(data, self.movie)
+                
+            #connect tracklets       
+            tracklink.connect_tracklet_time()
+            
+            #final tracks
+            self.tracks=tracklink.tracks
+    
+        # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         
         return self.tracks
     
