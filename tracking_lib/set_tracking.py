@@ -421,7 +421,17 @@ class TrackingSetUp(object):
                     'tracklinking_Npass':self.tracklinking_Npass,  'tracklinking_path1_topology':self.tracklinking_path1_topology,  'tracklinking_path1_frame_gap_0':self.tracklinking_path1_frame_gap_0,
                     'tracklinking_path1_frame_gap_1':self.tracklinking_path1_frame_gap_1,'tracklinking_path1_direction_limit':self.tracklinking_path1_direction_limit,'tracklinking_path1_distance_limit':self.tracklinking_path1_distance_limit, 
                     'tracklinking_path1_connectivity_threshold':self.tracklinking_path1_connectivity_threshold, 'tracklinking_path1_speed_limit': self.tracklinking_path1_speed_limit, 'tracklinking_path1_intensity_limit':self.tracklinking_path1_intensity_limit,
-                    'tracklinking_path1_track_displacement_limit':self.tracklinking_path1_track_displacement_limit, 'tracklinking_path1_track_duration_limit':self.tracklinking_path1_track_duration_limit}
+                    'tracklinking_path1_track_displacement_limit':self.tracklinking_path1_track_displacement_limit, 'tracklinking_path1_track_duration_limit':self.tracklinking_path1_track_duration_limit,
+                    
+                    'tracklinking_path2_topology':self.tracklinking_path2_topology,  'tracklinking_path2_frame_gap_0':self.tracklinking_path2_frame_gap_0,
+                    'tracklinking_path2_frame_gap_1':self.tracklinking_path2_frame_gap_1,'tracklinking_path2_direction_limit':self.tracklinking_path2_direction_limit,'tracklinking_path2_distance_limit':self.tracklinking_path2_distance_limit, 
+                    'tracklinking_path2_connectivity_threshold':self.tracklinking_path2_connectivity_threshold, 'tracklinking_path2_speed_limit': self.tracklinking_path2_speed_limit, 'tracklinking_path2_intensity_limit':self.tracklinking_path2_intensity_limit,
+                    'tracklinking_path2_track_displacement_limit':self.tracklinking_path2_track_displacement_limit, 'tracklinking_path2_track_duration_limit':self.tracklinking_path2_track_duration_limit,
+                    
+                    'tracklinking_path3_topology':self.tracklinking_path3_topology,  'tracklinking_path3_frame_gap_0':self.tracklinking_path3_frame_gap_0,
+                    'tracklinking_path3_frame_gap_1':self.tracklinking_path3_frame_gap_1,'tracklinking_path3_direction_limit':self.tracklinking_path3_direction_limit,'tracklinking_path3_distance_limit':self.tracklinking_path3_distance_limit, 
+                    'tracklinking_path3_connectivity_threshold':self.tracklinking_path3_connectivity_threshold, 'tracklinking_path3_speed_limit': self.tracklinking_path3_speed_limit, 'tracklinking_path3_intensity_limit':self.tracklinking_path3_intensity_limit,
+                    'tracklinking_path3_track_displacement_limit':self.tracklinking_path3_track_displacement_limit, 'tracklinking_path3_track_duration_limit':self.tracklinking_path3_track_duration_limit}
         data={'parameters':parameters}
         
         # save the parameters       
@@ -449,6 +459,8 @@ class TrackingSetUp(object):
 
         # tracking: tracklinking
         self.tracklinking_Npass=settings['tracklinking_Npass'] 
+        
+        #path1 
         self.tracklinking_path1_topology=settings['tracklinking_path1_topology']      
         self.tracklinking_path1_frame_gap_0=settings['tracklinking_path1_frame_gap_0']
         self.tracklinking_path1_frame_gap_1=settings['tracklinking_path1_frame_gap_1']       
@@ -462,4 +474,32 @@ class TrackingSetUp(object):
         self.tracklinking_path1_track_displacement_limit=settings['tracklinking_path1_track_displacement_limit']
         self.tracklinking_path1_track_duration_limit=settings['tracklinking_path1_track_duration_limit']
             
-                
+        #path2 
+        self.tracklinking_path2_topology=settings['tracklinking_path2_topology']      
+        self.tracklinking_path2_frame_gap_0=settings['tracklinking_path2_frame_gap_0']
+        self.tracklinking_path2_frame_gap_1=settings['tracklinking_path2_frame_gap_1']       
+        self.tracklinking_path2_direction_limit=settings['tracklinking_path2_direction_limit']
+        self.tracklinking_path2_distance_limit=settings['tracklinking_path2_distance_limit']
+        self.tracklinking_path2_connectivity_threshold=settings['tracklinking_path2_connectivity_threshold']
+        self.tracklinking_path2_speed_limit=settings['tracklinking_path2_speed_limit']
+        self.tracklinking_path2_intensity_limit=settings['tracklinking_path2_intensity_limit']
+        
+        # filter final tracks
+        self.tracklinking_path2_track_displacement_limit=settings['tracklinking_path2_track_displacement_limit']
+        self.tracklinking_path2_track_duration_limit=settings['tracklinking_path2_track_duration_limit']
+            
+        #path3 
+        self.tracklinking_path3_topology=settings['tracklinking_path3_topology']      
+        self.tracklinking_path3_frame_gap_0=settings['tracklinking_path3_frame_gap_0']
+        self.tracklinking_path3_frame_gap_1=settings['tracklinking_path3_frame_gap_1']       
+        self.tracklinking_path3_direction_limit=settings['tracklinking_path3_direction_limit']
+        self.tracklinking_path3_distance_limit=settings['tracklinking_path3_distance_limit']
+        self.tracklinking_path3_connectivity_threshold=settings['tracklinking_path3_connectivity_threshold']
+        self.tracklinking_path3_speed_limit=settings['tracklinking_path3_speed_limit']
+        self.tracklinking_path3_intensity_limit=settings['tracklinking_path3_intensity_limit']
+        
+        # filter final tracks
+        self.tracklinking_path3_track_displacement_limit=settings['tracklinking_path3_track_displacement_limit']
+        self.tracklinking_path3_track_duration_limit=settings['tracklinking_path3_track_duration_limit']
+            
+                                        
