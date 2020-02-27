@@ -318,7 +318,8 @@ class TrackingSetUp(object):
         tracklink.track_duration_limit=self.tracklinking_path1_track_duration_limit 
         tracklink.movie=self.movie
         
-
+        
+        print("\n pass 1 : \n", data)
         
         # set tracklets
         tracklink.rearrange_track_to_frame_start_end(data, self.movie)
@@ -329,11 +330,17 @@ class TrackingSetUp(object):
         #final tracks
         self.tracks=tracklink.tracks
 
-
+        #save tracks in temp file
+        tracklink.save_tracks("temp.txt")
         # # # # # # # # tracklinking path 2  # # # # # # # # # 
         
         if self.tracklinking_Npass>1:
-            data=self.tracks
+                        
+            # read tracks
+            with open('temp.txt') as json_file:  # 'tracking_original.txt'
+                data = json.load(json_file)
+                
+            print("\n pass 2 : \n", data)
             self.tracks=[]
             
             # set parameters
@@ -367,11 +374,15 @@ class TrackingSetUp(object):
             #final tracks
             self.tracks=tracklink.tracks
 
+            #save tracks in temp file
+            tracklink.save_tracks("temp.txt")
         
 
         # # # # # # # # tracklinking path 3  # # # # # # # # # 
         if self.tracklinking_Npass>2:
-            data=self.tracks
+            # read tracks
+            with open('temp.txt') as json_file:  # 'tracking_original.txt'
+                data = json.load(json_file)
             self.tracks=[]
             
             # set parameters
@@ -405,6 +416,7 @@ class TrackingSetUp(object):
             
             #final tracks
             self.tracks=tracklink.tracks
+            
     
         # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         
