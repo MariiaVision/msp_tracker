@@ -20,7 +20,7 @@ matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
-from matplotlib.backend_bases import key_press_handler
+from matplotlib.backend_bases import Event
 from matplotlib.figure import Figure
 
 import skimage
@@ -627,6 +627,15 @@ class MainVisual(tk.Frame):
         
         
     def show_tracks(self):    
+        
+        # read limits
+#        print(matplotlib.get_backend())
+#        print (self.ax.dataLim)
+#        print (self.ax.viewLim)
+        xlim_old=self.ax.get_xlim()
+        ylim_old=self.ax.get_ylim()
+
+#        print("xlim_old ", xlim_old, ", ylim_old ", ylim_old)
 
         # plot image
         if self.memebrane_switch==0:
@@ -639,6 +648,12 @@ class MainVisual(tk.Frame):
         self.ax.clear() # clean the plot 
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')
+
+        #set the same "zoom"
+        self.ax.viewLim.x0=xlim_old[0]
+        self.ax.viewLim.x1=xlim_old[1]
+        self.ax.viewLim.y0=ylim_old[0]
+        self.ax.viewLim.y1=ylim_old[1]
         
         if  self.track_data_framed and self.monitor_switch<=1:
 
@@ -667,6 +682,20 @@ class MainVisual(tk.Frame):
         # toolbar
         toolbarFrame = tk.Frame(master=root)
         toolbarFrame.grid(row=18, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        
+        # update home button
+
+        def new_home( *args, **kwargs):
+            # zoom out
+            self.ax.viewLim.x0=0
+            self.ax.viewLim.x1=self.movie.shape[2] 
+            self.ax.viewLim.y0=0
+            self.ax.viewLim.y1=self.movie.shape[1] 
+
+            self.show_tracks()
+            
+        NavigationToolbar2Tk.home = new_home
+
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
@@ -917,10 +946,17 @@ class MainVisual(tk.Frame):
         
         # create a none-membrane movie
         self.membrane_movie=np.ones(self.movie.shape)
+
+        
+        # set axes
+        #set the same "zoom"
+        self.ax.viewLim.x0=0
+        self.ax.viewLim.x1=self.movie.shape[2] 
+        self.ax.viewLim.y0=0
+        self.ax.viewLim.y1=self.movie.shape[1]         
         
         # plot image
-        self.show_tracks()
-        
+        self.show_tracks()        
            #  #  # # # # next and previous buttons
         def show_values(v):
             self.frame_pos=int(v)
