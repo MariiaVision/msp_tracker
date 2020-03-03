@@ -150,6 +150,7 @@ class MainApplication(tk.Frame):
         ############################################
 
         self.frame_pos=0
+        self.detection_frame=0 # frame where the latest detection was made
         self.movie_length=1
         self.monitor_switch_detection=0
         self.pad_val=5
@@ -1180,7 +1181,7 @@ class MainApplication(tk.Frame):
     def run_test_detection(self):
         
         # read parameters from the buttons
-
+        self.detection_frame=self.frame_pos
         self.collect_detection_parameters()
 
         # movie 
@@ -1251,13 +1252,13 @@ class MainApplication(tk.Frame):
         # plot results
         
    
-        if self.monitor_switch_detection==1: # candidates
+        if self.monitor_switch_detection==1 and self.detection_frame==self.frame_pos: # candidates
             if len(self.detector.detection_candidates)>0:
                 for i in range(0, len(np.asarray(self.detector.detection_candidates))):
                     circle=plt.Circle((np.asarray(self.detector.detection_candidates)[i,1], np.asarray(self.detector.detection_candidates)[i,0]), 3, color="b", fill=False)
                     self.axd.add_artist(circle)    
         elif self.monitor_switch_detection==2: # detection
-            if len(self.detector.detection_vesicles)>0:
+            if len(self.detector.detection_vesicles)>0 and self.detection_frame==self.frame_pos:
                 for i in range(0, len(np.asarray(self.detector.detection_vesicles))):
                     circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False)
                     self.axd.add_artist(circle)    
