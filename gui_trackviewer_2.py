@@ -1569,10 +1569,10 @@ class TrackViewer(tk.Frame):
             img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         #calculate window position
         
-        left_point_y=np.min(np.asarray(self.trace)[:,1])-self.pixN_basic
-        right_point_y=np.max(np.asarray(self.trace)[:,1])+self.pixN_basic
-        top_point_x=np.min(np.asarray(self.trace)[:,0])-self.pixN_basic
-        bottom_point_x=np.max(np.asarray(self.trace)[:,0])+self.pixN_basic
+        left_point_y=int(np.min(np.asarray(self.trace)[:,1])-self.pixN_basic)
+        right_point_y=int(np.max(np.asarray(self.trace)[:,1])+self.pixN_basic)
+        top_point_x=int(np.min(np.asarray(self.trace)[:,0])-self.pixN_basic)
+        bottom_point_x=int(np.max(np.asarray(self.trace)[:,0])+self.pixN_basic)
         
         
         
@@ -1603,9 +1603,8 @@ class TrackViewer(tk.Frame):
             x_min=np.max([0, x_max-self.pixN_basic])
         else:
             x_min=0
-            x_max=img.shape[0]-1            
-        
-        
+            x_max=img.shape[0]-1       
+            
         region=img[x_min:x_max, y_min:y_max]
         
         blue_c=np.linspace(0., 1., len(self.trace))
