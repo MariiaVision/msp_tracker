@@ -430,6 +430,7 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.information_frame, text=" Final result fill be saved to: "+ self.result_path,  bg='white')
         lbl3.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
+        
           # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
         lbl3.grid(row=3, column=0, columnspan=4,pady=self.pad_val, padx=self.pad_val)  
@@ -465,7 +466,6 @@ class MainApplication(tk.Frame):
     
         lbl3 = tk.Label(master=self.information_frame, text=" Relevant peak height "+str(self.detector.threshold_rel),  bg='white')
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
-
             
           # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white')#, height=int(self.button_length/4))
@@ -1075,6 +1075,11 @@ class MainApplication(tk.Frame):
         self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
 
+    # button to show MSSEF
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Show MSSEF ", command=self.show_mssef, width=self.button_length)
+        lbl3.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)   
+
+
             
           # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
@@ -1136,6 +1141,35 @@ class MainApplication(tk.Frame):
         lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
     
 
+    def show_mssef(self):
+        
+        # read parameters
+        self.detection_frame=self.frame_pos
+        self.collect_detection_parameters()
+
+        # movie 
+        self.detector.movie=self.movie
+        
+        # generate MSSEF
+        mssef=self.detector.get_mssef(self.frame_pos)
+        
+        # create new window
+        fig_mssef=plt.figure()
+        plt.imshow(mssef, cmap="gray")
+        plt.axis('off')
+
+
+        self.novi = tk.Toplevel()
+        self.novi.title(" MSSEF image ")
+        canvas = FigureCanvasTkAgg(fig_mssef, master=self.novi)
+        canvas.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        canvas.draw()
+
+        # toolbar
+        self.toolbar = NavigationToolbar2Tk(canvas, self.novi)
+        self.toolbar.set_message=lambda x:"" # remove message with coordinates
+        self.toolbar.update()        
+        # show in it
         
     def load_cnn_model(self):
         # choose the file
