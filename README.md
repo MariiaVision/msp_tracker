@@ -23,12 +23,11 @@ This repository presents two GUIs:
 3. To run the software: `python gui_tracker.py`
   
 ### to do list:
-- [ ] add progress bar
-- [ ] set colours
-- [ ] fix zooming from frame to frame
-- [ ] clean the code 
+
 - [ ] create a proper description in "help"
+- [ ] clean the code 
 - [ ] give a proper name
+- [ ] add progress bar
 
 
 
@@ -50,10 +49,11 @@ This repository presents two GUIs:
 
 
 ### to do list:
-- [ ] include differenttrajectory segmentation
-- [ ] make scaling transit from frame to frame -> self.ax.set_ylim(val) doesn't allow "home" button
+
+- [ ] create help description
+- [ ] give a proper name
+- [ ] include different trajectory segmentation 
 - [ ] change to different system to read the tracks
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
 - [ ] clean the code
-- [ ] give a proper name
