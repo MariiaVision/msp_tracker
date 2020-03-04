@@ -174,7 +174,7 @@ class MainApplication(tk.Frame):
 
      # # # # # # # # # # # # # # # # # # # # # #    
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame_detection,text="   Select vesicle movie   ", command=self.select_vesicle_movie_detection, width=20)
+        self.button_mv = tk.Button(self.viewFrame_detection,text="   Select vesicle movie   ", command=self.select_vesicle_movie_detection, width=20, bg="#80818a")
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
 
         var_plot_detection = tk.IntVar()
@@ -284,11 +284,11 @@ class MainApplication(tk.Frame):
         
         
         self.tab_parametersFrame_linking_step2 = ttk.Frame(self.parametersFrame_linking)
-        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step2, text=" 2nd path ")
+        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step2, text=" 2nd pass ")
 
         
         self.tab_parametersFrame_linking_step3 = ttk.Frame(self.parametersFrame_linking)
-        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step3, text=" 3d path ")        
+        self.tab_parametersFrame_linking.add(self.tab_parametersFrame_linking_step3, text=" 3d pass ")        
         
         self.tab_parametersFrame_linking.pack(expand=1, fill='both')    
         
@@ -308,7 +308,7 @@ class MainApplication(tk.Frame):
         self.parametersFrame_linking_step3.configure(background='white')
         
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame_linking,text="   Select vesicle movie   ", command=self.select_vesicle_movie_linking, width=20)
+        self.button_mv = tk.Button(self.viewFrame_linking,text="   Select vesicle movie   ", command=self.select_vesicle_movie_linking, width=20, bg="#80818a")
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
     
         var_plot_linking = tk.IntVar()
@@ -398,18 +398,18 @@ class MainApplication(tk.Frame):
             self.show_parameters()
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Where to save results ", command=define_result_path, width=int(self.button_length*1.5), bg="gray")
+        lbl3 = tk.Button(master=self.action_frame, text=" Where to save results ", command=define_result_path, width=int(self.button_length*1.5),bg="#80818a")
         lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=int(self.button_length*1.5), bg="gray")
+        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=int(self.button_length*1.5), bg="#80818a")
         lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
           # empty space
         lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/4))
         lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)  
         
         # button to run tracking        
-        lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=self.run_tracking, width=self.button_length*2, bg="#02a17a")
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=self.run_tracking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=7, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
 
         # show parameters
@@ -762,7 +762,7 @@ class MainApplication(tk.Frame):
         self.l_tracklinking_path1_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_speed_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Speed siimilarity limit ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Speed similarity limit ",  bg='white')
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_speed_limit))
         self.l_tracklinking_path1_speed_limit = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
@@ -808,9 +808,9 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
@@ -878,7 +878,7 @@ class MainApplication(tk.Frame):
         self.l_tracklinking_path2_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_speed_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Speed siimilarity limit ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Speed similarity limit ",  bg='white')
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_speed_limit))
         self.l_tracklinking_path2_speed_limit = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
@@ -912,9 +912,9 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
@@ -982,7 +982,7 @@ class MainApplication(tk.Frame):
         self.l_tracklinking_path3_direction_limit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # tracklinking_path1_speed_limit
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Speed siimilarity limit ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Speed similarity limit ",  bg='white')
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_speed_limit))
         self.l_tracklinking_path3_speed_limit = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
@@ -1016,9 +1016,9 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=19, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Save to file ", command=self.save_to_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=20, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Read from file ", command=self.read_from_file_linking, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=21, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
@@ -1133,9 +1133,9 @@ class MainApplication(tk.Frame):
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#02f17a")
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file_detection, width=self.button_length*2, bg="#00917a")
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file_detection, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Read from file ", command=self.read_from_file_detection, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
@@ -1274,7 +1274,14 @@ class MainApplication(tk.Frame):
             print(" Parameters are read from the file ", filename)
 
         
-    def show_frame_detection(self):    
+    def show_frame_detection(self):  
+        
+                # read limits
+#        print(matplotlib.get_backend())
+#        print (self.ax.dataLim)
+#        print (self.ax.viewLim)
+        xlim_old=self.axd.get_xlim()
+        ylim_old=self.axd.get_ylim()
         
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
@@ -1283,8 +1290,14 @@ class MainApplication(tk.Frame):
         self.axd.imshow(self.image, cmap="gray")
         self.axd.axis('off')  
         
-        # plot results
+        #set the same "zoom"
+        self.axd.viewLim.x0=xlim_old[0]
+        self.axd.viewLim.x1=xlim_old[1]
+        self.axd.viewLim.y0=ylim_old[0]
+        self.axd.viewLim.y1=ylim_old[1]      
         
+        
+        # plot results        
    
         if self.monitor_switch_detection==1 and self.detection_frame==self.frame_pos: # candidates
             if len(self.detector.detection_candidates)>0:
@@ -1307,6 +1320,20 @@ class MainApplication(tk.Frame):
         # toolbar
         toolbarFrame = tk.Frame(master=self.viewFrame_detection)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        
+        # update home button
+
+        def new_home( *args, **kwargs):
+            # zoom out
+            self.axd.viewLim.x0=0
+            self.axd.viewLim.x1=self.movie.shape[2] 
+            self.axd.viewLim.y0=0
+            self.axd.viewLim.y1=self.movie.shape[1] 
+
+            self.show_frame_detection()
+            
+        NavigationToolbar2Tk.home = new_home
+        
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
@@ -1328,6 +1355,18 @@ class MainApplication(tk.Frame):
               
             lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
             lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            
+            #set the same "zoom"
+            self.axl.viewLim.x0=0
+            self.axl.viewLim.x1=self.movie.shape[2] 
+            self.axl.viewLim.y0=0
+            self.axl.viewLim.y1=self.movie.shape[1]   
+            
+            
+            self.axd.viewLim.x0=0
+            self.axd.viewLim.x1=self.movie.shape[2] 
+            self.axd.viewLim.y0=0
+            self.axd.viewLim.y1=self.movie.shape[1]   
             
         
         # plot image
@@ -1367,6 +1406,16 @@ class MainApplication(tk.Frame):
             lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
             lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
             
+            #set the same "zoom"
+            self.axd.viewLim.x0=0
+            self.axd.viewLim.x1=self.movie.shape[2] 
+            self.axd.viewLim.y0=0
+            self.axd.viewLim.y1=self.movie.shape[1]   
+
+            self.axl.viewLim.x0=0
+            self.axl.viewLim.x1=self.movie.shape[2] 
+            self.axl.viewLim.y0=0
+            self.axl.viewLim.y1=self.movie.shape[1]              
         
             # plot image
             self.show_frame_linking()
@@ -1589,13 +1638,18 @@ class MainApplication(tk.Frame):
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
             
     def show_frame_linking(self):    
-    
+
+        # read limits
+        xlim_old=self.axl.get_xlim()
+        ylim_old=self.axl.get_ylim()
+        
         # plot image
         self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
         self.axl.clear() # clean the plot 
         self.axl.imshow(self.image, cmap="gray")
         self.axl.axis('off')  
+
         
         # define the tracks to plot
        
@@ -1608,13 +1662,22 @@ class MainApplication(tk.Frame):
     
         # plotting
         if  bool(self.track_data_framed): # if the dict is not empty
+            print(self.track_data_framed)
             # plot tracks
     #            print("self.frame_pos ", self.frame_pos)
     #            print(self.track_data_framed['frames'][self.frame_pos])
             for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
                 trace=p['trace']
-                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
-                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+                self.axl.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
+                self.axl.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+
+        
+        #set the same "zoom"
+        self.axl.viewLim.x0=xlim_old[0]
+        self.axl.viewLim.x1=xlim_old[1]
+        self.axl.viewLim.y0=ylim_old[0]
+        self.axl.viewLim.y1=ylim_old[1] 
+
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
@@ -1624,6 +1687,20 @@ class MainApplication(tk.Frame):
         # toolbar
         toolbarFrame = tk.Frame(master=self.viewFrame_linking)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        
+        # update home button
+
+        def new_home( *args, **kwargs):
+            # zoom out
+            self.axl.viewLim.x0=0
+            self.axl.viewLim.x1=self.movie.shape[2] 
+            self.axl.viewLim.y0=0
+            self.axl.viewLim.y1=self.movie.shape[1] 
+
+            self.show_frame_linking()
+            
+        NavigationToolbar2Tk.home = new_home
+        
         self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
         self.toolbar.set_message=lambda x:"" # remove message with coordinates
         self.toolbar.update()
