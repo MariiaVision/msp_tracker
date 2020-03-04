@@ -635,7 +635,6 @@ class MainVisual(tk.Frame):
         xlim_old=self.ax.get_xlim()
         ylim_old=self.ax.get_ylim()
 
-#        print("xlim_old ", xlim_old, ", ylim_old ", ylim_old)
 
         # plot image
         if self.memebrane_switch==0:
