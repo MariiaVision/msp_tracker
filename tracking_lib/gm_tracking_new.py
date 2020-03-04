@@ -258,7 +258,7 @@ class GraphicalModelTracking(object):
         else:
             print("the BN topology cannot be identify - check the self.topology parameter")
         print("Chosen topology: ", self.topology )
-        print(cpd_a) 
+#        print(cpd_a) 
         
         # check model: defined and sum to 1.
         self.bgm_tracklet.check_model()
@@ -305,8 +305,9 @@ class GraphicalModelTracking(object):
         # intensity similarity  (0 - not similar, 1- similar)
         val_I=self.decision_in()
         
-        print("decisions: ", "\n order  ", val_O, "\n gap    ", val_G, "\n overLap  ", val_L
-              , "\n coordinates ", val_C, "\n orientation ", val_D, "\n speed   ", val_SP, "\n intensity ", val_I)
+#        print("decisions: ", "\n order  ", val_O, "\n gap    ", val_G, "\n overLap  ", val_L
+#              , "\n coordinates ", val_C, "\n orientation ", val_D, "\n speed   ", val_SP, "\n intensity ", val_I)
+        
         # make a query based on the calculated nodes
         infer = VariableElimination(self.bgm_tracklet) 
         
@@ -778,7 +779,7 @@ class GraphicalModelTracking(object):
 
                     checked_connections.append([ID_compare[0], ID_compare[1]])
                     connectivity_score=self.decision_tracklets_connection(track1, track2)
-                    print("tracklets", [ID_compare[0], ID_compare[1]]," possible connection", connectivity_score)
+#                    print("tracklets", [ID_compare[0], ID_compare[1]]," possible connection", connectivity_score)
                     
                     # remove pairs with small connectivity score
                     if connectivity_score>=self.connectivity_threshold:
@@ -887,7 +888,7 @@ class GraphicalModelTracking(object):
                 else:
                     connected_tracklets.append(comparison_list_end[best_choice_end_pos])
 #                    print("connected by end: ", comparison_list_end[best_choice_end_pos])
-                print("   connected: ", connected_tracklets[-1])
+ #               print("   connected: ", connected_tracklets[-1])
 
         # store connectivity score value
         new_connected_tracklets=[]
@@ -977,7 +978,7 @@ class GraphicalModelTracking(object):
                     # add the track in connections
                     self.tracklets_connection.append(new_track)
             print("N_connections ", N_connections)
-            print(len(self.tracklets_connection))
+#            print(len(self.tracklets_connection))
             if N_connections>0:
                 connected_tracklets=self.tracklets_connection
                 self.tracklets_connection=[]

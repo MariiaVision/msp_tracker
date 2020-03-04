@@ -393,8 +393,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         else:
             self.detected_vesicles=updated_centers
             
-        print("\n candidates ", len(self.detected_candidates))
-        print("vesicles ", len(self.detected_vesicles))
+        print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 
         return self.detected_vesicles
 

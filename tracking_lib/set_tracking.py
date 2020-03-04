@@ -174,7 +174,44 @@ class TrackingSetUp(object):
         self.detection_candidates=detector.detected_candidates
             
         return self.detection_vesicles
-    
+
+
+    def get_mssef(self, frameN):
+        '''
+         run detection with given parameters
+        '''
+        
+        #set up parameters
+        detector=Detectors()
+        
+        #MSSEF
+        detector.c=self.c #0.01 # coef for the thresholding
+        detector.k_max=self.k_max # end of  the iteration
+        detector.k_min=self.k_min # start of the iteration
+        detector.sigma_min=self.sigma_min # min sigma for LOG
+        detector.sigma_max=self.sigma_max# max sigma for LOG     
+        #thresholding
+        detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
+        detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
+        
+        detector.box_size=self.box_size # bounding box size for detection
+        detector.img_set=self.movie
+        #CNN based classification        
+        detector.detection_threshold=self.detection_threshold
+         
+        detector.substract_bg_step =self.substract_bg_step   
+        
+        #######################################################################
+        #background substraction 
+        img= detector.substract_bg_single(self.movie, frameN) 
+        
+        # Convert BGR to GRAY
+        gray = detector.img_enhancement(img)
+
+        # MSSEF
+        img_mssef, binary_mssef=detector.mssef(gray, self.c, self.k_max, self.k_min, self.sigma_min, self.sigma_max)
+
+        return img_mssef   
 
     def detection_parameter_to_file(self):
         '''
@@ -271,6 +308,7 @@ class TrackingSetUp(object):
         tracker = Tracker(self.tracker_distance_threshold, self.tracker_max_skipped_frame, self.tracker_max_track_length, 0)
 
         for frameN in range(self.start_frame,self.end_frame):
+            print("frame ", frameN)
             #detection
             vesicles=detector.detect(frameN, cnn_model)
             #tracking
@@ -319,7 +357,7 @@ class TrackingSetUp(object):
         tracklink.movie=self.movie
         
         
-        print("\n pass 1 : \n", data)
+        print("\n pass 1 : \n")
         
         # set tracklets
         tracklink.rearrange_track_to_frame_start_end(data, self.movie)
@@ -340,7 +378,7 @@ class TrackingSetUp(object):
             with open('temp.txt') as json_file:  # 'tracking_original.txt'
                 data = json.load(json_file)
                 
-            print("\n pass 2 : \n", data)
+            print("\n pass 2 : \n")
             self.tracks=[]
             
             # set parameters
@@ -380,6 +418,7 @@ class TrackingSetUp(object):
 
         # # # # # # # # tracklinking path 3  # # # # # # # # # 
         if self.tracklinking_Npass>2:
+            print("\n pass 3 : \n")
             # read tracks
             with open('temp.txt') as json_file:  # 'tracking_original.txt'
                 data = json.load(json_file)
