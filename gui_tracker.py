@@ -1662,7 +1662,7 @@ class MainApplication(tk.Frame):
     
         # plotting
         if  bool(self.track_data_framed): # if the dict is not empty
-            print(self.track_data_framed)
+
             # plot tracks
     #            print("self.frame_pos ", self.frame_pos)
     #            print(self.track_data_framed['frames'][self.frame_pos])
