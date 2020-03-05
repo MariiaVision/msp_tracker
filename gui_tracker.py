@@ -1289,13 +1289,7 @@ class MainApplication(tk.Frame):
         self.axd.clear() # clean the plot 
         self.axd.imshow(self.image, cmap="gray")
         self.axd.axis('off')  
-        
-        #set the same "zoom"
-        self.axd.viewLim.x0=xlim_old[0]
-        self.axd.viewLim.x1=xlim_old[1]
-        self.axd.viewLim.y0=ylim_old[0]
-        self.axd.viewLim.y1=ylim_old[1]      
-        
+      
         
         # plot results        
    
@@ -1310,7 +1304,14 @@ class MainApplication(tk.Frame):
                     circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False)
                     self.axd.add_artist(circle)    
 
+        
+        #set the same "zoom"
+        self.axd.set_xlim(xlim_old[0],xlim_old[1])
+        self.axd.set_ylim(ylim_old[0],ylim_old[1])  
 
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.axd.invert_yaxis()  
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figd, master=self.viewFrame_detection)
@@ -1325,10 +1326,8 @@ class MainApplication(tk.Frame):
 
         def new_home( *args, **kwargs):
             # zoom out
-            self.axd.viewLim.x0=0
-            self.axd.viewLim.x1=self.movie.shape[2] 
-            self.axd.viewLim.y0=0
-            self.axd.viewLim.y1=self.movie.shape[1] 
+            self.axd.set_xlim(0,self.movie.shape[2])
+            self.axd.set_ylim(0,self.movie.shape[1])
 
             self.show_frame_detection()
             
@@ -1357,16 +1356,12 @@ class MainApplication(tk.Frame):
             lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
             
             #set the same "zoom"
-            self.axl.viewLim.x0=0
-            self.axl.viewLim.x1=self.movie.shape[2] 
-            self.axl.viewLim.y0=0
-            self.axl.viewLim.y1=self.movie.shape[1]   
             
-            
-            self.axd.viewLim.x0=0
-            self.axd.viewLim.x1=self.movie.shape[2] 
-            self.axd.viewLim.y0=0
-            self.axd.viewLim.y1=self.movie.shape[1]   
+            self.axl.set_xlim(0,self.movie.shape[2])
+            self.axl.set_ylim(0,self.movie.shape[1])
+
+            self.axd.set_xlim(0,self.movie.shape[2])
+            self.axd.set_ylim(0,self.movie.shape[1])            
             
         
         # plot image
@@ -1407,15 +1402,11 @@ class MainApplication(tk.Frame):
             lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
             
             #set the same "zoom"
-            self.axd.viewLim.x0=0
-            self.axd.viewLim.x1=self.movie.shape[2] 
-            self.axd.viewLim.y0=0
-            self.axd.viewLim.y1=self.movie.shape[1]   
-
-            self.axl.viewLim.x0=0
-            self.axl.viewLim.x1=self.movie.shape[2] 
-            self.axl.viewLim.y0=0
-            self.axl.viewLim.y1=self.movie.shape[1]              
+            self.axd.set_xlim(0,self.movie.shape[2])
+            self.axd.set_ylim(0,self.movie.shape[1])
+            
+            self.axl.set_xlim(0,self.movie.shape[2])
+            self.axl.set_ylim(0,self.movie.shape[1])
         
             # plot image
             self.show_frame_linking()
@@ -1673,11 +1664,14 @@ class MainApplication(tk.Frame):
 
         
         #set the same "zoom"
-        self.axl.viewLim.x0=xlim_old[0]
-        self.axl.viewLim.x1=xlim_old[1]
-        self.axl.viewLim.y0=ylim_old[0]
-        self.axl.viewLim.y1=ylim_old[1] 
+        self.axl.set_xlim(xlim_old[0],xlim_old[1])
+        self.axl.set_ylim(ylim_old[0],ylim_old[1])
+        
 
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.axl.invert_yaxis()
+            
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
@@ -1692,10 +1686,10 @@ class MainApplication(tk.Frame):
 
         def new_home( *args, **kwargs):
             # zoom out
-            self.axl.viewLim.x0=0
-            self.axl.viewLim.x1=self.movie.shape[2] 
-            self.axl.viewLim.y0=0
-            self.axl.viewLim.y1=self.movie.shape[1] 
+        
+            self.axl.set_xlim(0,self.movie.shape[2])
+            self.axl.set_ylim(0,self.movie.shape[1])
+
 
             self.show_frame_linking()
             
