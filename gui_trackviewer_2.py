@@ -273,6 +273,7 @@ class MainVisual(tk.Frame):
         # plot bg
         self.fig, self.ax = plt.subplots(1,1, figsize=self.figsize_value)
         self.ax.axis('off')
+        
         self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
         self.show_tracks() 
@@ -478,23 +479,41 @@ class MainVisual(tk.Frame):
         
         
     def save_movie(self):
-        length=self.movie.shape[0]
+        
+        # run save movie
+        
+        
+        f_start=0
+        f_end=self.movie.shape[0]
 #        final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
         
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
         
-        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
-            #save tiff file for small cell solution
-            final_img_set=np.zeros((self.movie.shape[0],self.movie.shape[1],self.movie.shape[2], 3))
+                # read limits
+        xlim_old=self.ax.get_xlim()
+        ylim_old=self.ax.get_ylim()
+        
+        lim_x0=int(ylim_old[1])
+        lim_x1=int(ylim_old[0])
+        lim_y0=int(xlim_old[0]) # because y-axis is inverted
+        lim_y1=int(xlim_old[1]) # because y-axis is inverted
+#        print (lim_x0, lim_x1, lim_y0, lim_y1)
+        saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
+        saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
 
-            for frameN in range(0, length):
+#        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
+        if saved_movie.shape[1]<700 and saved_movie.shape[2]<700:
+            #save tiff file for small cell solution
+            final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3))
+
+            for frameN in range(0, saved_movie.shape[0]):
           
                 plot_info=self.track_data_framed['frames'][frameN]['tracks']
-                frame_img=self.movie[frameN,:,:]
-                membrane_img=self.membrane_movie[frameN,:,:]
+                frame_img=saved_movie[frameN,:,:]
+                membrane_img=saved_membrane[frameN,:,:]
                 # Make a colour image frame
-                orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
+                orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
         
                 img=frame_img/np.max(frame_img)+membrane_img*0.2
                 orig_frame [:,:,0] = img/np.max(img)*256
@@ -511,10 +530,10 @@ class MainVisual(tk.Frame):
                             # Draw trace line
                             point1=trace[j]
                             point2=trace[j+1]
-                            x1 = int(point1[1])
-                            y1 = int(point1[0])
-                            x2 = int(point2[1])
-                            y2 = int(point2[0])                        
+                            x1 = int(point1[1])-lim_y0
+                            y1 = int(point1[0])-lim_x0
+                            x2 = int(point2[1])-lim_y0
+                            y2 = int(point2[0])-lim_x0                        
                             cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
                                      self.color_list[clr], 1)
                             
@@ -536,17 +555,15 @@ class MainVisual(tk.Frame):
             if not(save_file.endswith(".avi")):
                 save_file += ".avi"
 
-    #        cv2.VideoWriter_fourcc(*'XVID')
-    #        cv2.VideoWriter_fourcc('M','J','P','G')
             out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
     
-            for frameN in range(0, length):
+            for frameN in range(0, saved_movie.shape[0]):
           
                 plot_info=self.track_data_framed['frames'][frameN]['tracks']
-                frame_img=self.movie[frameN,:,:]
-                membrane_img=self.membrane_movie[frameN,:,:]
+                frame_img=saved_movie[frameN,:,:]
+                membrane_img=saved_movie[frameN,:,:]
                 # Make a colour image frame
-                orig_frame = np.zeros((self.movie.shape[1], self.movie.shape[2], 3))
+                orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
         
                 img=frame_img/np.max(frame_img)+membrane_img*0.2
                 orig_frame [:,:,0] = img/np.max(img)*256
@@ -628,12 +645,12 @@ class MainVisual(tk.Frame):
         
     def show_tracks(self):    
         
+        
         # read limits
-#        print(matplotlib.get_backend())
-#        print (self.ax.dataLim)
-#        print (self.ax.viewLim)
+
         xlim_old=self.ax.get_xlim()
         ylim_old=self.ax.get_ylim()
+#        print("axis ", xlim_old, ylim_old)
 
 
         # plot image
@@ -648,12 +665,6 @@ class MainVisual(tk.Frame):
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')
 
-        #set the same "zoom"
-        self.ax.viewLim.x0=xlim_old[0]
-        self.ax.viewLim.x1=xlim_old[1]
-        self.ax.viewLim.y0=ylim_old[0]
-        self.ax.viewLim.y1=ylim_old[1]
-        
         if  self.track_data_framed and self.monitor_switch<=1:
 
             # plot tracks
@@ -666,13 +677,26 @@ class MainVisual(tk.Frame):
         if self.memebrane_switch==2:
             #extract skeleton
             skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+            
             # create an individual cmap with red colour
             cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
             cmap_new._init() # create the _lut array, with rgba values
             alphas = np.linspace(0, 0.8, cmap_new.N+3)
             cmap_new._lut[:,-1] = alphas
+            
             #plot the membrane border on the top
             self.ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
+
+        #set the same "zoom"
+        
+        self.ax.set_xlim(xlim_old[0],xlim_old[1])
+        self.ax.set_ylim(ylim_old[0],ylim_old[1])
+        
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.ax.invert_yaxis()
+        
+        
         
         # DrawingArea
         self.canvas = FigureCanvasTkAgg(self.fig, master=root)
@@ -685,11 +709,11 @@ class MainVisual(tk.Frame):
         # update home button
 
         def new_home( *args, **kwargs):
-            # zoom out
-            self.ax.viewLim.x0=0
-            self.ax.viewLim.x1=self.movie.shape[2] 
-            self.ax.viewLim.y0=0
-            self.ax.viewLim.y1=self.movie.shape[1] 
+            
+            # zoom out            
+            self.ax.set_xlim(0,self.movie.shape[2])
+            self.ax.set_ylim(0,self.movie.shape[1] )
+
 
             self.show_tracks()
             
