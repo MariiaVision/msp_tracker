@@ -712,7 +712,7 @@ class MainVisual(tk.Frame):
             
             # zoom out            
             self.ax.set_xlim(0,self.movie.shape[2])
-            self.ax.set_ylim(0,self.movie.shape[1] )
+            self.ax.set_ylim(0,self.movie.shape[1])
 
 
             self.show_tracks()
