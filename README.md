@@ -24,7 +24,7 @@ This repository presents two GUIs:
   
 ### to do list:
 
-- [ ] create a proper description in "help"
+- [ ] add  license
 - [ ] clean the code 
 - [ ] give a proper name
 - [ ] add progress bar
@@ -57,3 +57,4 @@ This repository presents two GUIs:
 - [ ] change from list to a table with sorting option
 - [ ] change plotting to grab the coordinates from the image
 - [ ] clean the code
+- [ ] add  license
