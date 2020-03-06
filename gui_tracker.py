@@ -56,9 +56,58 @@ class MainApplication(tk.Frame):
             self.new_window_help.title("About ")
 #            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
             self.new_window_help.configure(background='white')
+            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
+            S = tk.Scrollbar(self.new_window_help)
+            S.config(command=T.yview)
+            S.pack(side=tk.RIGHT, fill=tk.Y)
+            T.config(yscrollcommand=S.set)
+            T.configure(font=("Helvetica", 12))
             # widget in there with a text 
-            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software ",  bg='white')
-            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)            
+            text_help=""" Information about the software: 
+                
+The tracking software allows to set parameters and test them before running the tracker for the movie. 
+
+You can test detection on a single frame and linking on a sequence of frames.   
+
+Follow the steps to run the tracker: 
+    
+1) load the movie (button "select vesicle movie")
+It should be single channel movie.
+
+2) Set detection parametera (load from a file if set earlier): 
+    a) Set parameter for candidate detection.  
+    b) Set parameters for candidate pruning. 
+    c) Run test and change parameters until satisfied with the results.  
+
+3) Set Linking parameters (load from a file if set earlier): 
+    a) Choose number of passes.  
+    b) Set STEP 1. 
+    c) Set one pass after another. 
+    d) Set start and end frame for testing. 
+    e) Run test and change parameters until satisfied with the results. 
+
+4) Run the tracker:  
+    a) Check the parameters 
+    b) Choose start and end frames 
+    c) Select location and name of the file with tracking results 
+    d) Run the tracker with button “RUN TRACKING” 
+
+You should not close the software until the tracking is complete. 
+You can follow the tracking progress in the terminal. 
+When finished the final tracks will appear in the linking window and also can be opened in the separate viewer software. 
+
+The tracking algorithm is described in 
+“Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network” 
+Mariia Dmitrieva,  Helen L Zenner, Jennifer Richens, Daniel St Johnston, Jens Rittscher, 
+2019 IEEE 29th International Workshop on Machine Learning for Signal Processing (MLSP) 
+
+
+            """
+            
+#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
+            T.insert(tk.END, text_help)
+            T.pack(side=tk.LEFT, fill=tk.Y)
+            
             
         def HelpDetection():
             # create a new window
@@ -67,8 +116,40 @@ class MainApplication(tk.Frame):
 #            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
             self.new_window_help.configure(background='white')
             # widget in there with a text 
-            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Detection ",  bg='white')
-            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)       
+            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
+            S = tk.Scrollbar(self.new_window_help)
+            S.config(command=T.yview)
+            S.pack(side=tk.RIGHT, fill=tk.Y)
+            T.config(yscrollcommand=S.set)
+            T.configure(font=("Helvetica", 12))
+            # widget in there with a text 
+            text_help=""" Detection:
+    
+    a) Set parameter for candidate detection. 
+    
+        - Firstly, set Multi Scale Spot Enhancing Filter (MSSEF) choosing Threshold coefficient and Sigma. You can use “Show MSSEF” button to check the  enhanced spots. 
+The ideal image is when all the vesicles appear as separate spots without any holes inside and area outside the cell doesn't produce any spots.
+Threshold coefficient - intensity of the spots (from 0 up to 2-5)
+Sigma - range of blur for spot enhancement, influence the spot size and its shape.
+
+        - Set Relevant peak height (from 0 to 1). Increase the value to detect only bright spots and decrease it if darker spots have to be detected as well.
+        
+    b) Set parameter for candidate pruning.
+    
+- Minimum distance between detections - number of pixels expected between centers of two vesicles
+- Region of Interest size - region for classifier 8 or 16
+- Threshold coefficient - threshold for the classifier (from 0 to 1)
+- Load CNN model - there is a number of different trained models (folder "dl_weight"), if the classification results are not good you can try another model
+- Gaussian fit - on/off 
+ 
+You can test the detection on the current frame – button “Run test”, save the parameters into a file – button “Save to file” and load saved parameters “Read from file”. 
+            
+
+"""
+            
+#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
+            T.insert(tk.END, text_help)
+            T.pack(side=tk.LEFT, fill=tk.Y)    
             
         def HelpLinking():
             # create a new window
@@ -77,8 +158,61 @@ class MainApplication(tk.Frame):
 #            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
             self.new_window_help.configure(background='white')
             # widget in there with a text 
-            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Linking ",  bg='white')
-            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)         
+            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
+            S = tk.Scrollbar(self.new_window_help)
+            S.config(command=T.yview)
+            S.pack(side=tk.RIGHT, fill=tk.Y)
+            T.config(yscrollcommand=S.set)
+            T.configure(font=("Helvetica", 12))
+            
+            text_help="""Linking:
+                
+    a) Choose number of passes. 
+    
+This is number of tracklinking passes. In most of the cases 1 pass is enough, but in case of dense vesicle population or difference in speed movement it can be beneficial to use few passes.
+
+    b) Set STEP 1. 
+    
+At this step short tracklets are forms based on the distance. You need to specify three parameters: 
+
+- maximum distance to link - number of pixels between to detection which still can be linked
+- maximum skipped frames - how many frames can be skipped in the same tracklet between two detections
+- maximum track length - number of frames in one tracklet. Could be 5-10 in general, but for a dense movement should be about 3-4.
+   
+    c) Set one pass after another. 
+
+- Bayesian network topology - complete is the best option yet, which include all the nodes in the network
+- connectivity threshold - final threshold which decide on tracklets connection (from 0 to 1)
+- small temproal gap - number of frames which is expected between two connections (when vesicle is not detected for a number of frames)
+- large temporal gap- maximum number of frames which can be between two connections (when vesicle is not detected for a number of frames)
+- distance limit - maximum expected distance between two detections
+- orientation similarity - acceptable difference in orientation (from 0 to 180)
+- speed similarity limit - acceptable proportional difference in speed (from 0 to 1)
+- intensity similarity limit - acceptable difference in intensity (from 0 to 1)
+- threshold of track length - the final tracks shorter than the number will be removed. Make it 0 for all the passes accept the last one.
+
+When you have multiple passes the idea is first to connect slowly moving vesicles:
+    - smaller values for speed, intensity and orientation - it is not important
+    - small values for temporal gaps - the connections should be close to each other in time
+    - smaller value for the distance limit - this value depends on the speed you want to take into account
+    
+And with second-third pass faster moving vesicles will be linked:
+    - can increase values for speed, intensity and orientation, but not necessary 
+    - increase the temporal gap 
+    - increase the distance limit
+
+    d) Set start and end frame for testing. 
+It can be about 10-40 frames at the time when the most complex movement is happening
+
+    e) Run test and change parameters until satisfied with results. 
+    
+    
+            """
+            
+#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
+            T.insert(tk.END, text_help)
+            T.pack(side=tk.LEFT, fill=tk.Y)
+                    
             
             
         def HelpTracking():
@@ -87,9 +221,31 @@ class MainApplication(tk.Frame):
             self.new_window_help.title("Tracking ")
 #            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
             self.new_window_help.configure(background='white')
-            # widget in there with a text 
-            lb_start = tk.Label(master=self.new_window_help, text=" Information about the Tracking ",  bg='white')
-            lb_start.grid(row=0, column=0, pady=self.pad_val*2, padx=self.pad_val*3)       
+                        # widget in there with a text 
+            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
+            S = tk.Scrollbar(self.new_window_help)
+            S.config(command=T.yview)
+            S.pack(side=tk.RIGHT, fill=tk.Y)
+            T.config(yscrollcommand=S.set)
+            T.configure(font=("Helvetica", 12))
+            text_help=""" Run the tracker: 
+                
+    a) Check the parameters. 
+    b) Choose start and end frames 
+    c) Select location and name of the file with tracking results 
+    d) Run the tracker with button “RUN TRACKING” 
+
+You should not close the software until the tracking is complete. 
+You can see the progress in the terminal. 
+When finished the final tracks will appear in the linking window and also can be opened in the separate viewer software. 
+
+
+            """
+            
+#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
+            T.insert(tk.END, text_help)
+            T.pack(side=tk.LEFT, fill=tk.Y)
+                 
             
             
         helpmenu.add_command(label="About...", command=HelpAbout)
@@ -456,25 +612,28 @@ class MainApplication(tk.Frame):
     # sigma
         lbl3 = tk.Label(master=self.information_frame, text=" Sigma from  "+ str(self.detector.sigma_min)+" to "+str(self.detector.sigma_max),  bg='white')
         lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
-    # min_distance min distance minimum distance between two max after MSSEF
 
-        lbl3 = tk.Label(master=self.information_frame, text=" Minimum distance between detections "+str(self.detector.min_distance)+" pix",  bg='white')
-        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
         
     # self.threshold_rel min pix value in relation to the image
     
         lbl3 = tk.Label(master=self.information_frame, text=" Relevant peak height "+str(self.detector.threshold_rel),  bg='white')
-        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
             
           # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white')#, height=int(self.button_length/4))
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
+        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
                 
         
         lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES PRUNING ",  bg='white')
-        lbl3.grid(row=12, column=0,  pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=11, column=0,  pady=self.pad_val, padx=self.pad_val) 
+
         
+    # min_distance min distance minimum distance between two max after MSSEF
+
+        lbl3 = tk.Label(master=self.information_frame, text=" Minimum distance between detections "+str(self.detector.min_distance)+" pix",  bg='white')
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        
+
     #self.box_size=16 # bounding box size for detection
         lbl3 = tk.Label(master=self.information_frame, text=" Region of Interest size "+str(self.detector.box_size)+" pix",  bg='white')
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
@@ -1059,35 +1218,36 @@ class MainApplication(tk.Frame):
         self.d_sigma_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
-    # min_distance min distance minimum distance between two max after MSSEF
-
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
-        lbl3.grid(row=4, column=0) 
-        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
-        self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_min_distance.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # self.threshold_rel min pix value in relation to the image
     
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Relevant peak height ",  bg='white')
-        lbl3.grid(row=5, column=0) 
+        lbl3.grid(row=4, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.threshold_rel))
         self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_threshold_rel.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
 
     # button to show MSSEF
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Show MSSEF ", command=self.show_mssef, width=self.button_length)
-        lbl3.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)   
 
 
             
           # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)        
+        lbl3.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)        
                 
         
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
-        lbl3.grid(row=7, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=6, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+
+    # min_distance min distance minimum distance between two max after MSSEF
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
+        lbl3.grid(row=7, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
+        self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_min_distance.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
         
     #self.box_size=16 # bounding box size for detection
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region of Interest size ",  bg='white')
