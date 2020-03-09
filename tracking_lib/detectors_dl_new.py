@@ -105,6 +105,7 @@ class Detectors(object):
         self.threshold_rel=0.1 # min pix value in relation to the image
         
         self.box_size=32 # bounding box size for detection
+        self.box_size_fit= 8 # bounding box size for gaussian fit
         
         #CNN based classification        
         self.detection_threshold=0.99
@@ -367,7 +368,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
 #        
     
     # # # # segmentation using watershed new_img
-        updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model)  
+        updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model, segment_size=self.box_size)  
 #        updated_centers=self.classify_vesicle(local_max, new_img, new_model)  
         
         if self.gaussian_fit==True:
@@ -376,7 +377,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                 # ROI for the vesicle
                 img=self.img_set[frameN,:,:]
                 img=filters.median(img, selem=None, out=None, mask=None, shift_x=False, shift_y=False)
-                img_roi= np.copy(img[lm[0]-int(self.box_size/3): lm[0]+int(self.box_size/3), lm[1]-int(self.box_size/3):lm[1]+int(self.box_size/3)])  
+                img_roi= np.copy(img[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
                 
                 # radial fit
                 
@@ -386,12 +387,13 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                     x=lm[0]
                     y=lm[1]
                 else:
-                    x=lm[0]+x-int(self.box_size/3)
-                    y=lm[1]+y-int(self.box_size/3)
+                    x=lm[0]+x-int(self.box_size_fit/2)
+                    y=lm[1]+y-int(self.box_size_fit/2)
                 point_new=[x, y]            
                 self.detected_vesicles.append(point_new) 
         else:
             self.detected_vesicles=updated_centers
+        print("detections: \n", self.detected_vesicles)
             
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 

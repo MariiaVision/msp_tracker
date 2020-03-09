@@ -69,7 +69,8 @@ class TrackingSetUp(object):
         self.substract_bg_step =100   
         
         #option for Gaussian fit
-        self.gaussian_fit=True    
+        self.gaussian_fit=True
+        self.box_size_fit=8
         self.expected_radius=5
         self.cnn_model_path="dl_weight/cnn-weights-spiral_disk-39-0.95.hdf5"
         
@@ -151,6 +152,7 @@ class TrackingSetUp(object):
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
         
         detector.box_size=self.box_size # bounding box size for detection
+        detector.box_size_fit=self.box_size_fit  # bounding box size for gaussian fit
         detector.img_set=self.movie
         #CNN based classification        
         detector.detection_threshold=self.detection_threshold
@@ -195,6 +197,7 @@ class TrackingSetUp(object):
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
         
         detector.box_size=self.box_size # bounding box size for detection
+        detector.box_size_fit=self.box_size_fit  # bounding box size for gaussian fit
         detector.img_set=self.movie
         #CNN based classification        
         detector.detection_threshold=self.detection_threshold
@@ -218,10 +221,9 @@ class TrackingSetUp(object):
         save new detection parameters
         '''
         
-        
         parameters={'c':self.c, 'k_max':self.k_max , 'k_min':self.k_min,
                     'sigma_min':self.sigma_min,  'sigma_max':self.sigma_max,  'min_distance':self.min_distance,
-                    'threshold_rel':self.threshold_rel,'box_size':self.box_size,'detection_threshold':self.detection_threshold, 
+                    'threshold_rel':self.threshold_rel,'box_size':self.box_size, 'box_size_fit':self.box_size_fit, 'detection_threshold':self.detection_threshold, 
                     'substract_bg_step':self.substract_bg_step, 'gaussian_fit': self.gaussian_fit, 'expected_radius':self.expected_radius, 'cnn_model_path':self.cnn_model_path}
         data={'parameters':parameters}
         
@@ -255,6 +257,7 @@ class TrackingSetUp(object):
         self.threshold_rel=settings['threshold_rel'] # min pix value in relation to the image        
         self.box_size=settings['box_size'] # bounding box size for detection
         
+        
         #CNN based classification        
         self.detection_threshold=settings['detection_threshold']         
         self.substract_bg_step =settings['substract_bg_step']   
@@ -262,7 +265,7 @@ class TrackingSetUp(object):
         #option for Gaussian fit
         self.gaussian_fit=settings['gaussian_fit']
         self.expected_radius=settings['expected_radius']
-        
+        self.box_size_fit=settings['box_size_fit']
         self.cnn_model_path=settings['cnn_model_path']
             
         
@@ -288,7 +291,8 @@ class TrackingSetUp(object):
         detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
         
-        detector.box_size=self.box_size # bounding box size for detection
+        detector.box_size=self.box_size # bounding box size for detection#
+        detector.box_size_fit=self.box_size_fit  # bounding box size for gaussian fit
         detector.img_set=self.movie
         #CNN based classification        
         detector.detection_threshold=self.detection_threshold

@@ -634,7 +634,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
         
 
-    #self.box_size=16 # bounding box size for detection
+    #self.box_size # bounding box size for detection
         lbl3 = tk.Label(master=self.information_frame, text=" Region of Interest size "+str(self.detector.box_size)+" pix",  bg='white')
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
@@ -650,16 +650,20 @@ When finished the final tracks will appear in the linking window and also can be
     # expected_radius gaussian fit radius 
         lbl3 = tk.Label(master=self.information_frame, text=" Expected particle radius:  "+str(self.detector.expected_radius),  bg='white')
         lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+
+    #self.box_size_fit # bounding box size for detection
+        lbl3 = tk.Label(master=self.information_frame, text=" Region for Gaussian fit "+str(self.detector.box_size_fit)+" pix",  bg='white')
+        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
         
     # cnn_model cnn model 
         lbl3 = tk.Label(master=self.information_frame, text=" Loaded CNN model: "+self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white') #, height=int(self.button_length/4))
-        lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=19, column=0, pady=self.pad_val, padx=self.pad_val) 
 
         
         lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 1 ",  bg='white')
@@ -1273,25 +1277,33 @@ When finished the final tracks will appear in the linking window and also can be
         self.gaussianValue.set(True)
         self.d_gaussian_fit = tk.Checkbutton(self.parametersFrame_detection, text='', var=self.gaussianValue, command=clickgaussian_fit)
         self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    #self.box_size_fit 
+
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region for Gaussian fit ",  bg='white')
+        lbl3.grid(row=11, column=0) 
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size_fit))
+        self.d_box_size_fit = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_box_size_fit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # expected_radius
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Expected particle radius ",  bg='white')
-        lbl3.grid(row=11, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.expected_radius))
         self.d_expected_radius = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_expected_radius.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_expected_radius.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # cnn_model cnn model 
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val)  
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val)  
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        lbl3.grid(row=12, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=13, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
-        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
@@ -1369,6 +1381,16 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.d_detection_threshold.get()!='':
             self.detector.detection_threshold=float(self.d_detection_threshold.get())
+
+        # parameters: gaussian fit    
+        if self.d_box_size_fit.get()!='':
+            self.detector.box_size_fit=int(self.d_box_size_fit.get())  
+            
+            
+        if self.d_expected_radius.get()!='':
+            self.detector.expected_radius=float(self.d_expected_radius.get())
+            
+            
             
         self.show_parameters()
         
@@ -1391,6 +1413,7 @@ When finished the final tracks will appear in the linking window and also can be
         print(" detection_threshold", self.detector.detection_threshold)
         print(" gaussian_fit", self.detector.gaussian_fit)
         print(" expected_radius", self.detector.expected_radius)
+        print(" box_size_fit", self.detector.box_size_fit)
         print(" cnn_model", self.detector.cnn_model_path)
         
         print("\n running detection for frame ", self.frame_pos, " ...")
