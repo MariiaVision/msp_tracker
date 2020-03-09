@@ -39,9 +39,12 @@ class MainApplication(tk.Frame):
         parent.configure(background='white')
         
         #set the window size        
-        self.window_width = int(parent.winfo_screenwidth()/2) # half the monitor width
-        self.window_height = int(parent.winfo_screenheight()*0.8)  # 0.9 of the monitor height
+        self.window_width = int(parent.winfo_screenwidth()/2.5) # half the monitor width
+        self.window_height = int(parent.winfo_screenheight()*0.7)  # 0.9 of the monitor height
 #        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
+
+        print(parent.winfo_screenwidth(), parent.winfo_screenheight())
+        print(self.window_width, self.window_height)
 
         # menu
         menu = tk.Menu(parent)
@@ -309,11 +312,11 @@ When finished the final tracks will appear in the linking window and also can be
         self.detection_frame=0 # frame where the latest detection was made
         self.movie_length=1
         self.monitor_switch_detection=0
-        self.pad_val=5
+        self.pad_val=1
         self.dpi=100
-        self.img_width=self.window_height*0.8
+        self.img_width=self.window_height*0.6
         self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
-        self.button_length=np.max((10,int(self.window_width/100)))
+        self.button_length=np.max((10,int(self.window_width/130)))
         self.filename_final_tracking="unnamed_tracking_results.txt"
         
         #############################################
@@ -381,11 +384,6 @@ When finished the final tracks will appear in the linking window and also can be
         ############################################
 
         self.monitor_switch_linking=0
-        self.pad_val=5
-        self.dpi=100
-        self.img_width=self.window_height*0.8
-        self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
-        self.button_length=np.max((10,int(self.window_width/100)))
         self.track_data_framed={} 
     
         
@@ -519,7 +517,7 @@ When finished the final tracks will appear in the linking window and also can be
         self.gap_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.1), height=self.window_height, bg="white")
         self.gap_frame.grid(row=0, column=1, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)      
 
-        lbl3 = tk.Label(master=self.gap_frame, text=" ",  bg='white', width=int(self.button_length), height=int(self.button_length/1.5))
+        lbl3 = tk.Label(master=self.gap_frame, text=" ",  bg='white', width=int(self.button_length), height=int(self.button_length/3))
         lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val)   
         
         
@@ -561,7 +559,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=int(self.button_length*1.5), bg="#80818a")
         lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
           # empty space
-        lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)  
         
         # button to run tracking        
@@ -580,7 +578,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*3, padx=self.pad_val*3) 
         
-        lbl3 = tk.Label(master=self.information_frame, text=" Original protein channel:  "+ self.movie_protein_path,  bg='white', wraplength=int(self.window_width*0.3))
+        lbl3 = tk.Label(master=self.information_frame, text=" Original protein channel:  "+ self.movie_protein_path,  bg='white', wraplength=int(self.window_width*0.4))
         lbl3.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
         lbl3 = tk.Label(master=self.information_frame, text=" Final result fill be saved to: "+ self.result_path,  bg='white')
@@ -588,7 +586,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         
           # empty space
-        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=3, column=0, columnspan=4,pady=self.pad_val, padx=self.pad_val)  
         
         
@@ -620,7 +618,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
             
           # empty space
-        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white')#, height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white')#, height=int(self.button_length/10))
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
                 
         
@@ -662,7 +660,7 @@ When finished the final tracks will appear in the linking window and also can be
   # # # # # #  # #
 
          # empty space
-        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white') #, height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white') #, height=int(self.button_length/10))
         lbl3.grid(row=19, column=0, pady=self.pad_val, padx=self.pad_val) 
 
         
@@ -867,7 +865,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: first pass of tracklinking ",  bg='white')
@@ -949,7 +947,7 @@ When finished the final tracks will appear in the linking window and also can be
      
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
     
     # test range 
@@ -968,7 +966,7 @@ When finished the final tracks will appear in the linking window and also can be
       # # # # # #  # #
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step1, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
@@ -983,7 +981,7 @@ When finished the final tracks will appear in the linking window and also can be
         ##### step 2 #####          
         
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" TRACKER: second pass of tracklinking ",  bg='white')
@@ -1065,14 +1063,14 @@ When finished the final tracks will appear in the linking window and also can be
      
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
 
         
       # # # # # #  # #
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step2, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
@@ -1087,7 +1085,7 @@ When finished the final tracks will appear in the linking window and also can be
         ##### step 3 #####
         
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)      
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" TRACKER: third pass of tracklinking ",  bg='white')
@@ -1169,14 +1167,14 @@ When finished the final tracks will appear in the linking window and also can be
      
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/4))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
     
         
       # # # # # #  # #
     
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=18, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_linking_step3, text=" Run test ", command=self.run_test_linking, width=self.button_length*2, bg="#80818a")
@@ -1238,7 +1236,7 @@ When finished the final tracks will appear in the linking window and also can be
 
             
           # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)        
                 
         
@@ -1294,7 +1292,7 @@ When finished the final tracks will appear in the linking window and also can be
         self.d_expected_radius.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # cnn_model cnn model 
-        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length)
+        lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length*2)
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val)  
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
         lbl3.grid(row=13, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
@@ -1302,7 +1300,7 @@ When finished the final tracks will appear in the linking window and also can be
   # # # # # #  # #
 
          # empty space
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/2))
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/10))
         lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#80818a")
