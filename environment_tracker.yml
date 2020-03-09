@@ -10,6 +10,7 @@ dependencies:
     - trackpy
     - pgmpy==0.1.9
     - tqdm
+    - torch==1.0.1
   - numpy
   - scipy
   - matplotlib
@@ -17,7 +18,6 @@ dependencies:
   - tk
   - pandas
   - keras==2.3.1
-  - pytorch==1.0.1
   - joblib==0.14.1
   
 
