@@ -326,7 +326,7 @@ class TrackingSetUp(object):
         for trackN in range(0, len(tracker.completeTracks)):
             data.update({str(tracker.completeTracks[trackN].track_id):{
                     'trackID':tracker.completeTracks[trackN].track_id,
-                    'trace': np.asarray(tracker.completeTracks[trackN].trace).astype(int).tolist(),
+                    'trace': np.asarray(tracker.completeTracks[trackN].trace).astype(float).tolist(),
                     'frames':tracker.completeTracks[trackN].trace_frame,
                     'skipped_frames': tracker.completeTracks[trackN].skipped_frames
                     }})

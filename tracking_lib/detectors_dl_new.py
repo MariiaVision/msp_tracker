@@ -104,7 +104,7 @@ class Detectors(object):
         self.min_distance=4 # minimum distance between two max after MSSEF
         self.threshold_rel=0.1 # min pix value in relation to the image
         
-        self.box_size=32 # bounding box size for detection
+        self.box_size=16 # bounding box size for detection
         self.box_size_fit= 8 # bounding box size for gaussian fit
         
         #CNN based classification        
@@ -393,7 +393,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                 self.detected_vesicles.append(point_new) 
         else:
             self.detected_vesicles=updated_centers
-        print("detections: \n", self.detected_vesicles)
+#        print("detections: \n", self.detected_vesicles)
             
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 
