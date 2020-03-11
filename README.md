@@ -24,7 +24,6 @@ This repository presents two GUIs:
   
 ### to do list:
 
-- [ ] scroll in the parameter show/remove show parameters
 - [ ] show number of passes
 - [ ] add  license
 - [ ] clean the code 
