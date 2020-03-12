@@ -6,6 +6,9 @@ Created on Thu Jan  3 13:41:16 2019
 @author: maria dmitrieva
 """
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 import sys
 sys.path.append('./tracking_lib/')
 
