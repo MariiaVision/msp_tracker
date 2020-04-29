@@ -11,24 +11,25 @@ This repository presents two GUIs:
 2. Open the folder which contains the software in finder.
 3. In finder, right click on code folder and select `New Terminal at Folder`
 4. In the terminal type `conda env create -f environment_tracker.yml` and press enter. It should install all the required packages
+5. To run the software: activate the environment with `source activate gui_tracker` and run it with `python gui_tracker.py`
 
 #### Windows
 1. Install Anaconda: https://docs.anaconda.com/anaconda/install/windows/
 2. Launch Anaconda Prompt
 3. Navigate to the source directory and create conda environment with: `conda env create -f environment_tracker_win.yml`
-4. Activate the environment with `conda activate gui_tracker`
-5. To run software:  `python gui_tracker.py`
-
+4. To run the software: activate the environment with `conda activate gui_tracker` and run the tracker with `python gui_tracker.py` or double click on `run_tracker_windows.bat`
 
 #### Linux
 1. Install conda: https://docs.anaconda.com/anaconda/install/linux/
 2. In the terminal open the directory with the software
 3. In the terminal type `conda env create -f environment_tracker.yml` and press enter. It should install all the required packages
+4. To run the software: activate the environment with `source activate gui_tracker` and run it with `python gui_tracker.py`
 
 ### Usage
-1. In a terminal, activate the environment: `source activate gui_tracker` ( `conda activate gui_tracker` for windows)
+1. In a terminal (Anaconda prompt for Windows) navigate to the software folder, activate the environment: `source activate gui_tracker` (`conda activate gui_tracker` for windows)
 2. In necessary update the environment: `conda env update --file environment_tracker.yml`
 3. To run the software: `python gui_tracker.py`
+4. For window machine double click on `run_tracker_windows.bat` will do all the work
   
 ### to do list:
 
