@@ -1465,7 +1465,6 @@ When finished the final tracks will appear in the linking window and also can be
                 # read limits
 #        print(matplotlib.get_backend())
 #        print (self.ax.dataLim)
-#        print (self.ax.viewLim)
         xlim_old=self.axd.get_xlim()
         ylim_old=self.axd.get_ylim()
         
