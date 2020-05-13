@@ -34,7 +34,7 @@ from skimage.feature import peak_local_max
 
 from fusion_events import FusionEvent 
 
-from trajectory_segmentation_msd import TrajectorySegment
+from trajectory_segmentation import TrajectorySegment
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
@@ -74,7 +74,7 @@ class MainVisual(tk.Frame):
         
         # segmentation 
         self.tg = TrajectorySegment()     
-        self.tg.window_length=10
+        self.tg.window_length=8
 
         #filter parameters
         self.filter_duration=[0, 1000]
@@ -100,7 +100,7 @@ class MainVisual(tk.Frame):
         self.ap_axis=0
         
         # placing sizes
-        self.button_length=np.max((10,int(self.window_width/70)))
+        self.button_length=np.max((20,int(self.window_width/50)))
         self.pad_val=2
         self.dpi=100
         self.img_width=self.window_height*0.6
@@ -420,7 +420,6 @@ class MainVisual(tk.Frame):
 
         if not(save_file.endswith(".png")):
             save_file += ".png"        
-#        filename='/home/mariaa/NANOSCOPY/VESICLE_TRACKING/tracking_result/spinning_disk/movement_map/movement_map_'+file_name+'_cell_'+str(cellN)+'.png'
         plt.savefig(save_file) 
         
         
@@ -554,26 +553,6 @@ class MainVisual(tk.Frame):
             json.dump(self.track_data_filtered, f, ensure_ascii=False) 
         print("tracks are saved in  ", save_filename, " file")
 
-#    
-#    def update_data(self):
-#        '''
-#        update changed parameters
-#        '''
-#        
-#        if self.frame_parameter.get()!='':
-#            self.frame_rate=float(self.frame_parameter.get())
-#
-#        if self.res_parameter.get()!='':
-#            self.img_resolution=float(self.res_parameter.get())        
-#            
-#        if self.txt_stop_tolerance.get()!='':
-#            self.max_movement_stay=float(self.txt_stop_tolerance.get())/self.img_resolution
-#        
-#        
-#        self.list_update()
-#        self.track_to_frame()
-#        self.show_tracks()
-#          
 
     def move_to_previous(self):
         
@@ -695,16 +674,7 @@ class MainVisual(tk.Frame):
             self.filter_length[1]=10000
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
-            
-#        if self.txt_stop_from.get()=='':
-#            self.filter_stop[0]=0
-#        else:
-#            self.filter_stop[0]=float(self.txt_stop_from.get())
-#
-#        if self.txt_stop_to.get()=='':
-#            self.filter_stop[1]=10000
-#        else:
-#            self.filter_stop[1]=float(self.txt_stop_to.get())          
+                   
             
             
         print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration) #, ";   final stop duration: ", self.filter_stop)
@@ -723,8 +693,8 @@ class MainVisual(tk.Frame):
                 track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
                 # check maximum displacement between any two positions in track
                 track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
+               
                 # check stop length
-
                 track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)/self.frame_rate
                 
             else:
@@ -985,9 +955,10 @@ class MainVisual(tk.Frame):
         provide motion type evaluation to select directed movement for speed evaluation
         '''
 
-        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+#        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+        segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
         motion_type=segmentation_result[:len(track_data_original['frames'])]
-        #motion_type=[1]*len(track_data_original['frames'])
+
         
         return motion_type
     
@@ -1258,8 +1229,7 @@ class TrackViewer(tk.Frame):
         def show_values(v):
             self.frame_pos=int(v)
             self.plot_image() 
-            
-            # length=400,         
+                   
         self.scale_movie = tk.Scale(master=self.viewer, from_=0, to=self.movie_length, tickinterval=100, length=int(self.img_width), width=5, orient="horizontal", command=show_values)
         self.scale_movie.set(self.frame_pos)        
         self.scale_movie.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
@@ -1268,16 +1238,7 @@ class TrackViewer(tk.Frame):
         buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.E) 
         
         buttonnext = tk.Button(master=self.viewer, text=" >> ", command=self.move_to_next, width=5)
-        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)            
-#        
-#        buttonbefore = tk.Button(master=self.viewer,text="previous", command=self.move_to_previous, width=10)
-#        buttonbefore.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
-#
-#        lbframe = tk.Label(master=self.viewer, text=" frame: "+str(self.frame_pos), width=20, bg='white')
-#        lbframe.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
-#        
-#        buttonnext = tk.Button(master=self.viewer,text="next", command=self.move_to_next, width=10)
-#        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.E)
+        buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
      # buttins to change the position
      
@@ -1713,15 +1674,7 @@ class TrackViewer(tk.Frame):
         listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving    "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
         listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving  "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
-
-
-
-#Mean curvilinear speed
-#        listNodes_parameters.insert(tk.END, " Mean straight-line speed         "+str(0.00)+" px/frames")
-
-#        listNodes_parameters.insert(tk.END, " Linearity of forward progression "+str(0.00))
-
-#        listNodes_parameters.insert(tk.END, " Confinement ration               "+str(0.00))          
+      
 
         
     def show_list(self): 
@@ -1745,7 +1698,7 @@ class TrackViewer(tk.Frame):
        # plot the track positions
         for i in range(0, len(self.frames)):
              # add to the list
-            listNodes.insert(tk.END, "frame: "+str(self.frames[i])+"  position: "+str(self.trace[i]))     
+            listNodes.insert(tk.END, str(self.frames[i])+":  "+str(np.round(self.trace[i], 4)))     
 
 
 
