@@ -13,7 +13,7 @@ from scipy import stats
 import pandas as pd
 import skimage
 from skimage import io
-from model_1dunet import unet
+from viewer_lib.model_1dunet import unet
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
