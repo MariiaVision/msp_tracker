@@ -156,7 +156,7 @@ class MainVisual(tk.Frame):
         
             
         # AP axis 
-        ap_lb = tk.Label(master=root, text=" AP axis: ", width=20, bg='white')
+        ap_lb = tk.Label(master=root, text=" AP(AB) axis: ", width=20, bg='white')
         ap_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.ap_axis))
         self.ap_parameter = tk.Entry(root, width=10, text=v)
@@ -465,6 +465,13 @@ class MainVisual(tk.Frame):
         ax.set_theta_zero_location("S")
         ax.set_theta_direction(1)
         ax.set_title(" movement orientation \n based on track count ")
+#
+#        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330,  (self.ap_axis+90)%360, (self.ap_axis+270)%360)),
+#                   ['270', '300', '330', '0' , '30', '60','90', '120', '150', '180', '210', '240', '\n \n AP', '\n AP'])
+#        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+#        ax.set_theta_zero_location("S")
+#        ax.set_theta_direction(1)
+#        ax.set_title(" movement orientation \n based on track count ")
         
 #        plt.show()
         
