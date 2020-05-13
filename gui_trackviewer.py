@@ -32,9 +32,13 @@ import imageio
 import math
 from skimage.feature import peak_local_max
 
-from fusion_events import FusionEvent 
+from viewer_lib.fusion_events import FusionEvent 
 
-from trajectory_segmentation import TrajectorySegment
+from viewer_lib.trajectory_segmentation import TrajectorySegment
+
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
@@ -251,32 +255,32 @@ class MainVisual(tk.Frame):
 
         # motion map 
 
-        button_save=tk.Button(master=root, text="save motion map", command=self.plot_motion_map, width=self.button_length)
-        button_save.grid(row=14, column=7, pady=self.pad_val, padx=self.pad_val)
+        button_save=tk.Button(master=root, text="orientation: save map", command=self.plot_motion_map, width=int(self.button_length*1.5))
+        button_save.grid(row=13, column=6, pady=self.pad_val, padx=self.pad_val)
 
-        button_save=tk.Button(master=root, text="save orientation", command=self.plot_motion_map, width=self.button_length)
-        button_save.grid(row=15, column=7, pady=self.pad_val, padx=self.pad_val)
+        button_save=tk.Button(master=root, text="orientation: save info", command=self.save_orientation_info, width=int(self.button_length*1.5))
+        button_save.grid(row=14, column=6, pady=self.pad_val, padx=self.pad_val)
         
-        button_save=tk.Button(master=root, text="load and plot", command=self.plot_motion_map, width=self.button_length)
-        button_save.grid(row=16, column=7, pady=self.pad_val, padx=self.pad_val)        
+        button_save=tk.Button(master=root, text="orientation: joint map", command=self.plot_multiple_motion_map, width=int(self.button_length*1.5))
+        button_save.grid(row=15, column=6, pady=self.pad_val, padx=self.pad_val)        
         # button to save all the tracks on the image
         
-        button_save=tk.Button(master=root, text="save tracks plot", command=self.save_track_plot, width=self.button_length)
+        button_save=tk.Button(master=root, text="trajectories: save image", command=self.save_track_plot, width=int(self.button_length*1.5))
         button_save.grid(row=13, column=7, pady=self.pad_val, padx=self.pad_val)
         
         # button to update changes
         
-        button_save=tk.Button(master=root, text="save movie", command=self.save_movie, width=self.button_length)
-        button_save.grid(row=13, column=8, pady=self.pad_val, padx=self.pad_val)
+        button_save=tk.Button(master=root, text="trajectories: save movie", command=self.save_movie, width=int(self.button_length*1.5))
+        button_save.grid(row=14, column=7, pady=self.pad_val, padx=self.pad_val)
               
 
-        button_save=tk.Button(master=root, text="info to csv", command=self.save_data_csv, width=self.button_length)
-        button_save.grid(row=14, column=8, pady=self.pad_val, padx=self.pad_val)  
+        button_save=tk.Button(master=root, text="trajectories: save info to csv", command=self.save_data_csv, width=int(self.button_length*1.5))
+        button_save.grid(row=15, column=7, pady=self.pad_val, padx=self.pad_val)  
         
         # save button
      
-        button_save=tk.Button(master=root, text="tracks to json", command=self.save_in_file, width=self.button_length)
-        button_save.grid(row=15, column=8, pady=self.pad_val, padx=self.pad_val)  
+        button_save=tk.Button(master=root, text="trajectories: save updates", command=self.save_in_file, width=int(self.button_length*1.5))
+        button_save.grid(row=16, column=7, pady=self.pad_val, padx=self.pad_val)  
         
       # # # # # # movie  # # # # # # 
         
@@ -345,9 +349,116 @@ class MainVisual(tk.Frame):
         # close the image
         plt.close()     
         
+        
+    def save_orientation_info(self):
+        '''
+        save track orientation into a file
+        '''
+        #read ap axis
+        if self.ap_parameter.get()!='':
+            self.ap_axis=int(self.ap_parameter.get())
+            
+        if self.axis_name_parameter.get()!='':
+            self.axis_name=self.axis_name_parameter.get()
+  
+        #calculate orientation for each trajectory
+        orintation_array=[]
+        
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+        #    calculate parameters
+            point_start=track['trace'][0]
+            point_end=track['trace'][-1]
+
+            # calculate orientation
+            y=point_end[1]-point_start[1]
+            x=point_end[0]-point_start[0]
+            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+            
+            orintation_array.append(orintation_move)    
+            
+        # save the array into the file
+        
+        # request file name name
+        save_file = tk.filedialog.asksaveasfilename()   
+        
+        if not(save_file.endswith(".txt")):
+            save_file += ".txt"  
+            
+        # save in json format                    
+        with open(save_file, 'w') as f:
+            json.dump({'orientation':orintation_array}, f, ensure_ascii=False) 
+        
+    def plot_multiple_motion_map(self):
+        '''
+        load and plot multiple orientations together
+        '''
+        
+        # load multiple files
+        load_files = tk.filedialog.askopenfilenames(title='Choose all files together')
+        print(load_files)
+        
+        # create the joint orientation list
+        
+        orientation_all=[]
+        
+        for file_name in load_files:
+            
+            #read from json format 
+            with open(file_name) as json_file:  
+                orientation_new = json.load(json_file)
+                
+            orientation_all+=orientation_new['orientation']        
+        
+#        print(orientation_all)
+        
+        # axis name
+            
+        if self.axis_name_parameter.get()!='':
+            self.axis_name=self.axis_name_parameter.get()
+            
+            
+        axis_name=self.axis_name.split(",")
+        if axis_name[0]:
+            first_name=axis_name[0]
+        else:
+            first_name=" "
+        
+        if axis_name[1]:
+            second_name=axis_name[1]
+        else:
+            second_name=" "
+            
+            
+        # plot and save 
+        plt.figure(figsize=(8,8))
+        
+        ax_new = plt.subplot(111, projection='polar')
+        
+        bin_size=10
+        a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+
+        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+           [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+        ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+        ax_new.set_theta_direction(1)
+        ax_new.set_title(" movement orientation \n based on track count ")
+        
+        # request file name
+        save_file = tk.filedialog.asksaveasfilename() 
+
+        if not(save_file.endswith(".png")):
+            save_file += ".png"        
+        plt.savefig(save_file) 
+        
+        
+        
+        
+        
     def plot_motion_map(self):
         '''
-        plot motion map woth given AP
+        plot motion map with given AP
         '''
         #read ap axis
         if self.ap_parameter.get()!='':
@@ -369,12 +480,12 @@ class MainVisual(tk.Frame):
         if axis_name[0]:
             first_name=axis_name[0]
         else:
-            first_name="A"
+            first_name=" "
         
         if axis_name[1]:
             second_name=axis_name[1]
         else:
-            second_name="B"
+            second_name=" "
         
         arrow_a=[30,30]
         dist=25
@@ -548,10 +659,15 @@ class MainVisual(tk.Frame):
     
     def save_in_file(self):
         
-        save_filename = tk.filedialog.asksaveasfilename()
-        with open(save_filename+'.txt', 'w') as f:
+        save_file = tk.filedialog.asksaveasfilename()
+        
+        if not(save_file.endswith(".txt")):
+            save_file += ".txt"  
+            
+        with open(save_file, 'w') as f:
             json.dump(self.track_data_filtered, f, ensure_ascii=False) 
-        print("tracks are saved in  ", save_filename, " file")
+            
+        print("tracks are saved in  ", save_file, " file")
 
 
     def move_to_previous(self):
