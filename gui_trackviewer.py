@@ -507,8 +507,8 @@ class MainVisual(tk.Frame):
         arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
 
         ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-        ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.5)
-        ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.5)
+        ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
+        ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
 
         for trackID in range(0, len(self.track_data_filtered['tracks'])):
             track=self.track_data_filtered['tracks'][trackID]
