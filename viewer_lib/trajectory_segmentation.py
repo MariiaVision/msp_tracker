@@ -14,6 +14,7 @@ import pandas as pd
 import skimage
 from skimage import io
 from viewer_lib.model_1dunet import unet
+#from model_1dunet import unet
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -53,7 +54,7 @@ class TrajectorySegment(object):
         self.trace=[]
         self.frames=[]
         self.window_length=8
-        self.unet_threshold=0.3
+        self.unet_threshold=0.5
         
         
         
@@ -88,7 +89,7 @@ class TrajectorySegment(object):
             new_track=trace
         
         new_segment=np.zeros((len(new_track),1))
-        
+        real_segment=np.zeros((len(new_track),1))
         # rolling window over the samples
         for pos in range(8, np.max((9,track_length)),4): 
     
@@ -118,8 +119,10 @@ class TrajectorySegment(object):
             #pass to segmnetation array
             if pos==8:
                 new_segment[0: pos]=semgentation_unet_result[:]
+                real_segment[0: pos]=real_results[:]
             else:
                 new_segment[pos-6: pos]=semgentation_unet_result[2:]
+                real_segment[pos-6: pos]=real_results[2:]
             
             
         #save the last window to tge segmentation array
@@ -148,12 +151,20 @@ class TrajectorySegment(object):
             semgentation_unet_result=np.zeros(real_results.shape)
 
             semgentation_unet_result[real_results>=self.unet_threshold]=1
-            
             #pass to segmnetation array
             new_segment[track_length-6:track_length]=semgentation_unet_result[2:]
+            real_segment[track_length-6:track_length]=real_results[2:]
             
+        # check on small segments:
         
-        return new_segment.reshape((new_segment.shape[0]))
+        segmented_traj=self.remove_small_segments(new_segment.reshape((new_segment.shape[0])), 1)
+        
+        print("\n")
+        for n in range(0,len(real_segment)):
+            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
+        
+        return segmented_traj
+#        return new_segment.reshape((new_segment.shape[0]))
     
     def msd_based_segmentation(self, trace):
         '''
@@ -173,9 +184,14 @@ class TrajectorySegment(object):
             if slope<=1:
                 segmentation_msd_based[i]=0
             else:
-                segmentation_msd_based[i]=1      
+                segmentation_msd_based[i]=1    
                 
-        return segmentation_msd_based
+        
+        # check on small segments:
+        
+        segmented_traj=self.remove_small_segments(segmentation_msd_based, 1)
+                
+        return segmented_traj
         
     def msd_slope(self, track):
         '''
@@ -209,5 +225,43 @@ class TrajectorySegment(object):
     
         return msds, tau
     
+    def remove_small_segments(self, segmented=[],segment_length=1):
+        '''
+        remove too short segment
+        '''
+        new_segment=np.copy(segmented)
+        segment=np.diff(segmented)
+        loc=np.where(np.abs(segment)==1)
+        d=np.diff(loc)[0]
         
+        for pos in range(0, len(d)):
+            if (pos-1)>=0:
+                v_before=d[pos-1]
+            else:
+                v_before=10
+                    
+            if (pos+1)<len(d):
+                v_after=d[pos+1]
+            else:
+                v_after=10
+                
+            val=d[pos]
+            # if the segment is between two big pieces
+            if val<=segment_length and v_before>segment_length+1 and v_after>segment_length+1:
+                actual_pos=loc[0][pos]+1 # position in the original array
+                actual_new_pos=loc[0][pos]
+                new_val=segmented[actual_new_pos]
+                new_segment[actual_pos:actual_pos+val]=new_val
+                
         
+        return new_segment
+        #
+#        
+#
+#if __name__ == "__main__":
+#    segmented=[1,0,1,0,1,0,1,0,0,0,1,0,0,0,1,1,0,0,0,0,1,1,1,1,1,0,1,1,1,1,0,0,1,1,]
+#    print(np.asarray(segmented))
+#    results=TrajectorySegment.remove_small_segments(segmented, segmented)
+#    
+#    print(results)
+    
