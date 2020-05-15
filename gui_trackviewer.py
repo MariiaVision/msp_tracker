@@ -39,6 +39,7 @@ from viewer_lib.trajectory_segmentation import TrajectorySegment
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+plt.rcParams.update({'figure.max_open_warning': 0})
 
 class MainVisual(tk.Frame):
     # choose the files and visualise the tracks on the data
@@ -503,7 +504,7 @@ class MainVisual(tk.Frame):
             second_name=" "
         
         arrow_a=[30,30]
-        dist=25
+        dist=20
         arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
 
         ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
