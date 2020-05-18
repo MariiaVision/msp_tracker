@@ -680,7 +680,7 @@ class MainVisual(tk.Frame):
         
         if not(save_file.endswith(".txt")):
             save_file += ".txt"  
-            
+        print(self.track_data_filtered)
         with open(save_file, 'w') as f:
             json.dump(self.track_data_filtered, f, ensure_ascii=False) 
             
@@ -1525,10 +1525,13 @@ class TrackViewer(tk.Frame):
             for pos in range(0, len(motion)-1):
                 move_pos=motion[pos]
                 if move_pos==1 and move_switch==0and pos!=(len(motion)-2): # switching to the moving
+                    print(1)
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos]
+                    frame_n=frame_n+1
                     
-                if move_pos==1 and move_switch==0and pos==(len(motion)-2): # switching to the moving at last frame
+                elif move_pos==1 and move_switch==0and pos==(len(motion)-2): # switching to the moving at last frame
+                    print(2)
 
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos]
@@ -1536,20 +1539,27 @@ class TrackViewer(tk.Frame):
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
                 elif move_pos==0 and move_switch==1: #  end of motion
+                    print(3)
 
                     move_switch=0 # switch off moving mode
                     end=trajectory[pos]   
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                    print("start and end: ", start, end)
                 
                 elif move_pos==1 and move_switch==1 and pos!=(len(motion)-2): # continue moving
+                    print(4)
 
                     frame_n=frame_n+1
                     
-                elif move_pos==1 and move_switch==1 and pos==(len(motion)-2):
-
-                    frame_n=frame_n+2
+                elif move_pos==1 and move_switch==1 and pos==(len(motion)-2): # end of movement
+                    print(5)
+                
+                    frame_n=frame_n+1
                     end=trajectory[pos+1]
+                    print("start and end: ", start, end)
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                print("d ",distance, 'frames', frame_n)
+                
 
 
             frame_n=np.max((1, frame_n))
