@@ -156,10 +156,10 @@ class TrajectorySegment(object):
         
         segmented_traj=self.remove_small_segments(new_segment.reshape((new_segment.shape[0])), self.limit_segment_length)
         
-        # print segmentation results
-        print("\n")
-        for n in range(0,len(real_segment)):
-            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
+#        # print segmentation results
+#        print("\n")
+#        for n in range(0,len(real_segment)):
+#            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
         
         return segmented_traj
     
@@ -252,6 +252,101 @@ class TrajectorySegment(object):
                 
         
         return new_segment.tolist()
+    
+    
+    def calculate_speed(self, track, mode="average"): # mode: "average"/"movement"
+        '''
+        calculate speed of vesicle movement
+        '''
+        trajectory=track['trace']
+        frames=track['frames']
+        motion=track['motion']
+
+        
+        #Mean curvilinear speed
+
+        # separated arrays for coordinates
+        x_1=np.asarray(trajectory)[1:,0]    
+        y_1=np.asarray(trajectory)[1:,1]   
+
+        x_2=np.asarray(trajectory)[0:-1,0]    
+        y_2=np.asarray(trajectory)[0:-1,1]   
+
+        # calculate the discplacement
+
+        sqr_disp_back=np.sqrt((x_1-x_2)**2+(y_1-y_2)**2)        
+
+        if mode=="average":  
+            
+            # sum of all the displacements                   
+            disp=np.sum(sqr_disp_back)
+            
+            # frames        
+            time=(frames[-1]-frames[0])
+
+        else: # movement mode
+            
+            disp=np.sum(np.asarray(motion[1:])*sqr_disp_back)
+            time=np.max((1,np.sum(np.asarray(motion)[1:])))
+           
+        #speed        
+        curvilinear_speed=disp/time    
+        
+        # straightline_speed
+        if  mode=="average":
+            
+            straightline_dist=np.sqrt((x_2[0]-x_1[-1])**2+(y_2[0]-y_1[-1])**2)
+            straightline_time=(frames[-1]-frames[0])
+            straightline_speed=straightline_dist/straightline_time
+        else:
+            move_switch=0
+            start=[0,0]
+            end=[0,0]
+            distance=0
+            frame_n=0
+#            print("\n")
+            for pos in range(1, len(motion)):
+                move_pos=motion[pos]
+#                print(pos)
+                if move_pos==1 and move_switch==0 and pos!=(len(motion)-1): # switching to the moving
+                    frame_n=frame_n+1
+                    move_switch=1 # switch to moving mode
+                    start=trajectory[pos-1]
+                    
+                elif move_pos==1 and move_switch==0 and pos==(len(motion)-1): # switching to the moving at last frame
+ 
+                    move_switch=1 # switch to moving mode
+                    start=trajectory[pos-1]
+                    end=trajectory[pos]
+#                    print(start, end)
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                    
+                elif move_pos==0 and move_switch==1: #  end of motion
+
+                    move_switch=0 # switch off moving mode
+                    end=trajectory[pos-1] 
+#                    print(start, end)
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                
+                elif move_pos==1 and move_switch==1 and pos!=(len(motion)-1): # continue moving
+
+                    frame_n=frame_n+1
+                    
+                elif move_pos==1 and move_switch==1 and pos==(len(motion)-1): # end of movement at last frame
+
+                    frame_n=frame_n+1
+                    end=trajectory[pos]
+#                    print(start, end)
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                    
+#                print("motion", move_pos, " Nframes ", frame_n, ", dist: ", distance)
+
+
+            frame_n=np.max((1, frame_n))
+            straightline_speed=distance/frame_n
+
+            
+        return curvilinear_speed, straightline_speed # pix/frame
         #
 #        
 #
