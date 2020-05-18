@@ -50,7 +50,7 @@ class TrajectorySegment(object):
         self.trace=[]
         self.frames=[]
         self.window_length=8
-        self.unet_threshold=0.6
+        self.unet_threshold=0.5
         self.limit_segment_length=2
         
         
@@ -156,10 +156,10 @@ class TrajectorySegment(object):
         
         segmented_traj=self.remove_small_segments(new_segment.reshape((new_segment.shape[0])), self.limit_segment_length)
         
-#        # print segmentation results
-#        print("\n")
-#        for n in range(0,len(real_segment)):
-#            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
+        # print segmentation results
+        print("\n")
+        for n in range(0,len(real_segment)):
+            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
         
         return segmented_traj
     
@@ -251,7 +251,7 @@ class TrajectorySegment(object):
                 new_segment[actual_pos:actual_pos+val]=new_val
                 
         
-        return new_segment
+        return new_segment.tolist()
         #
 #        
 #
