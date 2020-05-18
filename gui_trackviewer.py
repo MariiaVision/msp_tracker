@@ -1163,7 +1163,7 @@ class MainVisual(tk.Frame):
         # create the data for saving
         self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
         self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)', ' Final stop duration (sec)', 
+                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                          ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
                          'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
 
@@ -1217,13 +1217,11 @@ class MainVisual(tk.Frame):
                                  
             moving_mcs=np.round(self.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
             moving_msls=np.round(self.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
-            #stop duration
-            stop_t=FusionEvent.calculate_stand_length(self,trajectory, track['frames'], self.max_movement_stay)/self.frame_rate
             
             
             
             self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
-                                     max_displacement, time, stop_t, 
+                                     max_displacement, time,
                                      net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
             
         # select file location and name
@@ -1290,25 +1288,35 @@ class MainVisual(tk.Frame):
             distance=0
             frame_n=0
             for pos in range(0, len(motion)-1):
-
                 move_pos=motion[pos]
-                if move_pos==1 and move_switch==0: # switching to the moving
+                if move_pos==1 and move_switch==0and pos!=(len(motion)-2): # switching to the moving
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos]
                     
+                if move_pos==1 and move_switch==0and pos==(len(motion)-2): # switching to the moving at last frame
+
+                    move_switch=1 # switch to moving mode
+                    start=trajectory[pos]
+                    end=trajectory[pos+1]
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                    
                 elif move_pos==0 and move_switch==1: #  end of motion
+
                     move_switch=0 # switch off moving mode
                     end=trajectory[pos]   
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                 
-                elif move_pos==1 and move_switch==1and pos!=(len(motion)-2): # continue moving
+                elif move_pos==1 and move_switch==1 and pos!=(len(motion)-2): # continue moving
+
                     frame_n=frame_n+1
                     
                 elif move_pos==1 and move_switch==1 and pos==(len(motion)-2):
+
                     frame_n=frame_n+2
                     end=trajectory[pos+1]
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
-            
+
+
             frame_n=np.max((1, frame_n))
             straightline_speed=distance/frame_n
 
@@ -1353,6 +1361,10 @@ class TrackViewer(tk.Frame):
         self.frame_rate=frame_rate # movie frame rate
         self.ap_axis=ap_axis
         self.axis_name=axis_name
+        
+        # segmentation 
+        self.tg = TrajectorySegment()     
+        self.tg.window_length=8
         
         self.max_movement_stay=max_movement_stay # evaluate stopped vesicle - movement within the threshold
         
@@ -1460,11 +1472,15 @@ class TrackViewer(tk.Frame):
         self.R3.grid(row=1, column=4, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
 
-
-    def calculate_speed(self, trajectory, frames, mode="average"): # mode: "average"/"movement"
+    def calculate_speed(self, track, mode="average"): # mode: "average"/"movement"
         '''
         calculate speed of vesicle movement
         '''
+        trajectory=track['trace']
+        frames=track['frames']
+        motion=track['motion']
+
+        
         #Mean curvilinear speed
 
         # separated arrays for coordinates
@@ -1488,8 +1504,8 @@ class TrackViewer(tk.Frame):
 
         else: # movement mode
             
-            disp=np.sum(np.asarray(self.motion[:-1])*sqr_disp_back)
-            time=np.max((1,np.sum(np.asarray(self.motion)[:-1])))
+            disp=np.sum(np.asarray(motion[:-1])*sqr_disp_back)
+            time=np.max((1,np.sum(np.asarray(motion)[:-1])))
            
         #speed        
         curvilinear_speed=disp/time    
@@ -1506,31 +1522,42 @@ class TrackViewer(tk.Frame):
             end=[0,0]
             distance=0
             frame_n=0
-            for pos in range(0, len(self.motion)-1):
-
-                move_pos=self.motion[pos]
-                if move_pos==1 and move_switch==0: # switching to the moving
+            for pos in range(0, len(motion)-1):
+                move_pos=motion[pos]
+                if move_pos==1 and move_switch==0and pos!=(len(motion)-2): # switching to the moving
                     move_switch=1 # switch to moving mode
-                    start=self.trace[pos]
+                    start=trajectory[pos]
+                    
+                if move_pos==1 and move_switch==0and pos==(len(motion)-2): # switching to the moving at last frame
+
+                    move_switch=1 # switch to moving mode
+                    start=trajectory[pos]
+                    end=trajectory[pos+1]
+                    distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
                 elif move_pos==0 and move_switch==1: #  end of motion
+
                     move_switch=0 # switch off moving mode
-                    end=self.trace[pos]   
+                    end=trajectory[pos]   
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                 
-                elif move_pos==1 and move_switch==1and pos!=(len(self.motion)-2): # continue moving
+                elif move_pos==1 and move_switch==1 and pos!=(len(motion)-2): # continue moving
+
                     frame_n=frame_n+1
                     
-                elif move_pos==1 and move_switch==1 and pos==(len(self.motion)-2):
+                elif move_pos==1 and move_switch==1 and pos==(len(motion)-2):
+
                     frame_n=frame_n+2
-                    end=self.trace[pos+1]
+                    end=trajectory[pos+1]
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
-            
+
+
             frame_n=np.max((1, frame_n))
             straightline_speed=distance/frame_n
 
             
         return curvilinear_speed, straightline_speed # pix/frame
+    
     
     def calculate_direction(self, trace):
         '''
@@ -1571,6 +1598,13 @@ class TrackViewer(tk.Frame):
         
         self.trace[self.frame_pos_to_change]=[int(self.txt_position.get().split(',')[0]), int(self.txt_position.get().split(',')[1])]
         
+        
+        self.track_data['trace']=self.trace
+        self.track_data['frames']=self.frames
+        
+        self.motion=self.motion_type_evaluate(self.track_data)
+        self.track_data['motion']=self.motion
+        
         # update visualisation
         self.show_list()  
         
@@ -1587,30 +1621,38 @@ class TrackViewer(tk.Frame):
 
         try: 
             self.lbframechange.destroy()
-        except: print(" ")
+        except: 
+            pass
         
         try:
             self.lbpose.destroy()
-        except: print(" ")
+        except: 
+            pass
         try: 
             self.txt_position.destroy()  
-        except: print(" ")     
+        except: 
+            pass    
         try: 
             self.txt_frame.destroy()
-        except: print(" ")
+        except: 
+            pass
         
         try: 
             self.button_cancel.destroy()  
-        except: print(" ")     
+        except: 
+            pass    
         try: 
             self.buttonOK.destroy()
-        except: print(" ")
+        except: 
+            pass
         try: 
             self.buttonOKdel.destroy()
-        except: print(" ")
+        except: 
+            pass
         try: 
             self.buttonOK_add.destroy()
-        except: print(" ")
+        except: 
+            pass
 
         
     def delete_position(self):
@@ -1631,7 +1673,12 @@ class TrackViewer(tk.Frame):
 
         del self.trace[self.frame_pos_to_change] 
         del self.frames[self.frame_pos_to_change] 
-        del self.motion[self.frame_pos_to_change]
+        
+        self.track_data['trace']=self.trace
+        self.track_data['frames']=self.frames
+        
+        self.motion=self.motion_type_evaluate(self.track_data)
+        self.track_data['motion']=self.motion
         
         # update visualisation
         self.show_list()  
@@ -1689,8 +1736,12 @@ class TrackViewer(tk.Frame):
 
         self.trace.insert(pos,location_val)
         self.frames.insert(pos,frame_val)
+        self.track_data['trace']=self.trace
+        self.track_data['frames']=self.frames
         
-        #add motion here !!!!!!!!!!!!!
+        self.motion=self.motion_type_evaluate(self.track_data)
+        self.track_data['motion']=self.motion
+
 
         # update visualisation
         self.show_list()     
@@ -1839,20 +1890,23 @@ class TrackViewer(tk.Frame):
 #        listNodes_parameters.itemconfig(3, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Net orientation                   "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average   "+str(np.round(self.calculate_speed(self.trace, self.frames, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average   "+str(np.round(self.calculate_speed( self.track_data, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average "+str(np.round(self.calculate_speed(self.trace, self.frames, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average "+str(np.round(self.calculate_speed( self.track_data, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving    "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving    "+str(np.round(self.calculate_speed( self.track_data, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving  "+str(np.round(self.calculate_speed(self.trace, self.frames, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving  "+str(np.round(self.calculate_speed( self.track_data, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
     def show_list(self): 
         
         def tracklist_on_select(even):
-            self.frame_pos_to_change=listNodes.curselection()[0]
+            try:
+                self.frame_pos_to_change=listNodes.curselection()[0]
+            except:
+                pass
 
                 # show the list of data with scroll bar
         lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 12))
@@ -2020,7 +2074,17 @@ class TrackViewer(tk.Frame):
         canvas.draw()
         canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
 
-   
+    def motion_type_evaluate(self, track_data_original):
+        '''
+        provide motion type evaluation to select directed movement for speed evaluation
+        '''
+
+#        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+        segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
+        motion_type=segmentation_result[:len(track_data_original['frames'])]
+
+        
+        return motion_type   
         
 class MainApplication(tk.Frame):
     def __init__(self, parent):
