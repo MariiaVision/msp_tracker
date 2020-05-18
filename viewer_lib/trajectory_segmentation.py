@@ -4,17 +4,13 @@
 Trajectory segmentation based on the motion type
 v0.1: segmnetation into 2 classes: directed motion and the rest 
 
-@author: mariaa
 """
 
 import numpy as np
 import math
 from scipy import stats
 import pandas as pd
-import skimage
-from skimage import io
 from viewer_lib.model_1dunet import unet
-#from model_1dunet import unet
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -54,14 +50,15 @@ class TrajectorySegment(object):
         self.trace=[]
         self.frames=[]
         self.window_length=8
-        self.unet_threshold=0.5
+        self.unet_threshold=0.6
+        self.limit_segment_length=2
         
         
         
         # load the model
         
         self.model = unet( input_size = (self.window_length,2))
-        self.model.load_weights('checkpoints/1Dunet_real_data_polar.hdf5')
+        self.model.load_weights('dl_weight/1Dunet_jointdata_val_acc-0.84.hdf5')
         
         
     def from_cartesian_to_polar(self, x,y):
@@ -81,7 +78,6 @@ class TrajectorySegment(object):
         
         # check the length of the track and extand if needed
         if track_length<self.window_length:
-            print("track is small")
             new_track=np.zeros((self.window_length,Nch))+trace[-1]
             new_track[0:track_length, :]=trace
             new_track=new_track.tolist()                        
@@ -90,6 +86,7 @@ class TrajectorySegment(object):
         
         new_segment=np.zeros((len(new_track),1))
         real_segment=np.zeros((len(new_track),1))
+        
         # rolling window over the samples
         for pos in range(8, np.max((9,track_length)),4): 
     
@@ -157,14 +154,14 @@ class TrajectorySegment(object):
             
         # check on small segments:
         
-        segmented_traj=self.remove_small_segments(new_segment.reshape((new_segment.shape[0])), 1)
+        segmented_traj=self.remove_small_segments(new_segment.reshape((new_segment.shape[0])), self.limit_segment_length)
         
-        print("\n")
-        for n in range(0,len(real_segment)):
-            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
+#        # print segmentation results
+#        print("\n")
+#        for n in range(0,len(real_segment)):
+#            print(real_segment[n], " ->  ", new_segment[n], ' ->>  ', segmented_traj[n])
         
         return segmented_traj
-#        return new_segment.reshape((new_segment.shape[0]))
     
     def msd_based_segmentation(self, trace):
         '''
@@ -189,7 +186,7 @@ class TrajectorySegment(object):
         
         # check on small segments:
         
-        segmented_traj=self.remove_small_segments(segmentation_msd_based, 1)
+        segmented_traj=self.remove_small_segments(segmentation_msd_based, self.limit_segment_length)
                 
         return segmented_traj
         
