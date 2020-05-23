@@ -322,7 +322,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         #background substraction 
         img= self.substract_bg_single(self.img_set, frameN) 
         
-        # Convert BGR to GRAY
+        # enhance image
         gray = self.img_enhancement(img)
         
         
@@ -346,7 +346,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
             
             for point in local_peaks:
                 check_pos_var= (point[1]-self.box_size/2)>0 and  (gray.shape[1]-point[1]-self.box_size/2)>0 and (point[0]-self.box_size/2)>0 and  (gray.shape[0]-point[0]-self.box_size/2)>0
-                if check_pos_var==True: # remove mebrane spots
+                if check_pos_var==True: # remove spots close to the boarder
                     point_new=[point[0], point[1]]
                     local_max.append(point_new) 
                     self.detected_candidates.append(point_new)   

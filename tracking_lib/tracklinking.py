@@ -3,9 +3,7 @@
 """
 Created on Mon Jan 14 13:49:28 2019
 
-@author: mariaa
-
-Bayesian model - probabilistic graphical models
+class with tracklinking based on the probabilistic graphical models
 
 """
 from pgmpy.models import BayesianModel

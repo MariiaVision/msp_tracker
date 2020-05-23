@@ -4,13 +4,14 @@
 #           author: Mariia Dmitrieva, University of Oxford
 #########################################################
 
-#from skimage import io
+
 import numpy as np
 
-from detectors_dl_new import Detectors
-from gm_tracking_new import GraphicalModelTracking
+from detector import Detectors
+from tracklinking import GraphicalModelTracking
 from tracker import Tracker
-#from detectors_dl_spinning import Detectors
+
+
 from keras.models import  load_model
 import json 
 
