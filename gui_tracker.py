@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Jan  3 13:41:16 2019
 
-@author: maria dmitrieva
-"""
+
 
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # not to show warnings
 import sys
 sys.path.append('./tracking_lib/')
 
