@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jan 14 13:49:28 2019
 
-class with tracklinking based on the probabilistic graphical models
 
-"""
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD
 import pylab as plt
@@ -15,7 +11,6 @@ from pgmpy.inference import VariableElimination
 import json
 import skimage
 from skimage import io
-import time
 from tqdm import tqdm
 import scipy as sp
 
