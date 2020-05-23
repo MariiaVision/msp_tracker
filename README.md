@@ -52,7 +52,7 @@ This repository presents two GUIs:
 ### Usage
 1. In a terminal, activate the environment: `source activate gui_tracker`
 2. In necessary update the environment: `conda env update --file environment.yml`
-3. To run the software: `python gui_trackviewer_2.py`:
+3. To run the software: `python gui_trackviewer.py`:
   - 1st load protein movie
   - then select the tracks (.txt file, json format)
   - for fusion event detection select membrane (segmented membrane)
