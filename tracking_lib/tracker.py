@@ -8,6 +8,9 @@ from scipy.optimize import linear_sum_assignment
 from math import atan2,degrees
 
 class Track(object):
+    '''
+    class with track object
+    '''
 
     def __init__(self, first_point, first_frame, trackIdCount):
 
@@ -15,7 +18,7 @@ class Track(object):
         self.trace_frame = [first_frame]  # predicted centroids (x,y)
         self.skipped_frames = 0  # number of frames skipped undetected
         self.trace = [first_point]  # trace path
-        self.direction=720
+        self.direction=720 # false value of the track orientation/direction
     
     def trackAngle(self):
         if len(self.trace)>=2:
@@ -33,16 +36,21 @@ class Track(object):
 
 
 class Tracker(object):
+    '''
+    class for linking based on the Hungarian algorithm
+    '''
 
     def __init__(self, dist_thresh=30, max_frames_to_skip=5, max_trace_length=100,
                  trackIdCount=0):
 
-        self.dist_thresh = dist_thresh
-        self.max_frames_to_skip = max_frames_to_skip
-        self.max_trace_length = max_trace_length
-        self.tracks = []
-        self.trackIdCount = trackIdCount
-        self.completeTracks=[]
+        self.dist_thresh = dist_thresh # maximum distance for the detection and track to be linked
+        self.max_frames_to_skip = max_frames_to_skip # maximum number of skipped frames
+        self.max_trace_length = max_trace_length # maximum trajectory length
+        self.tracks = [] # list of tracks
+        self.trackIdCount = trackIdCount # track ID to start with
+        self.completeTracks=[] # final output
+        
+        # plot main parameters
         
         print(" - - - - - tracker: - - - - - - - ")
         print("dist_thresh ", self.dist_thresh)
@@ -50,6 +58,9 @@ class Tracker(object):
         print("max_trace_length ", self.max_trace_length)
         
     def cost_calculation(self, detections):
+        '''
+        calculate cost mastrix
+        '''
         N = len(self.tracks)
         M = len(detections)
         cost = np.zeros((N, M))   # Cost matrix
@@ -58,10 +69,11 @@ class Tracker(object):
                 try:
                     diff = np.array(self.tracks[i].trace[len(self.tracks[i].trace)-1]) - np.array(detections[j])
                     distance = np.sqrt((diff[0])**2 +(diff[1])**2 )
-    #                   print("distance: ", distance)
+
                     cost[i][j] = distance
                 except:
                     pass
+                
         # replace cost of the far distance with a ver huge number
         cost_array=np.asarray(cost)
         cost_array[cost_array>self.dist_thresh]=10000
@@ -69,7 +81,10 @@ class Tracker(object):
         return cost
     
     def assignDetectionToTracks(self, cost):
-        # based on Hungerian Algorithm
+        '''
+        detection assignment based on the Hungerian algorithm
+        '''
+        
         N = len(self.tracks)
         assignment = []
         for _ in range(N):
@@ -77,37 +92,42 @@ class Tracker(object):
         row_ind, col_ind = linear_sum_assignment(cost)
         for i in range(len(row_ind)):
             assignment[row_ind[i]] = col_ind[i]
-#        print("assigned: ", assignment)
         
         return assignment
     
     
     def update(self, detections, frameN):
+        '''
+        linking new detection with tracks: the results are in the self.completeTracks     
+        ! after the last frame self.completeTracks should be appended !
+        !      with the remaining tracks which were not completed     !
+        '''
 
-# Create tracks if no tracks  found
+        # Create tracks if there is none yet
         if (len(self.tracks) == 0):
             for i in range(len(detections)):
                 track = Track(detections[i], frameN, self.trackIdCount)
                 self.trackIdCount += 1
                 self.tracks.append(track)
 
+            # tracking the targets if there were tracks before
         else:
-# tracking the targets if there were tracks before
             # Calculate cost using sum of square distance between predicted vs detected centroids
             cost=self.cost_calculation(detections)
     
             # Hungarian Algorithm assigning detection to tracks:
             assignment=self.assignDetectionToTracks(cost)
  
-            # add the position to the assigned tracks and detect annasigned tracks
+            # add the position to the assigned tracks and detect not assigned tracks
             un_assigned_tracks = []
             for i in range(len(assignment)):
                 if (assignment[i] != -1):
-                    # check with the cost distance threshold and unassign if cost is high
+                    # check with the cost distance threshold and remove if cost is high
                     if (cost[i][assignment[i]] > self.dist_thresh):
                         assignment[i] = -1
                         un_assigned_tracks.append(i)
                         self.tracks[i].skipped_frames += 1
+                        
                     else: # add the detection to the track
                         self.tracks[i].trace.append(detections[assignment[i]])
                         self.tracks[i].trace_frame.append(frameN)
@@ -118,23 +138,21 @@ class Tracker(object):
                     self.tracks[i].skipped_frames += 1                
 
                         
-            # Unnasigned detections
+            # not assigned detections
             un_assigned_detects = []
             for i_det in range(len(detections)):
                     if i_det not in assignment:
                         un_assigned_detects.append(i_det)
     
-            # Start new tracks
+            # start new tracks
             if(len(un_assigned_detects) != 0):
                 for i in range(len(un_assigned_detects)):
                     track = Track(detections[un_assigned_detects[i]], frameN,
                                   self.trackIdCount)              
-#                    track.trace_frame.append(frameN)
 
                     self.trackIdCount += 1
                     self.tracks.append(track)
                         
-    # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
      
             # removing tracks
 
@@ -142,23 +160,22 @@ class Tracker(object):
             
             #remove track which are longer than the max_length
             for i in range(len(self.tracks)):
-                 #remove track which are longer than the max_length
+                
                 if ((self.tracks[i].trace_frame[-1]-self.tracks[i].trace_frame[0]+1) >= self.max_trace_length):
                     del_tracks.append(i)
-#                    print("delete track:  length        ", (self.tracks[i].trace_frame[-1]-self.tracks[i].trace_frame[0]+1))
+                    
                 #  remove tracks which has high skipped_frame value    
                 if (self.tracks[i].skipped_frames >= self.max_frames_to_skip) and i not in del_tracks:
-                    del_tracks.append(i) 
-#                    print("delete track: skipped frames ", self.tracks[i].skipped_frames)
+                    del_tracks.append(i)
         
         
      # when there are some tracks to delete:    
             if len(del_tracks) > 0:   
-#                print(del_tracks)
+
                 val_compensate_for_del=0
                 for id in del_tracks:
                     new_id=id-val_compensate_for_del
-#                    print("track ", new_id,  " (", self.tracks[new_id].track_id, ") ", " is deleted")
+                    
                     self.completeTracks.append(self.tracks[new_id])
                     del self.tracks[new_id]
                     val_compensate_for_del+=1
