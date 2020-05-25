@@ -301,7 +301,6 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                     updated_centers.append(centers[pos])
                     check_centres.append(centers[pos])
 
-        
         return updated_centers
 
 
@@ -341,8 +340,8 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         for i in range(1, np.max(spots_labeled)+1):
             mask_label=np.zeros(spots_labeled.shape)
             mask_label[spots_labeled==i]=1
-            img_label=np.asarray(mask_label*new_img).astype(np.int)
-            local_peaks=peak_local_max(img_label,  threshold_rel=self.threshold_rel, min_distance=20)
+            img_label=skimage.img_as_float(np.asarray(mask_label*new_img).astype(np.int))
+            local_peaks=peak_local_max(img_label,  threshold_rel=self.threshold_rel, min_distance=int(self.min_distance))
             
             for point in local_peaks:
                 check_pos_var= (point[1]-self.box_size/2)>0 and  (gray.shape[1]-point[1]-self.box_size/2)>0 and (point[0]-self.box_size/2)>0 and  (gray.shape[0]-point[0]-self.box_size/2)>0
@@ -350,22 +349,6 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
                     point_new=[point[0], point[1]]
                     local_max.append(point_new) 
                     self.detected_candidates.append(point_new)   
-        # find local maximum in the original image after mssef binary filtering
-#        peaks_coor=peak_local_max(self.binary_mssef*img,  threshold_rel=self.threshold_rel, min_distance=3) # min distance between peaks and threshold_rel - min value of the peak - in relation to the max value
-
-#        peaks_coor=peak_local_max(self.img_mssef,  threshold_rel=self.threshold_rel) # min distance between peaks and threshold_rel - min value of the peak - in relation to the max value
-        # min_distance=self.min_distance,
-        # remove the area where the membrane is
-
-        
-#        for point in peaks_coor:
-#            check_pos_var= (point[1]-self.box_size/2)>0 and  (gray.shape[1]-point[1]-self.box_size/2)>0 and (point[0]-self.box_size/2)>0 and  (gray.shape[0]-point[0]-self.box_size/2)>0
-#            if check_pos_var==True: # remove mebrane spots
-#                point_new=[point[0], point[1]]
-#                local_max.append(point_new) 
-#                self.detected_candidates.append(point_new) 
-##                coordinates.append(point_new)
-#        
     
     # # # # segmentation using watershed new_img
         updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model, segment_size=self.box_size)  
