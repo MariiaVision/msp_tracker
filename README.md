@@ -5,6 +5,7 @@ This repository presents two GUIs:
 
 ## Tracker 
 
+The approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
 ### Software installation
 #### Mac
 1. Install conda:  https://docs.anaconda.com/anaconda/install/mac-os/
@@ -30,14 +31,6 @@ This repository presents two GUIs:
 2. In necessary update the environment: `conda env update --file environment.yml`
 3. To run the software: `python gui_tracker.py`
 4. For window machine double click on `run_tracker_windows.bat` will do all the work
-  
-### to do list:
-
-- [ ] show number of passes
-- [ ] add  license
-- [ ] clean the code 
-- [ ] give a proper name
-- [ ] add progress bar
 
 
 
@@ -57,14 +50,3 @@ This repository presents two GUIs:
   - then select the tracks (.txt file, json format)
   - for fusion event detection select membrane (segmented membrane)
 
-
-### to do list:
-
-- [ ] create help description
-- [ ] give a proper name
-- [ ] include different trajectory segmentation 
-- [ ] change to different system to read the tracks
-- [ ] change from list to a table with sorting option
-- [ ] change plotting to grab the coordinates from the image
-- [ ] clean the code
-- [ ] add  license
