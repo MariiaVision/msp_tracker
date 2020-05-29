@@ -98,7 +98,6 @@ class GraphicalModelTracking(object):
     decision_d()
     calculate_speed(trace, frames)
     calculate_direction(trace)
-    plot_track_image(track, img)
     join_tracklets(connections)
     rearrange_track_to_frame_start_end(tracklets, movie)
     train_model(data)
@@ -251,7 +250,6 @@ class GraphicalModelTracking(object):
         else:
             print("the BN topology cannot be identify - check the self.topology parameter")
         print("Chosen topology: ", self.topology )
-#        print(cpd_a) 
         
         # check model: defined and sum to 1.
         self.bgm_tracklet.check_model()
@@ -298,8 +296,6 @@ class GraphicalModelTracking(object):
         # intensity similarity  (0 - not similar, 1- similar)
         val_I=self.decision_in()
         
-#        print("decisions: ", "\n order  ", val_O, "\n gap    ", val_G, "\n overLap  ", val_L
-#              , "\n coordinates ", val_C, "\n orientation ", val_D, "\n speed   ", val_SP, "\n intensity ", val_I)
         
         # make a query based on the calculated nodes
         infer = VariableElimination(self.bgm_tracklet) 
@@ -561,44 +557,7 @@ class GraphicalModelTracking(object):
         else:
             return 0
 
-    def plot_track_image(self, track, img):
-        '''
-        plot the trajectory of the track with a given frame
-        '''
 
-        fig = plt.figure()
-        plt.axis('off')
-        fig.tight_layout()
-        
-        pixN_basic=100
-        
-        pixN_min=np.min(([pixN_basic, np.min(np.asarray(track['trace'])[:,1]), np.min(np.asarray(track['trace'])[:,0])]))
-        pixN=np.min(([pixN_min, img.shape[0]-np.max(np.asarray(track['trace'])[:,1]),  img.shape[1]-np.max(np.asarray(track['trace'])[:,0])]))
-        
-        y_min=np.min(np.asarray(track['trace'])[:,1])-pixN
-        y_max=np.max(np.asarray(track['trace'])[:,1])+pixN
-    
-        x_min=np.min(np.asarray(track['trace'])[:,0])-pixN
-        x_max=np.max(np.asarray(track['trace'])[:,0])+pixN
-        
-        region=img[x_min:x_max, y_min:y_max]
-        
-
-        blue_c=np.linspace(0., 1., len(track['trace']))
-        red_c=1-np.linspace(0., 1., len(track['trace']))
-    
-        plt.imshow(region, cmap="gray")
-        
-        for pos in range(0, len(track['trace'])-1):
-            plt.plot(np.asarray(track['trace'])[pos:pos+2,1]- y_min,np.asarray(track['trace'])[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
-    
-        plt.text(np.asarray(track['trace'])[-1,1]- y_min,np.asarray(track['trace'])[-1,0]- x_min, "  END  ", fontsize=16, color="b")
-        plt.plot(np.asarray(track['trace'])[-1,1]- y_min,np.asarray(track['trace'])[-1,0]- x_min,  "bo",)  
-        
-        plt.text(np.asarray(track['trace'])[0,1]- y_min,np.asarray(track['trace'])[0,0]- x_min, "  START  ", fontsize=16, color="r")
-        
-        plt.plot(np.asarray(track['trace'])[0,1]- y_min,np.asarray(track['trace'])[0,0]- x_min,  "ro",)  
-        plt.title(track['trackID'])
             
     def join_tracklets(self,connections):
         '''
@@ -709,18 +668,21 @@ class GraphicalModelTracking(object):
             
             # iterate over frame and form a list with possible connections
             # based on the start point
-            for frame_pos in range(n_frame,n_frame+self.frame_search_range):
+            for frame_pos in range(n_frame,n_frame+self.frame_search_range): #!!! start from n_frame+1
  
                 if frame_pos in self.track_data_framed_start:
                     for trackID in self.track_data_framed_start[frame_pos]:
                          # get track ID
                         tracklets_to_check.append(trackID)
                         
+                    #!!! calculate distance and check connectivity here ?
+                        
                         # first position of the tracklet
                         track_one=self.tracklets.get(str(trackID))
                         
                         possible_commection_start_x.append(track_one['trace'][0][0]) 
                         possible_commection_start_y.append(track_one['trace'][0][1]) 
+           
             # based on the end point           
             for t1 in self.track_data_framed_end[n_frame]:
 
@@ -793,12 +755,13 @@ class GraphicalModelTracking(object):
         
         print("looking through possible connections  ... ")
         
+        print("POSSIBLE CONNECTIONS", possible_connections)
         #iterste over the possible connections and make a decision
         for p in tqdm(range(0, len(possible_connections))):
             
             pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
             
-            # check in existed connection first:            
+            # check in existing connection:            
             if not connected_tracklets:
                 start_connection_exist=False
                 end_connection_exist=False
@@ -890,6 +853,7 @@ class GraphicalModelTracking(object):
             
         connected_tracklets=new_connected_tracklets
 
+        print("\n \n connected_tracklets \n", connected_tracklets)
         # save not connected tracklets
         print("saving not connected tracklets ... ")
         for t3 in tqdm(self.tracklets, "saving not connected tracklets"):
@@ -914,7 +878,7 @@ class GraphicalModelTracking(object):
             N_connections=0 # number of connections
 #            print(N_connections)
             
-            for track in tqdm(connected_tracklets): #tqdm(connected_tracklets):
+            for track in connected_tracklets: #tqdm(connected_tracklets):
                 if track[0] not in added_list_start and track[-1] not in added_list_end:
                     new_track=track
                     added_list_start.append(track[0])
@@ -977,7 +941,9 @@ class GraphicalModelTracking(object):
                 self.tracklets_connection=[]
             else:
                 complete=True
-     
+                
+        print("\n possible_connections \n", possible_connections)
+        print("\n self.tracklets_connection \n", self.tracklets_connection)
         print("saving connected tracklets ... ")
         for tracklets_to_track in tqdm(self.tracklets_connection):
             
@@ -1002,5 +968,5 @@ class GraphicalModelTracking(object):
                 # this is for transition to the distionary storage - to display in list yet
                 self.data.update({t:track})
 
-            
+#        print("\n self.tracks \n", self.tracks)   
         print("ALL the tracks: ", len(self.tracks))            
