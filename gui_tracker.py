@@ -1293,15 +1293,23 @@ When finished the final tracks will appear in the linking window and also can be
 
         self.novi = tk.Toplevel()
         self.novi.title(" MSSEF image ")
-        canvas = FigureCanvasTkAgg(fig_mssef, master=self.novi)
-        canvas.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
-        canvas.draw()
-
+        self.canvas_mssef = FigureCanvasTkAgg(fig_mssef, master=self.novi)
+        self.canvas_mssef.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        self.canvas_mssef.draw()
+        
+        def new_home( *args, **kwargs):
+            # zoom out
+            plt.xlim(0,self.movie.shape[2])
+            plt.ylim(0,self.movie.shape[1])
+            plt.imshow(mssef, cmap="gray")
+            self.canvas_mssef.draw()
+            
+        NavigationToolbar2Tk.home = new_home
         # toolbar
-        self.toolbar = NavigationToolbar2Tk(canvas, self.novi)
-        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-        self.toolbar.update()        
-        # show in it
+        toolbar = NavigationToolbar2Tk(self.canvas_mssef, self.novi)
+        toolbar.set_message=lambda x:"" # remove message with coordinates
+        toolbar.update()        
+
         
     def load_cnn_model(self):
         # choose the file
@@ -1670,16 +1678,16 @@ When finished the final tracks will appear in the linking window and also can be
         print("\n ----------------parameters -----------------")
         print(" tracker_distance_threshold", self.detector.tracker_distance_threshold)
         print(" tracker_max_skipped_frame", self.detector.tracker_max_skipped_frame)
-        print(" tracker_max_track_length \n", self.detector.tracker_max_track_length)
+        print(" tracker_max_track_length ", self.detector.tracker_max_track_length)
         
-        print(" number of pass, ", self.detector.tracklinking_Npass)
+        print(" \n number of pass, ", self.detector.tracklinking_Npass)
         print(" topology", self.detector.tracklinking_path1_topology)
         print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
         print(" tracklinking_path1_frame_gap", self.detector.tracklinking_path1_frame_gap_1)
         print(" tracklinking_path1_distance_limit", self.detector.tracklinking_path1_distance_limit)
         print(" tracklinking_path1_direction_limit", self.detector.tracklinking_path1_direction_limit)
         print(" tracklinking_path1_speed_limit", self.detector.tracklinking_path1_speed_limit)
-        print(" tracklinking_path1_intensity_limit /n", self.detector.tracklinking_path1_intensity_limit)
+        print(" tracklinking_path1_intensity_limit", self.detector.tracklinking_path1_intensity_limit)
         
         if self.detector.tracklinking_Npass>1:
             print("\n topology 2", self.detector.tracklinking_path2_topology)
@@ -1688,7 +1696,7 @@ When finished the final tracks will appear in the linking window and also can be
             print(" tracklinking_path2_distance_limit", self.detector.tracklinking_path2_distance_limit)
             print(" tracklinking_path2_direction_limit", self.detector.tracklinking_path2_direction_limit)
             print(" tracklinking_path2_speed_limit", self.detector.tracklinking_path2_speed_limit)
-            print(" tracklinking_path2_intensity_limit /n", self.detector.tracklinking_path2_intensity_limit)
+            print(" tracklinking_path2_intensity_limit", self.detector.tracklinking_path2_intensity_limit)
 
         if self.detector.tracklinking_Npass>2:
             print("\n topology 3", self.detector.tracklinking_path1_topology)
@@ -1697,7 +1705,7 @@ When finished the final tracks will appear in the linking window and also can be
             print(" tracklinking_path3_distance_limit", self.detector.tracklinking_path3_distance_limit)
             print(" tracklinking_path3_direction_limit", self.detector.tracklinking_path3_direction_limit)
             print(" tracklinking_path3_speed_limit", self.detector.tracklinking_path3_speed_limit)
-            print(" tracklinking_path3_intensity_limit /n", self.detector.tracklinking_path3_intensity_limit)
+            print(" tracklinking_path3_intensity_limit", self.detector.tracklinking_path3_intensity_limit)
         
         print(" start_frame", self.detector.start_frame)
         print(" end_frame", self.detector.end_frame)
