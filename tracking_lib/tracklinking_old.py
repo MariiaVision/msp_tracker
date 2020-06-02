@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD
 import pylab as plt
@@ -12,12 +13,7 @@ import skimage
 from skimage import io
 from tqdm import tqdm
 import scipy as sp
-from scipy.optimize import linear_sum_assignment
 
-import networkx as nx
-
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # not to show warnings
 
 class GraphicalModelTracking(object):
     """
@@ -572,7 +568,7 @@ class GraphicalModelTracking(object):
         frames=[]
         trace=[]
 
-#        print("trackID: ", self.track_pos,  connections)
+        
         for i in connections:
 
             tracklet=self.tracklets[str(int(i))]
@@ -596,9 +592,8 @@ class GraphicalModelTracking(object):
                 else:
                     new_frames.append(frame_pos)
                     new_trace.append(trace[pos])             
-
+        
         # create new Track 
-#        print("frames: ", new_frames)
         new_track.update({'trackID': self.track_pos, 'frames': new_frames, 'trace': new_trace}) 
         self.tracks_before_filter.update({self.track_pos:new_track}) 
         
@@ -673,7 +668,7 @@ class GraphicalModelTracking(object):
             
             # iterate over frame and form a list with possible connections
             # based on the start point
-            for frame_pos in range(n_frame+1,n_frame+self.frame_search_range): #!!! start from n_frame+1
+            for frame_pos in range(n_frame,n_frame+self.frame_search_range): #!!! start from n_frame+1
  
                 if frame_pos in self.track_data_framed_start:
                     for trackID in self.track_data_framed_start[frame_pos]:
@@ -858,51 +853,7 @@ class GraphicalModelTracking(object):
             
         connected_tracklets=new_connected_tracklets
 
-#
-#        # cost matrix of connection
-#        
-#        m_size=len(self.tracklets.keys())
-#        prob_matrix=np.ones((m_size,m_size))*200
-#        tracklet_list= list(map(int, list(self.tracklets.keys())))
-##        print(m_size, "\n", tracklet_list)
-#        
-#        for p in tqdm(range(0, len(possible_connections))):
-#            
-#            pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
-#            first_tracklet=int(pair1[0])
-#            second_tracklet=int(pair1[1])
-#            score=pair1[2]
-#            pos_first=tracklet_list.index(first_tracklet)
-#            pos_second=tracklet_list.index(second_tracklet)
-#            prob_matrix[pos_first, pos_second]=1-score # score as opposite value
-#            
-#
-#        # Hungerian to assign the  connections
-#        
-#        assignment=self.assignDetectionToTracks(prob_matrix) 
-#    
-#        # check aarignment
-#        connected_tracklets = []
-#        
-#        for i in range(len(assignment)):
-#            if (assignment[i] != -1):
-#                # check with the cost distance threshold and remove if cost is high
-#                # i - first tracklet position
-#                #assignment[i] - second tracklet position
-#                
-#                if (prob_matrix[i][assignment[i]] > 1):
-#                    assignment[i] = -1
-##                    un_assigned_tracks.append(i)
-#                    
-#                else: # add the detection to the track
-#                    connected_tracklets.append([tracklet_list[i], tracklet_list[assignment[i]]]) #, 1-prob_matrix[i][assignment[i]]])
-##        print(assignment)connected_trackletsconnected_tracklets
-##        for pos in connected_tracklets:
-##            print(pos)
-#        connected_tracklets.sort()
-#                       
-
-################################################################################        
+        print("\n \n connected_tracklets \n", connected_tracklets)
         # save not connected tracklets
         print("saving not connected tracklets ... ")
         for t3 in tqdm(self.tracklets, "saving not connected tracklets"):
@@ -915,55 +866,107 @@ class GraphicalModelTracking(object):
                 self.join_tracklets([trackID])
 
         
-########################################################
-        # find connections
+        # connect connected tracklets
         
-        G=nx.DiGraph()
-        G.add_edges_from(connected_tracklets)
-        self.tracklets_connection=list(nx.weakly_connected_components(G))
+        print("checking connected tracklets ... ")
+        complete=False
         
+        while complete==False:
+            
+            added_list_start=[]
+            added_list_end=[]
+            N_connections=0 # number of connections
+#            print(N_connections)
+            
+            for track in connected_tracklets: #tqdm(connected_tracklets):
+                if track[0] not in added_list_start and track[-1] not in added_list_end:
+                    new_track=track
+                    added_list_start.append(track[0])
+                    added_list_end.append(track[1])
+                    
+                    pos_list=0
+                
+                    # find trackelts for connection
+                    start_repeating_list_x=[] # position in the list
+                    start_repeating_list_y=[] # is matching the start
+                    for i in connected_tracklets:
+                        
+                        start_repeating_list_y.append(np.asarray(i)[-1]==track[0])
+                        start_repeating_list_x.append(pos_list)
+                        pos_list+=1
+                    start_repeating_list_x=np.asarray(start_repeating_list_x)
+                    start_repeating_list_y=np.asarray(start_repeating_list_y)
+                        
+                    
+                    
+                    # check the position at the start for connection
+                    for l in range(0, len(start_repeating_list_x)):            
+                            if start_repeating_list_y[l]==True: # connection before this track
+                                # add connections 
+                                track_to_add=connected_tracklets[start_repeating_list_x[l]]
+                                if track_to_add[0] not in added_list_start:
+                                    new_track=track_to_add[0:-1]+new_track # add it to the track
+                                    added_list_start.append(track_to_add[0])
+                                    added_list_end.append(track[0])
+                                    N_connections=N_connections+1                                    
+                                    
+                    # check possible connection for end 
+                    end_repeating_list_x=[]
+                    end_repeating_list_y=[]
+                    pos_list=0
+                    for i in connected_tracklets:
+                        
+                        end_repeating_list_y.append(np.asarray(i)[0]==track[-1]) 
+                        end_repeating_list_x.append(pos_list)
+                        pos_list+=1
+                    end_repeating_list_x=np.asarray(end_repeating_list_x)
+                    end_repeating_list_y=np.asarray(end_repeating_list_y)
+                    
+                    # check the position at the end for connections    
+                    for l in range(0, len(end_repeating_list_x)):       
+                            if end_repeating_list_y[l]==True:  # connection after this track
+                                track_to_add=connected_tracklets[end_repeating_list_x[l]] 
+                                if track_to_add[-1] not in added_list_end:
+                                   new_track=new_track+track_to_add[1:]
+                                   added_list_end.append(track_to_add[-1])
+                                   added_list_start.append(track[-1])
+                                   N_connections=N_connections+1
+
+                    # add the track in connections
+                    self.tracklets_connection.append(new_track)
+            print("N_connections ", N_connections)
+#            print(len(self.tracklets_connection))
+            if N_connections>0:
+                connected_tracklets=self.tracklets_connection
+                self.tracklets_connection=[]
+            else:
+                complete=True
+                
         print("\n possible_connections \n", possible_connections)
-        print("\n connected_tracklets \n", connected_tracklets)
         print("\n self.tracklets_connection \n", self.tracklets_connection)
         print("saving connected tracklets ... ")
         for tracklets_to_track in tqdm(self.tracklets_connection):
-
-            tracklets_to_track=list(tracklets_to_track)
-            tracklets_to_track.sort()
-#            print("\n", tracklets_to_track)            
+            
             self.join_tracklets(tracklets_to_track)
             
-           
-        # eliminate short  tracks:
+            
+        # eliminate short and small displacement tracks:
         print("filtering tracks...")
         for t in tqdm(self.tracks_before_filter):
             
             track=self.tracks_before_filter.get(t)
 #            print(track)
             if len(track['trace'])>0:
+                dist=np.sqrt((track['trace'][0][0]-track['trace'][-1][0])**2+(track['trace'][0][1]-track['trace'][-1][1])**2)
                 duration=track['frames'][-1]-track['frames'][0]
             else:
+                dist=-1
                 duration=-1
-            if  duration>self.track_duration_limit:
+            if dist>self.track_displacement_limit and duration>self.track_duration_limit:
                 self.tracks.update({t:track})
                 
                 # this is for transition to the distionary storage - to display in list yet
                 self.data.update({t:track})
 
-#        print("\n self.tracks \n", self.tracks)  
+#        print("\n self.tracks \n", self.tracks)   
         print("ALL the tracks: ", len(self.tracks))            
-    
-    def assignDetectionToTracks(self, cost):
-        '''
-        detection assignment based on the Hungerian algorithm
-        '''
-        N = cost.shape[0]
-        assignment = []
-        for _ in range(N):
-            assignment.append(-1)
-        row_ind, col_ind = linear_sum_assignment(cost)
-        for i in range(len(row_ind)):
-            assignment[row_ind[i]] = col_ind[i]
-
-        return assignment
-    
