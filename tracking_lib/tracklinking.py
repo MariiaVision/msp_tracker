@@ -1,5 +1,8 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+#########################################################
+#
+# class to connect tracklets
+#        
+#########################################################
 
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD

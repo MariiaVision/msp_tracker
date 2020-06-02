@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-
+#########################################################
+#
+#  main framework to run the GUI and tracking module 
+#        
+#########################################################
 
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # not to show warnings
+
 import sys
 sys.path.append('./tracking_lib/')
 
@@ -1860,6 +1862,11 @@ When finished the final tracks will appear in the linking window and also can be
         '''
         running the final tracking 
         '''
+        
+        # switch to the detection mode
+        self.detector.detection_choice=0
+        
+        # read start and end frame
         if self.r_start_frame.get()!='':
             self.detector.start_frame=int(self.r_start_frame.get())
             
