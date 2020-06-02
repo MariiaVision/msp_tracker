@@ -15,8 +15,6 @@ from scipy.optimize import linear_sum_assignment
 
 import networkx as nx
 
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # not to show warnings
 
 class GraphicalModelTracking(object):
     """
@@ -170,7 +168,6 @@ class GraphicalModelTracking(object):
         cpd_s = TabularCPD(variable='S', variable_card=2, values=[[0.99, 1.0, 0.01, 0.9],
                                                                   [0.01, 0.0, 0.99, 0.1]], evidence=['O','L'], evidence_card=[2,2])
         
-#        cpd_g = TabularCPD(variable='G', variable_card=3, values=[[0.3, 0.3, 0.4]]) 
         cpd_g = TabularCPD(variable='G', variable_card=10, values=[[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]]) 
         
         cpd_p = TabularCPD(variable='P', variable_card=2, values=[[0.99, 0.99, 0.99, 0.99, 0.99, 0.99,0.99, 0.99, 0.99, 0.99,   0.01, 0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.99],
@@ -331,10 +328,7 @@ class GraphicalModelTracking(object):
         else:
             q=0
             print("the BN topology cannot be identify - check the self.topology parameter")
-
-#        print(" tracks ", self.track1["trackID"], self.track2["trackID"], " score: ", q)
-#        print(" val_O", val_O," val_G", val_G,  " val_ L", val_L, " val_C", val_C, " val_D", val_D, " val_SP", val_SP, " val_I", val_I, " val_I", val_I, "\n") 
-        
+     
         return q 
     
     
@@ -398,8 +392,7 @@ class GraphicalModelTracking(object):
             val=1
         else:
             val=0
-#        print("gap: ", gap)
-#        print("L: ", val)
+            
         return val
 
     def decision_c(self):
@@ -410,16 +403,12 @@ class GraphicalModelTracking(object):
         
         dist=np.sqrt((self.track2['trace'][0][0]-self.track1['trace'][-1][0])**2+(self.track2['trace'][0][1]-self.track1['trace'][-1][1])**2)
         N_frames_travelled=self.track2['frames'][0]-self.track1['frames'][-1]
-#        print("frames ", N_frames_travelled)
-#        print("track 2 ", self.track2['trace'])
-#        print("distance: ", dist)
-#        print("distance per frame : ", dist/N_frames_travelled)
+
         if dist/N_frames_travelled<=self.distance_limit_tracklinking:
             val = 1
         else:
             val = 0
-#        print("distance: ", dist)
-#        print("C: ", val)
+
         return val       
     
     def calculate_intensity(self, point, frameN):
@@ -741,112 +730,11 @@ class GraphicalModelTracking(object):
 
                     checked_connections.append([ID_compare[0], ID_compare[1]])   
 
-            
-      # # # compare results and connect the tracks
-#        print("connecting tracklets ....")
-        
+
 #######################################################################
         connected_tracklets=[] # new connections
         
         print("looking through possible connections  ... ")
-#        
-#        print("POSSIBLE CONNECTIONS", possible_connections)
-#        #iterste over the possible connections and make a decision
-#        for p in tqdm(range(0, len(possible_connections))):
-#            
-#            pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
-#            
-#            # check in existing connection:            
-#            if not connected_tracklets:
-#                start_connection_exist=False
-#                end_connection_exist=False
-#            else:
-#                start_connection_exist=pair1[0] in np.asarray(connected_tracklets)[:,0]
-#                end_connection_exist=pair1[1] in np.asarray(connected_tracklets)[:,1]
-#            
-#            if start_connection_exist==False and end_connection_exist==False:                              
-#                # check the first and choose highest
-#                
-#                # check another condidates for the beginning  tracklet
-#                comparison_list_start=[]
-#                first_tracklet=self.tracklets.get(str(int(pair1[0])))['frames'][-1]
-#                second_tracklet=self.tracklets.get(str(int(pair1[1])))['frames'][0]
-#
-#                gap_list=[]#gap_frame] # list of the gap values  for the connections
-#                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[0]))
-#                # repeating_list_x- is a position in the list of connection
-#                # repeating_list_y - is beginning (0) or ending (1) tracklet
-#                
-#                # iterate over all the possible connection with the tracklet
-#                for l in range(0, len(repeating_list_x)):
-#                    
-#                    if repeating_list_y[l]==0: # similar connection
-#                        comparison_list_start.append(possible_connections[repeating_list_x[l]])
-#                        
-#                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
-#                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
-#                        
-#                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets                   
-#                        
-#                
-#            # best choice for the beggining tracklet and delete all others
-#                best_choice_start_val=np.max(np.asarray(comparison_list_start)[:,2])
-#                
-#                #find all the option with max probability score
-#                best_choice_start_pos_array=np.where(np.asarray(comparison_list_start)[:,2]==best_choice_start_val)
-#                
-#                # it is the only one pick it
-#                if len(best_choice_start_pos_array)==1:                   
-#                    best_choice_start_pos=np.argmax(np.asarray(comparison_list_start)[:,2])
-#                    
-#                else: # if not - choose the one with the smallest time gap
-#                    best_choice_start_pos=np.argmin(np.asarray(gap_list))                
-#                        
-#                # check another condidates for the end tracklet
-#                comparison_list_end=[]
-#                
-#                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[1]))  
-#                gap_list=[]  # list of the gap values  for the connections
-#                
-#                for l in range(0, len(repeating_list_x)):            
-#                    if repeating_list_y[l]==1: # similar connection
-#                        comparison_list_end.append(possible_connections[repeating_list_x[l]])
-#                        
-#                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
-#                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
-#                        
-#                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets          
-#                        
-#                
-#            # best choice for the beggining tracklet and delete all others
-#                best_choice_end_val=np.max(np.asarray(comparison_list_end)[:,2]) 
-#                best_choice_end_pos_array=np.where(np.asarray(comparison_list_end)[:,2]==best_choice_end_val)
-#                best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
-#                
-#                # it is the only one pick it
-#                if len(best_choice_end_pos_array)==1:                   
-#                    best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
-#                    
-#                else: # if not - choose the one with the smallest time gap
-#                    best_choice_end_pos=np.argmin(np.asarray(gap_list))  
-#                    
-#            #choose the right connection:
-#                if best_choice_start_val>=best_choice_end_val:
-#                    
-#                    #save the connection
-#                    connected_tracklets.append(comparison_list_start[best_choice_start_pos])
-#                    
-#                else:
-#                    connected_tracklets.append(comparison_list_end[best_choice_end_pos])
-##                    print("connected by end: ", comparison_list_end[best_choice_end_pos])
-# #               print("   connected: ", connected_tracklets[-1])
-#
-#        # store connectivity score value
-#        new_connected_tracklets=[]
-#        for p in connected_tracklets:
-#            new_connected_tracklets.append(p[0:2])
-#            
-#        connected_tracklets=new_connected_tracklets
 
 
         # cost matrix of connection
@@ -882,13 +770,10 @@ class GraphicalModelTracking(object):
                 
                 if (prob_matrix[i][assignment[i]] > 1):
                     assignment[i] = -1
-#                    un_assigned_tracks.append(i)
                     
                 else: # add the detection to the track
                     connected_tracklets.append([tracklet_list[i], tracklet_list[assignment[i]]]) #, 1-prob_matrix[i][assignment[i]]])
-#        print(assignment)connected_trackletsconnected_tracklets
-#        for pos in connected_tracklets:
-#            print(pos)
+
         connected_tracklets.sort()
                        
 
@@ -912,9 +797,6 @@ class GraphicalModelTracking(object):
         G.add_edges_from(connected_tracklets)
         self.tracklets_connection=list(nx.weakly_connected_components(G))
         
-        print("\n possible_connections \n", possible_connections)
-        print("\n connected_tracklets \n", connected_tracklets)
-        print("\n self.tracklets_connection \n", self.tracklets_connection)
         print("saving connected tracklets ... ")
         for tracklets_to_track in tqdm(self.tracklets_connection):
 
@@ -945,7 +827,7 @@ class GraphicalModelTracking(object):
     
     def assignDetectionToTracks(self, cost):
         '''
-        detection assignment based on the Hungerian algorithm
+        tracklet assignment based on the Hungerian algorithm
         '''
         N = cost.shape[0]
         assignment = []

@@ -1,7 +1,7 @@
 #########################################################
 #
 # class to set parameters for the tracking
-#           author: Mariia Dmitrieva, University of Oxford
+#        
 #########################################################
 
 
@@ -50,6 +50,8 @@ class TrackingSetUp(object):
         #
         self.detection_parameter_path="detection_temp.txt"
         self.linking_parameter_path="linking_temp.txt"
+        
+        self.detection_choice=0
         
     # # # # # DETECTION parameters # # # # #
         
@@ -309,13 +311,42 @@ class TrackingSetUp(object):
         # stel 1: linking
         tracker = Tracker(self.tracker_distance_threshold, self.tracker_max_skipped_frame, self.tracker_max_track_length, 0)
 
-        for frameN in range(self.start_frame,self.end_frame):
-            print("frame ", frameN)
-            #detection
-            vesicles=detector.detect(frameN, cnn_model)
-            #tracking
-            tracker.update(vesicles, frameN)            
-        
+        if self.detection_choice==0: # first detection and then linking
+            data={}
+            for frameN in range(self.start_frame,self.end_frame):
+                print("frame ", frameN)
+                #detection
+                vesicles=detector.detect(frameN, cnn_model)
+                #tracking
+                tracker.update(vesicles, frameN)
+                data.update({frameN:vesicles})
+             
+            detection_dict={"detections": data}
+            #save detection results to a temp file    
+            with open("d_temp.txt", 'w') as f:
+                json.dump(detection_dict, f, ensure_ascii=False)
+                
+        else: # use previous detection
+            
+            # read detection from temp file
+            with open("d_temp.txt") as f:
+                data = json.load(f)          
+                
+            detections=data["detections"]    
+                
+            
+            # create tracklets
+            for frameN in range(self.start_frame,self.end_frame):
+                print("frame ", frameN)
+                try:
+                    vesicles=detections[str(frameN)]
+                except:
+                    vesicles=[]
+                        
+                
+                #tracking
+                tracker.update(vesicles, frameN)                 
+                
         # current tracks to save in complete
         for trackN in range(0, len(tracker.tracks)):
             tracker.completeTracks.append(tracker.tracks[trackN])

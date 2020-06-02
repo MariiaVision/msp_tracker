@@ -6,7 +6,7 @@
 import os
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # not to show warnings
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # not to show warnings
 import sys
 sys.path.append('./tracking_lib/')
 
@@ -406,9 +406,25 @@ When finished the final tracks will appear in the linking window and also can be
         self.parametersFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.parametersFrame_linking.grid(row=1, column=11, columnspan=1, rowspan=1, pady=self.pad_val, padx=self.pad_val)    
 
-        # choose the path number 
         
-                # choice of the path number 
+        
+        # new detections or not
+        
+        var_detection_choice = tk.IntVar()
+        
+        def update_detection_switch():            
+            self.detector.detection_choice=var_detection_choice.get()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.d1 = tk.Radiobutton(self.parametersFrame_linking_path, text=" update detections ", variable=var_detection_choice, value=0, bg='white', command =update_detection_switch )
+        self.d1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.d2 = tk.Radiobutton(self.parametersFrame_linking_path, text=" use previous detections ", variable=var_detection_choice, value=1, bg='white',command = update_detection_switch ) #  command=sel)
+        self.d2.grid(row=2, column=4, columnspan=4,  pady=self.pad_val, padx=self.pad_val)
+        
+
+        
+        # choice of the pass number 
         
         var_path_number = tk.IntVar()
         
@@ -1710,7 +1726,7 @@ When finished the final tracks will appear in the linking window and also can be
         print(" start_frame", self.detector.start_frame)
         print(" end_frame", self.detector.end_frame)
         
-        print("\n running linking ...")
+        print("\n running tracking ...")
 
         self.detector.linking()
         self.show_frame_linking()        
