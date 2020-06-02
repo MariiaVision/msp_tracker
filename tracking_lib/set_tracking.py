@@ -61,7 +61,7 @@ class TrackingSetUp(object):
         self.sigma_max=2# max sigma for LOG     
         
         #thresholding
-        self.min_distance=5 # minimum distance between two max after MSSEF
+        self.min_distance=3 # minimum distance between two max after MSSEF
         self.threshold_rel=0.3 # min pix value in relation to the image
         self.box_size=16 # bounding box size for detection
         
@@ -87,11 +87,10 @@ class TrackingSetUp(object):
         self.tracklinking_Npass=1 # number of tracklinking passes
         
         # tracking: tracklinking path 1
-        self.tracklinking_path1_topology='complete' # topology type      
-        self.tracklinking_path1_frame_gap_0=1
-        self.tracklinking_path1_frame_gap_1=2        
-        self.tracklinking_path1_direction_limit=50
-        self.tracklinking_path1_distance_limit=3 # distance in pix between two tracklets to be connected 
+        self.tracklinking_path1_topology='complete' # topology type    
+        self.tracklinking_path1_frame_gap_1=5        
+        self.tracklinking_path1_direction_limit=80
+        self.tracklinking_path1_distance_limit=5 # distance in pix between two tracklets to be connected 
         self.tracklinking_path1_connectivity_threshold=0.7
         self.tracklinking_path1_speed_limit=0.5
         self.tracklinking_path1_intensity_limit=0.4
@@ -104,7 +103,6 @@ class TrackingSetUp(object):
         
         # tracking: tracklinking path 2
         self.tracklinking_path2_topology='complete' # topology type      
-        self.tracklinking_path2_frame_gap_0=1
         self.tracklinking_path2_frame_gap_1=3        
         self.tracklinking_path2_direction_limit=90
         self.tracklinking_path2_distance_limit=5 # distance in pix between two tracklets to be connected 
@@ -121,7 +119,6 @@ class TrackingSetUp(object):
 
         # tracking: tracklinking path 3
         self.tracklinking_path3_topology='complete' # topology type      
-        self.tracklinking_path3_frame_gap_0=1
         self.tracklinking_path3_frame_gap_1=2        
         self.tracklinking_path3_direction_limit=90
         self.tracklinking_path3_distance_limit=7 # distance in pix between two tracklets to be connected 
@@ -345,7 +342,6 @@ class TrackingSetUp(object):
         tracklink.topology=self.tracklinking_path1_topology
         tracklink.tracklets_pgm()
         
-        tracklink.frame_gap_tracklinking_0=self.tracklinking_path1_frame_gap_0
         tracklink.frame_gap_tracklinking_1=self.tracklinking_path1_frame_gap_1        
         tracklink.direction_limit_tracklinking=self.tracklinking_path1_direction_limit
         tracklink.distance_limit_tracklinking=self.tracklinking_path1_distance_limit
@@ -392,7 +388,6 @@ class TrackingSetUp(object):
             tracklink.topology=self.tracklinking_path2_topology
             tracklink.tracklets_pgm()
             
-            tracklink.frame_gap_tracklinking_0=self.tracklinking_path2_frame_gap_0
             tracklink.frame_gap_tracklinking_1=self.tracklinking_path2_frame_gap_1        
             tracklink.direction_limit_tracklinking=self.tracklinking_path2_direction_limit
             tracklink.distance_limit_tracklinking=self.tracklinking_path2_distance_limit
@@ -435,7 +430,6 @@ class TrackingSetUp(object):
             tracklink.topology=self.tracklinking_path3_topology
             tracklink.tracklets_pgm()
             
-            tracklink.frame_gap_tracklinking_0=self.tracklinking_path3_frame_gap_0
             tracklink.frame_gap_tracklinking_1=self.tracklinking_path3_frame_gap_1        
             tracklink.direction_limit_tracklinking=self.tracklinking_path3_direction_limit
             tracklink.distance_limit_tracklinking=self.tracklinking_path3_distance_limit
@@ -474,17 +468,17 @@ class TrackingSetUp(object):
         
         
         parameters={'tracker_distance_threshold':self.tracker_distance_threshold, 'tracker_max_skipped_frame':self.tracker_max_skipped_frame , 'tracker_max_track_length':self.tracker_max_track_length,
-                    'tracklinking_Npass':self.tracklinking_Npass,  'tracklinking_path1_topology':self.tracklinking_path1_topology,  'tracklinking_path1_frame_gap_0':self.tracklinking_path1_frame_gap_0,
-                    'tracklinking_path1_frame_gap_1':self.tracklinking_path1_frame_gap_1,'tracklinking_path1_direction_limit':self.tracklinking_path1_direction_limit,'tracklinking_path1_distance_limit':self.tracklinking_path1_distance_limit, 
+                    'tracklinking_Npass':self.tracklinking_Npass,  'tracklinking_path1_topology':self.tracklinking_path1_topology, 'tracklinking_path1_frame_gap_1':self.tracklinking_path1_frame_gap_1,
+                    'tracklinking_path1_direction_limit':self.tracklinking_path1_direction_limit,'tracklinking_path1_distance_limit':self.tracklinking_path1_distance_limit, 
                     'tracklinking_path1_connectivity_threshold':self.tracklinking_path1_connectivity_threshold, 'tracklinking_path1_speed_limit': self.tracklinking_path1_speed_limit, 'tracklinking_path1_intensity_limit':self.tracklinking_path1_intensity_limit,
                     'tracklinking_path1_track_displacement_limit':self.tracklinking_path1_track_displacement_limit, 'tracklinking_path1_track_duration_limit':self.tracklinking_path1_track_duration_limit,
                     
-                    'tracklinking_path2_topology':self.tracklinking_path2_topology,  'tracklinking_path2_frame_gap_0':self.tracklinking_path2_frame_gap_0,
+                    'tracklinking_path2_topology':self.tracklinking_path2_topology,
                     'tracklinking_path2_frame_gap_1':self.tracklinking_path2_frame_gap_1,'tracklinking_path2_direction_limit':self.tracklinking_path2_direction_limit,'tracklinking_path2_distance_limit':self.tracklinking_path2_distance_limit, 
                     'tracklinking_path2_connectivity_threshold':self.tracklinking_path2_connectivity_threshold, 'tracklinking_path2_speed_limit': self.tracklinking_path2_speed_limit, 'tracklinking_path2_intensity_limit':self.tracklinking_path2_intensity_limit,
                     'tracklinking_path2_track_displacement_limit':self.tracklinking_path2_track_displacement_limit, 'tracklinking_path2_track_duration_limit':self.tracklinking_path2_track_duration_limit,
                     
-                    'tracklinking_path3_topology':self.tracklinking_path3_topology,  'tracklinking_path3_frame_gap_0':self.tracklinking_path3_frame_gap_0,
+                    'tracklinking_path3_topology':self.tracklinking_path3_topology,
                     'tracklinking_path3_frame_gap_1':self.tracklinking_path3_frame_gap_1,'tracklinking_path3_direction_limit':self.tracklinking_path3_direction_limit,'tracklinking_path3_distance_limit':self.tracklinking_path3_distance_limit, 
                     'tracklinking_path3_connectivity_threshold':self.tracklinking_path3_connectivity_threshold, 'tracklinking_path3_speed_limit': self.tracklinking_path3_speed_limit, 'tracklinking_path3_intensity_limit':self.tracklinking_path3_intensity_limit,
                     'tracklinking_path3_track_displacement_limit':self.tracklinking_path3_track_displacement_limit, 'tracklinking_path3_track_duration_limit':self.tracklinking_path3_track_duration_limit}
@@ -518,7 +512,6 @@ class TrackingSetUp(object):
         
         #path1 
         self.tracklinking_path1_topology=settings['tracklinking_path1_topology']      
-        self.tracklinking_path1_frame_gap_0=settings['tracklinking_path1_frame_gap_0']
         self.tracklinking_path1_frame_gap_1=settings['tracklinking_path1_frame_gap_1']       
         self.tracklinking_path1_direction_limit=settings['tracklinking_path1_direction_limit']
         self.tracklinking_path1_distance_limit=settings['tracklinking_path1_distance_limit']
@@ -532,7 +525,6 @@ class TrackingSetUp(object):
             
         #path2 
         self.tracklinking_path2_topology=settings['tracklinking_path2_topology']      
-        self.tracklinking_path2_frame_gap_0=settings['tracklinking_path2_frame_gap_0']
         self.tracklinking_path2_frame_gap_1=settings['tracklinking_path2_frame_gap_1']       
         self.tracklinking_path2_direction_limit=settings['tracklinking_path2_direction_limit']
         self.tracklinking_path2_distance_limit=settings['tracklinking_path2_distance_limit']
@@ -546,7 +538,6 @@ class TrackingSetUp(object):
             
         #path3 
         self.tracklinking_path3_topology=settings['tracklinking_path3_topology']      
-        self.tracklinking_path3_frame_gap_0=settings['tracklinking_path3_frame_gap_0']
         self.tracklinking_path3_frame_gap_1=settings['tracklinking_path3_frame_gap_1']       
         self.tracklinking_path3_direction_limit=settings['tracklinking_path3_direction_limit']
         self.tracklinking_path3_distance_limit=settings['tracklinking_path3_distance_limit']
