@@ -20,13 +20,6 @@ class TrackingSetUp(object):
     '''
     Class to set parameters for detection, linking and membrane evaluation
         
-
-    Methods
-    ---------
-    __init__(self)
-    detection(self, frameN)
-    detection_parameter_to_file(self)
-    detection_parameters_from_file(self)
     '''
     
     
