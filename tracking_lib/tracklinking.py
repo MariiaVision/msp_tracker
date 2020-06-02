@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-
 from pgmpy.models import BayesianModel
 from pgmpy.factors.discrete import TabularCPD
-import pylab as plt
 import numpy as np
 import math
 from pgmpy.inference import VariableElimination
@@ -13,7 +11,12 @@ import skimage
 from skimage import io
 from tqdm import tqdm
 import scipy as sp
+from scipy.optimize import linear_sum_assignment 
 
+import networkx as nx
+
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' # not to show warnings
 
 class GraphicalModelTracking(object):
     """
@@ -59,8 +62,7 @@ class GraphicalModelTracking(object):
     frame_search_range: int (default is 6)
         frame range to search connection between tracks   
     distance_search_range: int (default is 12)
-        distance range to search connection between tracks    
-    frame_gap_tracklinking_0: int (default is 1)        
+        distance range to search connection between tracks           
     frame_gap_tracklinking_1: int (default is 5)  
         upper limit for the frame gap      
     direction_limit_tracklinking: int (default 50)
@@ -87,7 +89,6 @@ class GraphicalModelTracking(object):
     save_tracks(filename) 
     decision_tracklets_connection(track1, track2)
     decision_s(val_o, val_l)
-    decision_p(val_s, val_g)
     decision_o()
     decision_g()
     decision_l()
@@ -131,7 +132,6 @@ class GraphicalModelTracking(object):
         self.frame_search_range=6 # frame range to search connection between tracks
         self.distance_search_range=12 # distance range to search connection between tracks
         
-        self.frame_gap_tracklinking_0=1
         self.frame_gap_tracklinking_1=5        
         self.direction_limit_tracklinking=50
         self.distance_limit_tracklinking=10 # distance in pix between two tracklets to be connected
@@ -170,10 +170,11 @@ class GraphicalModelTracking(object):
         cpd_s = TabularCPD(variable='S', variable_card=2, values=[[0.99, 1.0, 0.01, 0.9],
                                                                   [0.01, 0.0, 0.99, 0.1]], evidence=['O','L'], evidence_card=[2,2])
         
-        cpd_g = TabularCPD(variable='G', variable_card=3, values=[[0.3, 0.3, 0.4]]) 
+#        cpd_g = TabularCPD(variable='G', variable_card=3, values=[[0.3, 0.3, 0.4]]) 
+        cpd_g = TabularCPD(variable='G', variable_card=10, values=[[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]]) 
         
-        cpd_p = TabularCPD(variable='P', variable_card=2, values=[[0.99, 0.99, 0.99, 0.01, 0.1, 0.9],
-                                                                  [0.01, 0.01, 0.01, 0.99, 0.9, 0.1]], evidence=['S','G'], evidence_card=[2,3])     
+        cpd_p = TabularCPD(variable='P', variable_card=2, values=[[0.99, 0.99, 0.99, 0.99, 0.99, 0.99,0.99, 0.99, 0.99, 0.99,   0.01, 0.1, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.99],
+                                                                  [0.01, 0.01, 0.01, 0.01, 0.01, 0.01,0.01, 0.01, 0.01, 0.01,   0.99, 0.9, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.01]], evidence=['S','G'], evidence_card=[2,10])     
         
         cpd_d = TabularCPD(variable='D', variable_card=2, values=[[0.4, 0.6]])   
         
@@ -278,7 +279,7 @@ class GraphicalModelTracking(object):
         # order of the tracks (0-not in order, 1 -  in order)
         val_O=self.decision_o()
 
-        # gap between tracks (0 - zero frames, 1 - from 1-5 frames, 2 - more than 5 frames)
+        # gap between tracks (0 - zero frames, 1...8 - medium gap, 9 - large gap)
         val_G=self.decision_g()
 
         # overLap of the tracks (0 - no overlap, 1 - overlap)
@@ -347,18 +348,6 @@ class GraphicalModelTracking(object):
             val_s=0
         return val_s
     
-    
-    def decision_p(self, val_s, val_g):
-        '''
-        decision on position - join of sequence and gap(0 - not affinity, 1- affinity)
-        '''
-        if val_s==0:
-            val=0
-        elif val_g==2:
-            val=0
-        else:
-            val=1
-        return val
         
     
     def decision_o(self):
@@ -378,20 +367,25 @@ class GraphicalModelTracking(object):
         
     def decision_g(self):
         '''
-        decision on  gap (0 - zero frames, 1 - small gap, 2 - big gap)
+        decision on  gap (0 - zero frames, 1...8 - medium gap, 9 - large gap)
         '''
-        
+        # define step for each of 10 positions
+        if self.frame_gap_tracklinking_1>10:    
+            gap_step=10/self.frame_gap_tracklinking_1
+        else: 
+            gap_step=1
+            
         #calculate the gap
         gap=self.track2['frames'][0]-self.track1['frames'][-1]
+        #define output
+        if gap<=0: # maximum possible distance
+            gap=9        
+        elif gap>0 and gap<=self.frame_gap_tracklinking_1:
+            val=int((gap-1)*gap_step) # no gap or medium gap
+            
+        else: # more than maximum gap
+            val=9
         
-        if gap==self.frame_gap_tracklinking_0:
-            val=0 # no gap
-        elif gap>self.frame_gap_tracklinking_0 and gap<=self.frame_gap_tracklinking_1:
-            val=1
-        else: # if the value is negative or mpre than 5
-            val=2 # there is no overlap
-        
-#        print("G: ", val)
         return val
 
     def decision_l(self):
@@ -568,7 +562,7 @@ class GraphicalModelTracking(object):
         frames=[]
         trace=[]
 
-        
+#        print("trackID: ", self.track_pos,  connections)
         for i in connections:
 
             tracklet=self.tracklets[str(int(i))]
@@ -592,8 +586,9 @@ class GraphicalModelTracking(object):
                 else:
                     new_frames.append(frame_pos)
                     new_trace.append(trace[pos])             
-        
+
         # create new Track 
+#        print("frames: ", new_frames)
         new_track.update({'trackID': self.track_pos, 'frames': new_frames, 'trace': new_trace}) 
         self.tracks_before_filter.update({self.track_pos:new_track}) 
         
@@ -668,7 +663,7 @@ class GraphicalModelTracking(object):
             
             # iterate over frame and form a list with possible connections
             # based on the start point
-            for frame_pos in range(n_frame,n_frame+self.frame_search_range): #!!! start from n_frame+1
+            for frame_pos in range(n_frame+1,n_frame+self.frame_search_range): #!!! start from n_frame+1
  
                 if frame_pos in self.track_data_framed_start:
                     for trackID in self.track_data_framed_start[frame_pos]:
@@ -750,110 +745,154 @@ class GraphicalModelTracking(object):
       # # # compare results and connect the tracks
 #        print("connecting tracklets ....")
         
-
+#######################################################################
         connected_tracklets=[] # new connections
         
         print("looking through possible connections  ... ")
+#        
+#        print("POSSIBLE CONNECTIONS", possible_connections)
+#        #iterste over the possible connections and make a decision
+#        for p in tqdm(range(0, len(possible_connections))):
+#            
+#            pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
+#            
+#            # check in existing connection:            
+#            if not connected_tracklets:
+#                start_connection_exist=False
+#                end_connection_exist=False
+#            else:
+#                start_connection_exist=pair1[0] in np.asarray(connected_tracklets)[:,0]
+#                end_connection_exist=pair1[1] in np.asarray(connected_tracklets)[:,1]
+#            
+#            if start_connection_exist==False and end_connection_exist==False:                              
+#                # check the first and choose highest
+#                
+#                # check another condidates for the beginning  tracklet
+#                comparison_list_start=[]
+#                first_tracklet=self.tracklets.get(str(int(pair1[0])))['frames'][-1]
+#                second_tracklet=self.tracklets.get(str(int(pair1[1])))['frames'][0]
+#
+#                gap_list=[]#gap_frame] # list of the gap values  for the connections
+#                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[0]))
+#                # repeating_list_x- is a position in the list of connection
+#                # repeating_list_y - is beginning (0) or ending (1) tracklet
+#                
+#                # iterate over all the possible connection with the tracklet
+#                for l in range(0, len(repeating_list_x)):
+#                    
+#                    if repeating_list_y[l]==0: # similar connection
+#                        comparison_list_start.append(possible_connections[repeating_list_x[l]])
+#                        
+#                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
+#                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
+#                        
+#                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets                   
+#                        
+#                
+#            # best choice for the beggining tracklet and delete all others
+#                best_choice_start_val=np.max(np.asarray(comparison_list_start)[:,2])
+#                
+#                #find all the option with max probability score
+#                best_choice_start_pos_array=np.where(np.asarray(comparison_list_start)[:,2]==best_choice_start_val)
+#                
+#                # it is the only one pick it
+#                if len(best_choice_start_pos_array)==1:                   
+#                    best_choice_start_pos=np.argmax(np.asarray(comparison_list_start)[:,2])
+#                    
+#                else: # if not - choose the one with the smallest time gap
+#                    best_choice_start_pos=np.argmin(np.asarray(gap_list))                
+#                        
+#                # check another condidates for the end tracklet
+#                comparison_list_end=[]
+#                
+#                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[1]))  
+#                gap_list=[]  # list of the gap values  for the connections
+#                
+#                for l in range(0, len(repeating_list_x)):            
+#                    if repeating_list_y[l]==1: # similar connection
+#                        comparison_list_end.append(possible_connections[repeating_list_x[l]])
+#                        
+#                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
+#                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
+#                        
+#                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets          
+#                        
+#                
+#            # best choice for the beggining tracklet and delete all others
+#                best_choice_end_val=np.max(np.asarray(comparison_list_end)[:,2]) 
+#                best_choice_end_pos_array=np.where(np.asarray(comparison_list_end)[:,2]==best_choice_end_val)
+#                best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
+#                
+#                # it is the only one pick it
+#                if len(best_choice_end_pos_array)==1:                   
+#                    best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
+#                    
+#                else: # if not - choose the one with the smallest time gap
+#                    best_choice_end_pos=np.argmin(np.asarray(gap_list))  
+#                    
+#            #choose the right connection:
+#                if best_choice_start_val>=best_choice_end_val:
+#                    
+#                    #save the connection
+#                    connected_tracklets.append(comparison_list_start[best_choice_start_pos])
+#                    
+#                else:
+#                    connected_tracklets.append(comparison_list_end[best_choice_end_pos])
+##                    print("connected by end: ", comparison_list_end[best_choice_end_pos])
+# #               print("   connected: ", connected_tracklets[-1])
+#
+#        # store connectivity score value
+#        new_connected_tracklets=[]
+#        for p in connected_tracklets:
+#            new_connected_tracklets.append(p[0:2])
+#            
+#        connected_tracklets=new_connected_tracklets
+
+
+        # cost matrix of connection
         
-        print("POSSIBLE CONNECTIONS", possible_connections)
-        #iterste over the possible connections and make a decision
+        m_size=len(self.tracklets.keys())
+        prob_matrix=np.ones((m_size,m_size))*200
+        tracklet_list= list(map(int, list(self.tracklets.keys())))
+#        print(m_size, "\n", tracklet_list)
+        
         for p in tqdm(range(0, len(possible_connections))):
             
             pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
+            first_tracklet=int(pair1[0])
+            second_tracklet=int(pair1[1])
+            score=pair1[2]
+            pos_first=tracklet_list.index(first_tracklet)
+            pos_second=tracklet_list.index(second_tracklet)
+            prob_matrix[pos_first, pos_second]=1-score # score as opposite value
             
-            # check in existing connection:            
-            if not connected_tracklets:
-                start_connection_exist=False
-                end_connection_exist=False
-            else:
-                start_connection_exist=pair1[0] in np.asarray(connected_tracklets)[:,0]
-                end_connection_exist=pair1[1] in np.asarray(connected_tracklets)[:,1]
-            
-            if start_connection_exist==False and end_connection_exist==False:                              
-                # check the first and choose highest
-                
-                # check another condidates for the beginning  tracklet
-                comparison_list_start=[]
-                first_tracklet=self.tracklets.get(str(int(pair1[0])))['frames'][-1]
-                second_tracklet=self.tracklets.get(str(int(pair1[1])))['frames'][0]
 
-                gap_list=[]#gap_frame] # list of the gap values  for the connections
-                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[0]))
-                # repeating_list_x- is a position in the list of connection
-                # repeating_list_y - is beginning (0) or ending (1) tracklet
+        # Hungerian to assign the  connections
+        
+        assignment=self.assignDetectionToTracks(prob_matrix) 
+    
+        # check aarignment
+        connected_tracklets = []
+        
+        for i in range(len(assignment)):
+            if (assignment[i] != -1):
+                # check with the cost distance threshold and remove if cost is high
+                # i - first tracklet position
+                #assignment[i] - second tracklet position
                 
-                # iterate over all the possible connection with the tracklet
-                for l in range(0, len(repeating_list_x)):
+                if (prob_matrix[i][assignment[i]] > 1):
+                    assignment[i] = -1
+#                    un_assigned_tracks.append(i)
                     
-                    if repeating_list_y[l]==0: # similar connection
-                        comparison_list_start.append(possible_connections[repeating_list_x[l]])
-                        
-                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
-                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
-                        
-                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets                   
-                        
-                
-            # best choice for the beggining tracklet and delete all others
-                best_choice_start_val=np.max(np.asarray(comparison_list_start)[:,2])
-                
-                #find all the option with max probability score
-                best_choice_start_pos_array=np.where(np.asarray(comparison_list_start)[:,2]==best_choice_start_val)
-                
-                # it is the only one pick it
-                if len(best_choice_start_pos_array)==1:                   
-                    best_choice_start_pos=np.argmax(np.asarray(comparison_list_start)[:,2])
-                    
-                else: # if not - choose the one with the smallest time gap
-                    best_choice_start_pos=np.argmin(np.asarray(gap_list))                
-                        
-                # check another condidates for the end tracklet
-                comparison_list_end=[]
-                
-                repeating_list_x, repeating_list_y=np.where((np.asarray(possible_connections)==pair1[1]))  
-                gap_list=[]  # list of the gap values  for the connections
-                
-                for l in range(0, len(repeating_list_x)):            
-                    if repeating_list_y[l]==1: # similar connection
-                        comparison_list_end.append(possible_connections[repeating_list_x[l]])
-                        
-                        first_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][0])))['frames'][-1]
-                        second_tracklet=self.tracklets.get(str(int(possible_connections[repeating_list_x[l]][1])))['frames'][0]
-                        
-                        gap_list.append(second_tracklet-first_tracklet-1) # number of frames between the tracklets          
-                        
-                
-            # best choice for the beggining tracklet and delete all others
-                best_choice_end_val=np.max(np.asarray(comparison_list_end)[:,2]) 
-                best_choice_end_pos_array=np.where(np.asarray(comparison_list_end)[:,2]==best_choice_end_val)
-                best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
-                
-                # it is the only one pick it
-                if len(best_choice_end_pos_array)==1:                   
-                    best_choice_end_pos=np.argmax(np.asarray(comparison_list_end)[:,2])
-                    
-                else: # if not - choose the one with the smallest time gap
-                    best_choice_end_pos=np.argmin(np.asarray(gap_list))  
-                    
-            #choose the right connection:
-                if best_choice_start_val>=best_choice_end_val:
-                    
-                    #save the connection
-                    connected_tracklets.append(comparison_list_start[best_choice_start_pos])
-                    
-                else:
-                    connected_tracklets.append(comparison_list_end[best_choice_end_pos])
-#                    print("connected by end: ", comparison_list_end[best_choice_end_pos])
- #               print("   connected: ", connected_tracklets[-1])
+                else: # add the detection to the track
+                    connected_tracklets.append([tracklet_list[i], tracklet_list[assignment[i]]]) #, 1-prob_matrix[i][assignment[i]]])
+#        print(assignment)connected_trackletsconnected_tracklets
+#        for pos in connected_tracklets:
+#            print(pos)
+        connected_tracklets.sort()
+                       
 
-        # store connectivity score value
-        new_connected_tracklets=[]
-        for p in connected_tracklets:
-            new_connected_tracklets.append(p[0:2])
-            
-        connected_tracklets=new_connected_tracklets
-
-        print("\n \n connected_tracklets \n", connected_tracklets)
+################################################################################        
         # save not connected tracklets
         print("saving not connected tracklets ... ")
         for t3 in tqdm(self.tracklets, "saving not connected tracklets"):
@@ -866,107 +905,55 @@ class GraphicalModelTracking(object):
                 self.join_tracklets([trackID])
 
         
-        # connect connected tracklets
+########################################################
+        # find connections
         
-        print("checking connected tracklets ... ")
-        complete=False
+        G=nx.DiGraph()
+        G.add_edges_from(connected_tracklets)
+        self.tracklets_connection=list(nx.weakly_connected_components(G))
         
-        while complete==False:
-            
-            added_list_start=[]
-            added_list_end=[]
-            N_connections=0 # number of connections
-#            print(N_connections)
-            
-            for track in connected_tracklets: #tqdm(connected_tracklets):
-                if track[0] not in added_list_start and track[-1] not in added_list_end:
-                    new_track=track
-                    added_list_start.append(track[0])
-                    added_list_end.append(track[1])
-                    
-                    pos_list=0
-                
-                    # find trackelts for connection
-                    start_repeating_list_x=[] # position in the list
-                    start_repeating_list_y=[] # is matching the start
-                    for i in connected_tracklets:
-                        
-                        start_repeating_list_y.append(np.asarray(i)[-1]==track[0])
-                        start_repeating_list_x.append(pos_list)
-                        pos_list+=1
-                    start_repeating_list_x=np.asarray(start_repeating_list_x)
-                    start_repeating_list_y=np.asarray(start_repeating_list_y)
-                        
-                    
-                    
-                    # check the position at the start for connection
-                    for l in range(0, len(start_repeating_list_x)):            
-                            if start_repeating_list_y[l]==True: # connection before this track
-                                # add connections 
-                                track_to_add=connected_tracklets[start_repeating_list_x[l]]
-                                if track_to_add[0] not in added_list_start:
-                                    new_track=track_to_add[0:-1]+new_track # add it to the track
-                                    added_list_start.append(track_to_add[0])
-                                    added_list_end.append(track[0])
-                                    N_connections=N_connections+1                                    
-                                    
-                    # check possible connection for end 
-                    end_repeating_list_x=[]
-                    end_repeating_list_y=[]
-                    pos_list=0
-                    for i in connected_tracklets:
-                        
-                        end_repeating_list_y.append(np.asarray(i)[0]==track[-1]) 
-                        end_repeating_list_x.append(pos_list)
-                        pos_list+=1
-                    end_repeating_list_x=np.asarray(end_repeating_list_x)
-                    end_repeating_list_y=np.asarray(end_repeating_list_y)
-                    
-                    # check the position at the end for connections    
-                    for l in range(0, len(end_repeating_list_x)):       
-                            if end_repeating_list_y[l]==True:  # connection after this track
-                                track_to_add=connected_tracklets[end_repeating_list_x[l]] 
-                                if track_to_add[-1] not in added_list_end:
-                                   new_track=new_track+track_to_add[1:]
-                                   added_list_end.append(track_to_add[-1])
-                                   added_list_start.append(track[-1])
-                                   N_connections=N_connections+1
-
-                    # add the track in connections
-                    self.tracklets_connection.append(new_track)
-            print("N_connections ", N_connections)
-#            print(len(self.tracklets_connection))
-            if N_connections>0:
-                connected_tracklets=self.tracklets_connection
-                self.tracklets_connection=[]
-            else:
-                complete=True
-                
         print("\n possible_connections \n", possible_connections)
+        print("\n connected_tracklets \n", connected_tracklets)
         print("\n self.tracklets_connection \n", self.tracklets_connection)
         print("saving connected tracklets ... ")
         for tracklets_to_track in tqdm(self.tracklets_connection):
-            
+
+            tracklets_to_track=list(tracklets_to_track)
+            tracklets_to_track.sort()
+#            print("\n", tracklets_to_track)            
             self.join_tracklets(tracklets_to_track)
             
-            
-        # eliminate short and small displacement tracks:
+           
+        # eliminate short  tracks:
         print("filtering tracks...")
         for t in tqdm(self.tracks_before_filter):
             
             track=self.tracks_before_filter.get(t)
 #            print(track)
             if len(track['trace'])>0:
-                dist=np.sqrt((track['trace'][0][0]-track['trace'][-1][0])**2+(track['trace'][0][1]-track['trace'][-1][1])**2)
                 duration=track['frames'][-1]-track['frames'][0]
             else:
-                dist=-1
                 duration=-1
-            if dist>self.track_displacement_limit and duration>self.track_duration_limit:
+            if  duration>self.track_duration_limit:
                 self.tracks.update({t:track})
                 
                 # this is for transition to the distionary storage - to display in list yet
                 self.data.update({t:track})
 
-#        print("\n self.tracks \n", self.tracks)   
+#        print("\n self.tracks \n", self.tracks)  
         print("ALL the tracks: ", len(self.tracks))            
+    
+    def assignDetectionToTracks(self, cost):
+        '''
+        detection assignment based on the Hungerian algorithm
+        '''
+        N = cost.shape[0]
+        assignment = []
+        for _ in range(N):
+            assignment.append(-1)
+        row_ind, col_ind = linear_sum_assignment(cost)
+        for i in range(len(row_ind)):
+            assignment[row_ind[i]] = col_ind[i]
+
+        return assignment
+    
