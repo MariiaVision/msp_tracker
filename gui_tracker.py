@@ -25,14 +25,16 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+plt.rcParams.update({'figure.max_open_warning': 0})
 
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+from tqdm import tqdm
 import skimage
 from skimage import io
 import json 
 
 from set_tracking import  TrackingSetUp
-
+from msld import MultiscaleLineDetection
 
     
 class MainApplication(tk.Frame):
@@ -285,6 +287,9 @@ When finished the final tracks will appear in the linking window and also can be
         
         tab_run = ttk.Frame(tab_parent)
         tab_parent.add(tab_run, text=" Run tracking ")        
+
+        tab_membrane = ttk.Frame(tab_parent)
+        tab_parent.add(tab_membrane, text=" Membrane segmentation ") 
         
         tab_parent.pack(expand=1, fill='both')
         
@@ -300,6 +305,10 @@ When finished the final tracks will appear in the linking window and also can be
         # run 
         runFrame = tk.Frame(master=tab_run)
         runFrame.pack(expand=1, fill='both')
+        
+        # membrane segmentation 
+        membraneFrame = tk.Frame(master=tab_membrane)
+        membraneFrame.pack(expand=1, fill='both')
         
         
 
@@ -587,7 +596,390 @@ When finished the final tracks will appear in the linking window and also can be
         # show parameters
         self.show_parameters()
         
-        ####################################################
+        ########################   MEMBRANE segmentation #################
+     # # # # # # # # # # # # # # # # # # # # # #   
+        membraneFrame.configure(background='white')
+        
+        ############################################
+        self.segmentation=MultiscaleLineDetection() # membrane segmentation
+        self.memb_frame_pos=0
+        self.detection_frame=0 # frame where the latest detection was made
+        self.monitor_switch_detection=0
+        self.memb_movie=np.ones((1, 100,100))
+        self.memb_segmented_movie=np.zeros((1,100,100))
+        self.monitor_membrane_switch=0
+        self.memb_movie_length=1
+        
+        #segmentation parameters
+        self.roi_step_membrane=80 # size (length and hight) of the ROI in pixs
+        self.threshold_membrane=1.3
+        self.img_threshold_membrane=0.7
+        #############################################
+
+        # Framework: place monitor and view point
+        self.viewFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_membrane.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
+
+           
+        # place parameters and buttons
+        self.parametersFrame_membrane = tk.Frame(master=membraneFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_membrane.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
+        
+
+     # # # # # # # # # # # # # # # # # # # # # #    
+        # Framework: place monitor 
+        self.button_mv = tk.Button(self.viewFrame_membrane,text="   Select membrane movie   ", command=self.select_movie_membrane, width=20, bg="#80818a")
+        self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
+
+        var_plot_membrane = tk.IntVar()
+        
+        def update_membrane_switch():            
+            self.monitor_membrane_switch=var_plot_membrane.get()
+            # change image
+            self.show_frame_membrane()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.M1 = tk.Radiobutton(self.viewFrame_membrane, text=" original image ", variable=var_plot_membrane, value=0, bg='white', command =update_membrane_switch )
+        self.M1.grid(row=3, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        
+        self.M2 = tk.Radiobutton(self.viewFrame_membrane, text=" segmented membrane ", variable=var_plot_membrane, value=1, bg='white',command = update_membrane_switch )
+        self.M2.grid(row=3, column=3, columnspan=4,  pady=self.pad_val, padx=self.pad_val)
+  
+        
+
+        # plot bg
+        self.figm, self.axm = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
+        self.axm.axis('off')
+        self.figm.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+        
+        self.show_frame_membrane() 
+
+   #   next and previous buttons
+        def show_values_detection(v):
+            self.frame_pos=int(v)
+            self.show_frame_membrane()
+          
+        self.scale_movie = tk.Scale(self.viewFrame_membrane, from_=0, to=self.movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values_detection)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+
+        self.set_membrane_parameters_frame()
+        
+        
+    def select_movie_membrane(self):
+        
+        filename = tk.filedialog.askopenfilename()
+        if not filename:
+            print("File was not chosen")
+        else:   
+        
+            # read files 
+            self.memb_movie=skimage.io.imread(filename)
+            
+            # set parameters
+            self.memb_movie_length=self.memb_movie.shape[0]
+            self.axm.set_xlim(0,self.memb_movie.shape[2])
+            self.axm.set_ylim(0,self.memb_movie.shape[1])
+            self.memb_frame_pos=0
+            self.memb_segmented_movie=np.zeros(self.memb_movie.shape)
+            
+            # show the first frame
+            self.show_frame_membrane()
+            
+   #  #  movie navigator scale to the movie length
+        def show_values(v):
+            self.memb_frame_pos=int(v)
+            self.show_frame_membrane() 
+          
+        self.scale_movie = tk.Scale(self.viewFrame_membrane,  from_=0, to=self.memb_movie_length-1, tickinterval=100, length=self.img_width, width=10, orient="horizontal", command=show_values)
+        self.scale_movie.set(0)        
+        self.scale_movie.grid(row=7, column=2, columnspan=5,rowspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+            
+    def show_frame_membrane(self):
+
+        # read limits
+        xlim_old=self.axm.get_xlim()
+        ylim_old=self.axm.get_ylim()
+
+        
+        # define the mode
+       
+        if self.monitor_membrane_switch==0: # original
+            self.membrane_image = self.memb_movie[self.memb_frame_pos,:,:]/np.max(self.memb_movie[self.memb_frame_pos,:,:])
+
+        elif self.monitor_membrane_switch==1: # segmented
+            self.membrane_image = self.memb_segmented_movie[self.memb_frame_pos,:,:]
+
+            
+        # plot image self.memb_segmented_movie
+        
+        self.axm.clear() # clean the plot 
+        self.axm.imshow(self.membrane_image, cmap="gray")
+        self.axm.axis('off')  
+
+        
+        #set the same "zoom"
+        self.axm.set_xlim(xlim_old[0],xlim_old[1])
+        self.axm.set_ylim(ylim_old[0],ylim_old[1])
+        
+
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.axm.invert_yaxis()
+            
+        
+        # DrawingArea
+        self.canvas = FigureCanvasTkAgg(self.figm, master=self.viewFrame_membrane)
+        self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        self.canvas.draw()
+        
+        # toolbar
+        toolbarFrame = tk.Frame(master=self.viewFrame_membrane)
+        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        
+        # update home button
+
+        def new_home( *args, **kwargs):
+            # zoom out
+        
+            self.axm.set_xlim(0,self.memb_movie.shape[2])
+            self.axm.set_ylim(0,self.memb_movie.shape[1])
+
+
+            self.show_frame_membrane()
+            
+        NavigationToolbar2Tk.home = new_home
+        
+        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
+        self.toolbar.set_message=lambda x:"" # remove message with coordinates
+        self.toolbar.update()
+        
+        
+
+    def set_membrane_parameters_frame(self):
+
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" MEMBRANE SEGMENTATION ",  bg='white')
+        lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+        # should be odd number  - minimum line length
+
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Shortest line, pix (odd number): ",  bg='white')
+        lbl3.grid(row=1, column=0) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.W_start))
+        self.W_start = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.W_start.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+        # should be odd number  - maximum line length
+
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Longest line, pix (odd number): ",  bg='white')
+        lbl3.grid(row=2, column=0) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.W))
+        self.W = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.W.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
+
+        # step to iterate over the line lengths -  should be even number
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Step, pix (even number):  ",  bg='white')
+        lbl3.grid(row=3, column=0)
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.step))
+        self.step = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.step.grid(row=3, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+        # constant for the orientation thresholding
+    
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" First threshold (orientation) [0,5]: ",  bg='white')
+        lbl3.grid(row=4, column=0) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.threshold_membrane))
+        self.m_threshold_membrane = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.m_threshold_membrane.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+
+        # thrshold of the segmentation based on the initial image intensity after normalisation
+
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text="  Intensity threshold (normalised) [0,1]: ",  bg='white')
+        lbl3.grid(row=5, column=0) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.img_threshold_membrane))
+        self.m_img_threshold_membrane = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.m_img_threshold_membrane.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+        
+        # line orientation step
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Orientation step (degrees) [1,180]: ",  bg='white')
+        lbl3.grid(row=6, column=0) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.degree_step))
+        self.degree_step = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.degree_step.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
+
+
+        # minimum number of pixels in a sinlge segment
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Minimum Segment size, pix [0, inf]:  ",  bg='white')
+        lbl3.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.min_size))
+        self.min_size = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.min_size.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
+
+    # size (length and hight) of the ROI in pixs
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Single region width [0, inf]: ",  bg='white')
+        lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val) 
+        v=tk.StringVar(self.parametersFrame_membrane, value=str(self.roi_step_membrane))
+        self.m_roi_step_membrane = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
+        self.m_roi_step_membrane.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
+    
+  # # # # # #  # #
+
+         # empty space
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" ",  bg='white', height=int(self.button_length/5))
+        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+         # buttons   
+        lbl3 = tk.Button(master=self.parametersFrame_membrane, text=" Run test ", command=self.run_test_membrane, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_membrane, text=" Save to file ", command=self.save_to_file_membrane, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_membrane, text=" Read from file ", command=self.read_from_file_membrane, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+        lbl3 = tk.Button(master=self.parametersFrame_membrane, text=" Run membrane segmentation ", command=self.run_membrane_segmentation, width=self.button_length*3, bg="#80818a")
+        lbl3.grid(row=18, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val) 
+  
+    def run_test_membrane(self):
+        
+        #define the current image for segmentation
+        img=self.memb_movie[self.memb_frame_pos,:,:]
+        
+        # check on parameters
+        self.collect_membrane_parameters()
+        
+        self.segmentation.use_normalization =True # 
+        
+        # calculate segmentation
+        margen_step=int(self.roi_step_membrane/4) # boundaries of the ROI, which will not be saved to the final segmentation
+
+        img_segmented, feature_map = self.segmentation.segmentation(img, self.threshold_membrane, self.roi_step_membrane, margen_step, self.img_threshold_membrane)
+        
+        self.memb_segmented_movie[self.memb_frame_pos,:,:]=img_segmented
+        
+        #update the result
+        self.show_frame_membrane()
+        
+    def save_to_file_membrane(self):
+        
+        # update parameters
+        self.collect_membrane_parameters()
+        
+        # choose the file
+        filename=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
+        if not(filename.endswith(".txt")):
+                filename += ".txt" 
+        # save into the file
+        if not filename:
+            print("file name was not given. Nothing will be saved")
+        else:
+            # create data with parameters
+            parameters={'W_start':self.segmentation.W_start, 'W':self.segmentation.W , 'step':self.segmentation.step,
+            'threshold_membrane':self.threshold_membrane,  'img_threshold_membrane':self.img_threshold_membrane,  'degree_step':self.segmentation.degree_step,
+            'min_size':self.segmentation.min_size,'roi_step_membrane':self.roi_step_membrane}
+            
+            data={'parameters':parameters}
+        
+            # save the parameters       
+            with open(filename, 'w') as f:
+                json.dump(data, f, ensure_ascii=False) 
+            print("\n saving data: ", data['parameters'])
+            
+            #save it into the json file        
+            print(" file name: ", filename)
+        
+    def read_from_file_membrane(self):
+        
+        # open file
+        filename = tk.filedialog.askopenfilename(title = "Select file with saved parameters")
+        
+        if not filename:
+            print("file name was not given.")
+        else:       
+            # save parameters
+            with open(filename) as json_file: 
+                data = json.load(json_file)
+            settings=data['parameters']
+                
+            # read parameters
+            self.segmentation.W_start=settings['W_start'] 
+            self.segmentation.W=settings['W']
+            self.segmentation.step=settings['step'] 
+            self.threshold_membrane=settings['threshold_membrane']
+            self.img_threshold_membrane=settings['img_threshold_membrane']    
+            self.segmentation.degree_step=settings['degree_step']
+            self.segmentation.min_size=settings['min_size']       
+            self.roi_step_membrane=settings['roi_step_membrane'] 
+            
+            #update the numbers
+            self.set_membrane_parameters_frame()
+            
+    def run_membrane_segmentation(self):
+        '''
+        run segmentation for the entire sequence
+        '''
+        # check on parameters
+        self.collect_membrane_parameters()
+        margen_step=int(self.roi_step_membrane/4) # boundaries of the ROI, which will not be saved to the final segmentation
+
+        # ask where to save the file
+        filename=tk.filedialog.asksaveasfilename(title = "Save segmentation into the file ")
+        
+        if not filename :
+            print("the file name is not given")
+        else:
+            if not(filename.endswith(".tif") or filename.endswith(".tiff")):
+                filename += ".tif" 
+            
+            # run the segmentation         
+            for frame in tqdm(range(0, self.memb_movie_length), "membrane segmentation"):
+                img=self.memb_movie[frame,:,:]
+                img_segmented, feature_map = self.segmentation.segmentation(img, self.threshold_membrane, self.roi_step_membrane, margen_step, self.img_threshold_membrane)
+            
+                self.memb_segmented_movie[frame,:,:]=img_segmented
+            
+            # save the file with the segmented membrane
+            skimage.io.imsave(filename, self.memb_segmented_movie.astype('uint8')*256, check_contrast=False)
+            print("segmentation is saved to ", filename)
+                    
+        
+    def collect_membrane_parameters(self):
+
+
+        if self.W_start.get()!='':
+            self.segmentation.W_start=int(self.W_start.get())
+        if self.segmentation.W_start%2==0: # should be odd number
+            self.segmentation.W_start+=1
+            
+        if self.W.get()!='':
+            self.segmentation.W=int(self.W.get())  
+        if self.segmentation.W%2==0: # should be odd number
+            self.segmentation.W+=1 
+            
+        if self.step.get()!='':
+            self.segmentation.step=int(self.step.get())  
+        if self.segmentation.step%2!=0: # should be even number
+            self.segmentation.step+=1 
+            
+        if self.m_threshold_membrane.get()!='':
+            self.threshold_membrane=float(self.m_threshold_membrane.get())
+            
+        if self.m_img_threshold_membrane.get()!='':
+            self.img_threshold_membrane=float(self.m_img_threshold_membrane.get())
+            
+        if self.degree_step.get()!='':
+            self.segmentation.degree_step=int(self.degree_step.get())
+            
+    
+        if self.min_size.get()!='':
+            self.segmentation.min_size=int(self.min_size.get())
+            
+        if self.m_roi_step_membrane.get()!='':
+            self.roi_step_membrane=int(self.m_roi_step_membrane.get())
+            
+        #update the numbers on display
+        self.set_membrane_parameters_frame()
+
+    # # # # # # # # # # # # # # # # # # # # # # # # #
+        
+        ########################################################
      
     # parameters 
     def show_parameters(self):
@@ -1419,7 +1811,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # save into the file
         if not filename:
-            print("file was not chosen. Nothing will be saved")
+            print("file name was not given. Nothing will be saved")
         else:
             self.detector.detection_parameter_path= filename
             self.set_detection_parameters_frame()
@@ -1433,7 +1825,7 @@ When finished the final tracks will appear in the linking window and also can be
         filename = tk.filedialog.askopenfilename(title = "Open file with parameters ")
         # read from the file
         if not filename:
-            print("file was not chosen")
+            print("file name was not selected")
         else:
             self.detector.detection_parameters_from_file(filename)     
         
