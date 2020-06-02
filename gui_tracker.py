@@ -40,12 +40,10 @@ class MainApplication(tk.Frame):
         parent.configure(background='white')
         
         #set the window size        
-        self.window_width = int(parent.winfo_screenwidth()/2.5) # half the monitor width
-        self.window_height = int(parent.winfo_screenheight()*0.7)  # 0.9 of the monitor height
+        self.window_width = int(parent.winfo_screenwidth()/2.5) # part of the monitor width
+        self.window_height = int(parent.winfo_screenheight()*0.7)  # 0.7 of the monitor height
 #        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
 
-        print(parent.winfo_screenwidth(), parent.winfo_screenheight())
-        print(self.window_width, self.window_height)
 
         # menu
         menu = tk.Menu(parent)
@@ -189,8 +187,7 @@ At this step short tracklets are forms based on the distance. You need to specif
 
 - Bayesian network topology - complete is the best option yet, which include all the nodes in the network
 - connectivity threshold - final threshold which decide on tracklets connection (from 0 to 1)
-- small temporal gap - number of frames which is expected between two connections (when vesicle is not detected for a number of frames)
-- large temporal gap- maximum number of frames which can be between two connections (when vesicle is not detected for a number of frames)
+- temporal gap - maximum number of frames which can be between two connections (when vesicle is not detected for a number of frames)
 - distance limit - maximum expected distance between two detections
 - orientation similarity - acceptable difference in orientation (from 0 to 180)
 - speed similarity limit - acceptable proportional difference in speed (from 0 to 1)
@@ -686,31 +683,24 @@ When finished the final tracks will appear in the linking window and also can be
         
         
         ######## second colomn ########
-        
-#          # empty space
-#        lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/20), font=("Helvetica", 8))
-#        lbl3.grid(row=1, column=1, pady=self.pad_val, padx=self.pad_val)        
+              
 
         lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: First pass ",  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val) 
         
     # Topology
     
         lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path1_topology,  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        lbl3.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
     
     # tracklinking_path1_connectivity_threshold 
         lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path1_connectivity_threshold),  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
-        
-    # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.information_frame, text=" Small temporal gap "+str(self.detector.tracklinking_path1_frame_gap_0) +" frames  ",  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        lbl3.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
         
          
         #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.information_frame, text=" Large temporal gap "+str(self.detector.tracklinking_path1_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" Temporal gap "+str(self.detector.tracklinking_path1_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
         lbl3.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
     #  tracklinking_path1_distance_limit
@@ -745,20 +735,15 @@ When finished the final tracks will appear in the linking window and also can be
         # Topology
         
             lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path2_topology,  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=17, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+            lbl3.grid(row=18, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         
         # tracklinking_path1_connectivity_threshold 
             lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path2_connectivity_threshold),  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=18, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
-            
-        # tracklinking_path1_frame_gap_0 
-            lbl3 = tk.Label(master=self.information_frame, text=" Small temporal gap "+str(self.detector.tracklinking_path2_frame_gap_0) +" frames  ",  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=19, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-            
+            lbl3.grid(row=19, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
              
             #tracklinking_path1_frame_gap_1
-            lbl3 = tk.Label(master=self.information_frame, text=" Large temporal gap "+str(self.detector.tracklinking_path2_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
+            lbl3 = tk.Label(master=self.information_frame, text=" Temporal gap "+str(self.detector.tracklinking_path2_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
             lbl3.grid(row=20, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         #  tracklinking_path1_distance_limit
@@ -791,25 +776,21 @@ When finished the final tracks will appear in the linking window and also can be
      
         if self.Npass>2:
             lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: Third pass ",  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val) 
+            lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val) 
             
         # Topology
         
             lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path3_topology,  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+            lbl3.grid(row=7, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         
         # tracklinking_path1_connectivity_threshold 
             lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path3_connectivity_threshold),  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=7, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
-            
-        # tracklinking_path1_frame_gap_0 
-            lbl3 = tk.Label(master=self.information_frame, text=" Small temporal gap "+str(self.detector.tracklinking_path3_frame_gap_0) +" frames  ",  bg='white', font=("Helvetica", 8))
             lbl3.grid(row=8, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
             
              
             #tracklinking_path1_frame_gap_1
-            lbl3 = tk.Label(master=self.information_frame, text=" Large temporal gap "+str(self.detector.tracklinking_path3_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
+            lbl3 = tk.Label(master=self.information_frame, text=" Temporal gap "+str(self.detector.tracklinking_path3_frame_gap_1)+" frames ", bg='white', font=("Helvetica", 8))
             lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         #  tracklinking_path1_distance_limit
@@ -896,20 +877,13 @@ When finished the final tracks will appear in the linking window and also can be
         self.l_tracklinking_path1_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
         self.l_tracklinking_path1_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
         
-        
-    # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Small temporal gap, frames  ",  bg='white')
-        lbl3.grid(row=9, column=0)
-        v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_frame_gap_0))
-        self.l_tracklinking_path1_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
-        self.l_tracklinking_path1_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
          
         #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Large temporal gap, frames ", bg='white')
-        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val)
         v=tk.StringVar(self.parametersFrame_linking_step1, value=str(self.detector.tracklinking_path1_frame_gap_1))
         self.l_tracklinking_path1_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step1, width=self.button_length, text=v)
-        self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.l_tracklinking_path1_frame_gap_1.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
     
     #  tracklinking_path1_distance_limit
         lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Distance limit, pix ",  bg='white')
@@ -1012,20 +986,13 @@ When finished the final tracks will appear in the linking window and also can be
         self.l_tracklinking_path2_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
         self.l_tracklinking_path2_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
         
-        
-    # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Small temporal gap, frames  ",  bg='white')
-        lbl3.grid(row=9, column=0)
-        v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_frame_gap_0))
-        self.l_tracklinking_path2_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
-        self.l_tracklinking_path2_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
          
         #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Large temporal gap, frames ", bg='white')
-        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val)
         v=tk.StringVar(self.parametersFrame_linking_step2, value=str(self.detector.tracklinking_path2_frame_gap_1))
         self.l_tracklinking_path2_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step2, width=self.button_length, text=v)
-        self.l_tracklinking_path2_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.l_tracklinking_path2_frame_gap_1.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
     
     #  tracklinking_path1_distance_limit
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Distance limit, pix ",  bg='white')
@@ -1115,21 +1082,13 @@ When finished the final tracks will appear in the linking window and also can be
         v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_connectivity_threshold))
         self.l_tracklinking_path3_connectivity_threshold = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
         self.l_tracklinking_path3_connectivity_threshold.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val) 
-        
-        
-    # tracklinking_path1_frame_gap_0 
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Small temporal gap, frames  ",  bg='white')
-        lbl3.grid(row=9, column=0)
-        v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_frame_gap_0))
-        self.l_tracklinking_path3_frame_gap_0 = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
-        self.l_tracklinking_path3_frame_gap_0.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
          
         #tracklinking_path1_frame_gap_1
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Large temporal gap, frames ", bg='white')
-        lbl3.grid(row=9, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Temporal gap, frames ", bg='white')
+        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val)
         v=tk.StringVar(self.parametersFrame_linking_step3, value=str(self.detector.tracklinking_path3_frame_gap_1))
         self.l_tracklinking_path3_frame_gap_1 = tk.Entry(self.parametersFrame_linking_step3, width=self.button_length, text=v)
-        self.l_tracklinking_path3_frame_gap_1.grid(row=9, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.l_tracklinking_path3_frame_gap_1.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
     
     #  tracklinking_path1_distance_limit
         lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Distance limit, pix ",  bg='white')
@@ -1631,9 +1590,6 @@ When finished the final tracks will appear in the linking window and also can be
         if self.l_tracklinking_path1_connectivity_threshold.get()!='':
             self.detector.tracklinking_path1_connectivity_threshold=float(self.l_tracklinking_path1_connectivity_threshold.get())
             
-        if self.l_tracklinking_path1_frame_gap_0.get()!='':
-            self.detector.tracklinking_path1_frame_gap_0=int(self.l_tracklinking_path1_frame_gap_0.get())
-            
         if self.l_tracklinking_path1_frame_gap_1.get()!='':
             self.detector.tracklinking_path1_frame_gap_1=int(self.l_tracklinking_path1_frame_gap_1.get())
             
@@ -1655,10 +1611,7 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path2_connectivity_threshold.get()!='':
             self.detector.tracklinking_path2_connectivity_threshold=float(self.l_tracklinking_path2_connectivity_threshold.get())
-            
-        if self.l_tracklinking_path2_frame_gap_0.get()!='':
-            self.detector.tracklinking_path2_frame_gap_0=int(self.l_tracklinking_path2_frame_gap_0.get())
-            
+        
         if self.l_tracklinking_path2_frame_gap_1.get()!='':
             self.detector.tracklinking_path2_frame_gap_1=int(self.l_tracklinking_path2_frame_gap_1.get())
             
@@ -1681,10 +1634,7 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path3_connectivity_threshold.get()!='':
             self.detector.tracklinking_path3_connectivity_threshold=float(self.l_tracklinking_path3_connectivity_threshold.get())
-            
-        if self.l_tracklinking_path3_frame_gap_0.get()!='':
-            self.detector.tracklinking_path3_frame_gap_0=int(self.l_tracklinking_path3_frame_gap_0.get())
-            
+    
         if self.l_tracklinking_path3_frame_gap_1.get()!='':
             self.detector.tracklinking_path3_frame_gap_1=int(self.l_tracklinking_path3_frame_gap_1.get())
             
@@ -1725,8 +1675,7 @@ When finished the final tracks will appear in the linking window and also can be
         print(" number of pass, ", self.detector.tracklinking_Npass)
         print(" topology", self.detector.tracklinking_path1_topology)
         print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
-        print(" tracklinking_path1_frame_gap_0", self.detector.tracklinking_path1_frame_gap_0)
-        print(" tracklinking_path1_frame_gap_1", self.detector.tracklinking_path1_frame_gap_1)
+        print(" tracklinking_path1_frame_gap", self.detector.tracklinking_path1_frame_gap_1)
         print(" tracklinking_path1_distance_limit", self.detector.tracklinking_path1_distance_limit)
         print(" tracklinking_path1_direction_limit", self.detector.tracklinking_path1_direction_limit)
         print(" tracklinking_path1_speed_limit", self.detector.tracklinking_path1_speed_limit)
@@ -1735,7 +1684,6 @@ When finished the final tracks will appear in the linking window and also can be
         if self.detector.tracklinking_Npass>1:
             print("\n topology 2", self.detector.tracklinking_path2_topology)
             print(" tracklinking_path2_connectivity_threshold", self.detector.tracklinking_path2_connectivity_threshold)
-            print(" tracklinking_path2_frame_gap_0", self.detector.tracklinking_path2_frame_gap_0)
             print(" tracklinking_path2_frame_gap_1", self.detector.tracklinking_path2_frame_gap_1)
             print(" tracklinking_path2_distance_limit", self.detector.tracklinking_path2_distance_limit)
             print(" tracklinking_path2_direction_limit", self.detector.tracklinking_path2_direction_limit)
@@ -1745,7 +1693,6 @@ When finished the final tracks will appear in the linking window and also can be
         if self.detector.tracklinking_Npass>2:
             print("\n topology 3", self.detector.tracklinking_path1_topology)
             print(" tracklinking_path3_connectivity_threshold", self.detector.tracklinking_path3_connectivity_threshold)
-            print(" tracklinking_path3_frame_gap_0", self.detector.tracklinking_path3_frame_gap_0)
             print(" tracklinking_path3_frame_gap_1", self.detector.tracklinking_path3_frame_gap_1)
             print(" tracklinking_path3_distance_limit", self.detector.tracklinking_path3_distance_limit)
             print(" tracklinking_path3_direction_limit", self.detector.tracklinking_path3_direction_limit)
