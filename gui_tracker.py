@@ -77,7 +77,7 @@ You can test detection on a single frame and linking on a sequence of frames.
 
 Follow the steps to run the tracker: 
     
-1) load the movie (button "select vesicle movie")
+1) load the movie (button "Select vesicle movie")
 It should be single channel movie.
 
 2) Set detection parameters (load from a file if set earlier): 
@@ -163,7 +163,7 @@ You can test the detection on the current frame – button “Run test”, save 
             # create a new window
             self.new_window_help = tk.Toplevel(self.master)
             self.new_window_help.title("Linking ")
-#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+#            self.new_window_help.geometry(str(int(self.window_width/2))+"x"+str(int(self.window_height/2)))
             self.new_window_help.configure(background='white')
             # widget in there with a text 
             T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
@@ -249,6 +249,36 @@ When finished the final tracks will appear in the linking window and also can be
 
             """
             
+        def HelpMembrane():
+            # create a new window
+            self.new_window_help = tk.Toplevel(self.master)
+            self.new_window_help.title("Membrane segmentation ")
+#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
+            self.new_window_help.configure(background='white')
+                        # widget in there with a text 
+            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
+            S = tk.Scrollbar(self.new_window_help)
+            S.config(command=T.yview)
+            S.pack(side=tk.RIGHT, fill=tk.Y)
+            T.config(yscrollcommand=S.set)
+            T.configure(font=("Helvetica", 12))
+            text_help=""" Membrane segmentation: 
+                
+    a) Set parameters:
+            - Line length min, pix - should be an even number, the shortest line which will be fitted 
+            - Line length max, pix - should be an even number, the longest line which will be fitted 
+            - Line length step, pix - should be an odd number, the step while iterating over the line with different length
+            - Orientation threshold - float in range [0,5], defines which proportion between preeminent orientation and others should be to be accepted as a line
+            - Intensity threshold - float in range [0,1], defines minimum intensity of the pixel to be considered for the line fitting (normilised value in relation to the maximum intensity in the region)
+            - Orientation step, degrees - integer in range [1,180], defines step between line orientations which will be fitted. Good choice would be number between 10-40 degrees, but the choice depends on the membrane structure
+            - Minimum Segment size, pix - integer to define requirement to the minimum number of pixels per segment. It allows to remove small segments. 
+            - Region size, pix - integer defines region width and height to be processed at once. Use smaller region to compensate for the intensity variation in a single frame
+
+    b) Test the result for a number of frames
+    c) Save/read parameters in required
+    d) Run the segmentation for the entire video sequence with "Run membrane segmentation"
+    
+            """            
 #            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
             T.insert(tk.END, text_help)
             T.pack(side=tk.LEFT, fill=tk.Y)
@@ -259,6 +289,7 @@ When finished the final tracks will appear in the linking window and also can be
         helpmenu.add_command(label="Detection", command=HelpDetection)
         helpmenu.add_command(label="Linking", command=HelpLinking)
         helpmenu.add_command(label="Run tracking", command=HelpTracking)
+        helpmenu.add_command(label="Membrane segmentation", command=HelpMembrane)
         
         # set movie and class for parameter settings
         self.movie=np.ones((1,200,200))
@@ -763,7 +794,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # should be odd number  - minimum line length
 
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Shortest line, pix (odd number): ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Line length min, pix (odd number): ",  bg='white')
         lbl3.grid(row=1, column=0) 
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.W_start))
         self.W_start = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
@@ -771,14 +802,14 @@ When finished the final tracks will appear in the linking window and also can be
         
         # should be odd number  - maximum line length
 
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Longest line, pix (odd number): ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Line length max, pix (odd number): ",  bg='white')
         lbl3.grid(row=2, column=0) 
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.W))
         self.W = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
         self.W.grid(row=2, column=1, pady=self.pad_val, padx=self.pad_val)
 
         # step to iterate over the line lengths -  should be even number
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Step, pix (even number):  ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Line length step, pix (even number):  ",  bg='white')
         lbl3.grid(row=3, column=0)
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.step))
         self.step = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
@@ -786,7 +817,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # constant for the orientation thresholding
     
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" First threshold (orientation) [0,5]: ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Orientation threshold [0,10]: ",  bg='white')
         lbl3.grid(row=4, column=0) 
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.threshold_membrane))
         self.m_threshold_membrane = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
@@ -801,7 +832,7 @@ When finished the final tracks will appear in the linking window and also can be
         self.m_img_threshold_membrane.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
         
         # line orientation step
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Orientation step (degrees) [1,180]: ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Orientation step, degrees [1,180]: ",  bg='white')
         lbl3.grid(row=6, column=0) 
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.segmentation.degree_step))
         self.degree_step = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
@@ -816,7 +847,7 @@ When finished the final tracks will appear in the linking window and also can be
         self.min_size.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
 
     # size (length and hight) of the ROI in pixs
-        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Single region width [0, inf]: ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_membrane, text=" Region size, pix [0, inf]: ",  bg='white')
         lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_membrane, value=str(self.roi_step_membrane))
         self.m_roi_step_membrane = tk.Entry(self.parametersFrame_membrane, width=self.button_length, text=v)
