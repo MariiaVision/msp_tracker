@@ -68,7 +68,7 @@ class TrackingSetUp(object):
         self.gaussian_fit=True
         self.box_size_fit=8
         self.expected_radius=5
-        self.cnn_model_path="dl_weight/cnn-weights-spiral_disk-39-0.95.hdf5"
+        self.cnn_model_path="dl_weight_update/cnn-weight-spiral-disk-v1.hdf5"
         
     # # # # # LINKING parameters # # # # #
     
