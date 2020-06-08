@@ -1083,11 +1083,11 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
     # gaussian_fit gaussian fit
-        lbl3 = tk.Label(master=self.information_frame, text=" Subpixel localisation:  "+str(self.detector.gaussian_fit),  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" Subpixel localisation: "+str(self.detector.gaussian_fit),  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
     # expected_radius gaussian fit radius 
-        lbl3 = tk.Label(master=self.information_frame, text=" Expected particle radius:  "+str(self.detector.expected_radius),  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" Expected particle radius: "+str(self.detector.expected_radius),  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
     #self.box_size_fit # bounding box size for detection
