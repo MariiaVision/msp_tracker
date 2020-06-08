@@ -276,7 +276,6 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         '''
         updated_centers=[]
 
-        check_centres=[[-10,-10]]
         img_segment_set=np.zeros((len(centers),segment_size,segment_size))
         i=0
         
@@ -295,11 +294,9 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
             score_set = new_model.predict(x_data) 
             
             for pos in range(0, len(centers)):
-                res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(centers[pos]))**2, axis=1))
-                if score_set[pos][1]>self.detection_threshold and all(res_distance>self.min_distance):
+                if score_set[pos][1]>self.detection_threshold:
         
                     updated_centers.append(centers[pos])
-                    check_centres.append(centers[pos])
 
         return updated_centers
 
@@ -378,6 +375,37 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
             self.detected_vesicles=updated_centers
 #        print("detections: \n", self.detected_vesicles)
             
+        #remove detections which are too close to each other
+        
+        check_centres=[[-10,-10]]
+        checked_detection=[]
+        for pos in range(0, len(self.detected_vesicles)):
+            
+            res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(self.detected_vesicles[pos]))**2, axis=1))
+            if all(res_distance>self.min_distance):
+                print(self.detected_vesicles[pos])
+                check_centres.append(self.detected_vesicles[pos])
+                checked_detection.append(self.detected_vesicles[pos])
+#        else: 
+#            
+#            intensity_current=img(self.detected_vesicles[pos][0],self.detected_vesicles[pos][1])
+#            # find which one is close
+#            positions=np.where(res_distance>self.min_distance)
+#            print(positions)
+#            
+#            #for all
+#            for i in positions:
+#                repeat_pos=check_centres[i]
+#                intensity_repeat=img[repeat_pos[0],repeat_pos[1]]
+#                
+#                if 
+#                
+            #extract intensity
+            
+            
+            #choose the one with the brightest spot
+        
+        self.detected_vesicles=checked_detection    
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 
         return self.detected_vesicles
