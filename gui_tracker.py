@@ -146,8 +146,8 @@ Sigma - range of blur for spot enhancement, influence the spot size and its shap
 - Region of Interest size - region for classifier 8 or 16. At this stage it is 16 for all models unless states opposite.
 - Threshold coefficient - threshold for the classifier (from 0 to 1)
 - Load CNN model - there is a number of different trained models (folder "dl_weight"), if the classification results are not good you can try another model
-- Gaussian fit - on/off 
--Region of Gaussian fit - region of interest to fit gaussian
+- Subpixel localisation - on/off 
+-Region for Subpix localisation - region of interest for the task of subpixel localisation
 - Expected particle radius - odd number of pixels
  
 You can test the detection on the current frame – button “Run test”, save the parameters into a file – button “Save to file” and load saved parameters “Read from file”. 
@@ -1083,7 +1083,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
     
     # gaussian_fit gaussian fit
-        lbl3 = tk.Label(master=self.information_frame, text=" Gaussian fit:  "+str(self.detector.gaussian_fit),  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" Subpixel localisation:  "+str(self.detector.gaussian_fit),  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
     # expected_radius gaussian fit radius 
@@ -1091,7 +1091,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
     #self.box_size_fit # bounding box size for detection
-        lbl3 = tk.Label(master=self.information_frame, text=" Region for Gaussian fit "+str(self.detector.box_size_fit)+" pix",  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" Region for subpix localisation "+str(self.detector.box_size_fit)+" pix",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
         
     # cnn_model cnn model 
@@ -1672,7 +1672,7 @@ When finished the final tracks will appear in the linking window and also can be
     # gaussian_fit 
         def clickgaussian_fit():
             self.detector.gaussian_fit=self.gaussianValue.get()
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Gaussian fit (True/False) ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Subpixel localisation (True/False) ",  bg='white')
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
         self.gaussianValue=tk.BooleanVar()
         self.gaussianValue.set(True)
@@ -1681,7 +1681,7 @@ When finished the final tracks will appear in the linking window and also can be
 
     #self.box_size_fit 
 
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region for Gaussian fit ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region for subpix localisation ",  bg='white')
         lbl3.grid(row=11, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size_fit))
         self.d_box_size_fit = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
