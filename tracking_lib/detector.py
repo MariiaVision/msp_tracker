@@ -383,27 +383,9 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
             
             res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(self.detected_vesicles[pos]))**2, axis=1))
             if all(res_distance>self.min_distance):
-                print(self.detected_vesicles[pos])
+                
                 check_centres.append(self.detected_vesicles[pos])
                 checked_detection.append(self.detected_vesicles[pos])
-#        else: 
-#            
-#            intensity_current=img(self.detected_vesicles[pos][0],self.detected_vesicles[pos][1])
-#            # find which one is close
-#            positions=np.where(res_distance>self.min_distance)
-#            print(positions)
-#            
-#            #for all
-#            for i in positions:
-#                repeat_pos=check_centres[i]
-#                intensity_repeat=img[repeat_pos[0],repeat_pos[1]]
-#                
-#                if 
-#                
-            #extract intensity
-            
-            
-            #choose the one with the brightest spot
         
         self.detected_vesicles=checked_detection    
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
