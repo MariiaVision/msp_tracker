@@ -1,6 +1,6 @@
 # gui_tracking
 This repository presents two GUIs: 
-1) tracking protein vesicles  (set parameters, check the results, run on complete movie)  
+1) tracking protein vesicles  (set parameters, check the results, run on complete movie) with extra module of membrane segmentation
 2) track viewer to visualise the detected tracks, provides statistics and it also allows track modification.
 
 ## Tracker 
