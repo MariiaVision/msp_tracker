@@ -2023,7 +2023,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # parameters: TRACKER: create tracklets
         if self.l_tracker_distance_threshold.get()!='':
-            self.detector.tracker_distance_threshold=int(self.l_tracker_distance_threshold.get())
+            self.detector.tracker_distance_threshold=float(self.l_tracker_distance_threshold.get())
             
         if self.l_tracker_max_skipped_frame.get()!='':
             self.detector.tracker_max_skipped_frame=int(self.l_tracker_max_skipped_frame.get())
