@@ -740,49 +740,100 @@ class GraphicalModelTracking(object):
         print("looking through possible connections  ... ")
 
 
-        # cost matrix of connection
+        # iterate over small batches of tracklets
         
-        m_size=len(self.tracklets.keys())
-        prob_matrix=np.ones((m_size,m_size))*200
-        tracklet_list= list(map(int, list(self.tracklets.keys())))
-#        print(m_size, "\n", tracklet_list)
+        N_tracklets=10000 # number of tracklets per batch
+
         
-        for p in tqdm(range(0, len(possible_connections))):
+        Nsteps=int(len(possible_connections)/N_tracklets)+1
+        
+        for step in tqdm(range(0, Nsteps)):
+            # create matrix
+            connections_start=step*N_tracklets
+            connection_end=np.min((connections_start+N_tracklets, len(possible_connections)))
             
-            pair1=np.asarray(possible_connections)[p,:].tolist() # extract the connected tracks
-            first_tracklet=int(pair1[0])
-            second_tracklet=int(pair1[1])
-            score=pair1[2]
-            pos_first=tracklet_list.index(first_tracklet)
-            pos_second=tracklet_list.index(second_tracklet)
-            prob_matrix[pos_first, pos_second]=1-score # score as opposite value
+            possible_connections_part=possible_connections[connections_start:connection_end]
+            
+            # list of the first tracklets in the range
+            first_tracklet_set=np.asarray(possible_connections_part)[:,0].tolist()
+            first_tracklet_set=list(dict.fromkeys(first_tracklet_set))
+            second_tracklet_set=np.asarray(possible_connections_part)[:,1].tolist()
+            second_tracklet_set=list(dict.fromkeys(second_tracklet_set))
+            
+            # cost matrix of connection
+    
+            prob_matrix=np.ones((len(first_tracklet_set),len(second_tracklet_set)))*200
+
+            
+            for p in tqdm(range(0, len(possible_connections_part))):
+                
+                pair1=np.asarray(possible_connections_part)[p,:].tolist() # extract the connected tracks
+                first_tracklet=int(pair1[0])
+                second_tracklet=int(pair1[1])
+                score=pair1[2]
+                pos_first=first_tracklet_set.index(first_tracklet)
+                pos_second=second_tracklet_set.index(second_tracklet)
+                prob_matrix[pos_first, pos_second]=1-score # score as opposite value
             
 
-        # Hungerian to assign the  connections
+            # Hungerian to assign the  connections
+            
+            assignment=self.assignDetectionToTracks(prob_matrix) 
         
-        assignment=self.assignDetectionToTracks(prob_matrix) 
+            # check aarignment
     
-        # check aarignment
-        connected_tracklets = []
-        
-        for i in range(len(assignment)):
-            if (assignment[i] != -1):
-                # check with the cost distance threshold and remove if cost is high
-                # i - first tracklet position
-                #assignment[i] - second tracklet position
-                
-                if (prob_matrix[i][assignment[i]] > 1):
-                    assignment[i] = -1
+            
+            for i in range(len(assignment)):
+                if (assignment[i] != -1):
+                    # check with the cost distance threshold and remove if cost is high
+                    # i - first tracklet position
+                    #assignment[i] - second tracklet position
                     
-                else: # add the detection to the track
-                    connected_tracklets.append([tracklet_list[i], tracklet_list[assignment[i]]]) #, 1-prob_matrix[i][assignment[i]]])
+                    if (prob_matrix[i][assignment[i]] > 1):
+                        assignment[i] = -1
+                        
+                    else: # add the detection to the track
+                        # check that the connection is unique
+                        if connected_tracklets:
+                            check_start_var=first_tracklet_set[i] not in np.asarray(connected_tracklets)[:,0]
+                            check_end_var=second_tracklet_set[assignment[i]] not in np.asarray(connected_tracklets)[:,1]
+                        else:
+                            check_start_var=True
+                            check_end_var=True
+                        if check_start_var and check_end_var:
+                            connected_tracklets.append([first_tracklet_set[i], second_tracklet_set[assignment[i]], 1-prob_matrix[i][assignment[i]]])
+                        else: #compare scores if their are the same tracklets
+                            current_score=1-prob_matrix[i][assignment[i]]
+                            if check_start_var==False: # the first tracklet connection is the same
+                                
+                                first_pos_list=np.asarray(connected_tracklets)[:,0].tolist()
+                                pos_first=first_pos_list.index(first_tracklet_set[i])
+                                
+                                previous_score=connected_tracklets[pos_first][2]
+                                
+                                if current_score>previous_score:
+                                    del connected_tracklets[pos_first]
+                                    connected_tracklets.append([first_tracklet_set[i], second_tracklet_set[assignment[i]], 1-prob_matrix[i][assignment[i]]])
+                                
+                            if  check_end_var==False:# the second tracklet connection is the same
+                                
+                                second_pos_list=np.asarray(connected_tracklets)[:,1].tolist()
+                                pos_second=second_pos_list.index(second_tracklet_set[assignment[i]])
+                                
+                                previous_score=connected_tracklets[pos_second][2]
+                                
+                                if current_score>previous_score:
+                                    del connected_tracklets[pos_second]
+                                    connected_tracklets.append([first_tracklet_set[i], second_tracklet_set[assignment[i]], 1-prob_matrix[i][assignment[i]]])
+                                
 
         connected_tracklets.sort()
+        
                        
-
+        connected_tracklets=np.asarray(connected_tracklets)[:,0:-1].tolist()
 ################################################################################        
         # save not connected tracklets
-        print("saving not connected tracklets ... ")
+        
         for t3 in tqdm(self.tracklets, "saving not connected tracklets"):
             trackID=self.tracklets.get(t3)['trackID']
             if len(connected_tracklets)>0:
