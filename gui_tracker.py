@@ -18,7 +18,6 @@ import scipy as sp
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
-import csv
 
 # for plotting
 import matplotlib
