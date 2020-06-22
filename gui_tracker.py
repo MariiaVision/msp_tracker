@@ -39,7 +39,7 @@ from msld import MultiscaleLineDetection
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSBNtracker")
+        parent.title("MSP-tracker")
         parent.configure(background='white')
         
         #set the window size        
@@ -609,11 +609,11 @@ When finished the final tracks will appear in the linking window and also can be
             self.show_parameters()
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Where to save results ", command=define_result_path, width=int(self.button_length*1.5),bg="#80818a")
+        lbl3 = tk.Button(master=self.action_frame, text=" set path for results ", command=define_result_path, width=int(self.button_length*2),bg="#80818a")
         lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" Update the info ", command=update_info, width=int(self.button_length*1.5), bg="#80818a")
+        lbl3 = tk.Button(master=self.action_frame, text=" update the info ", command=update_info, width=int(self.button_length*2), bg="#80818a")
         lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
           # empty space
         lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/20))
@@ -1013,6 +1013,17 @@ When finished the final tracks will appear in the linking window and also can be
      
     # parameters 
     def show_parameters(self):
+        
+        
+        #### update frames
+        
+        
+        lb_start = tk.Label(master=self.action_frame, text=" end frame ",  bg='white')
+        lb_start.grid(row=0, column=2) 
+        v=tk.StringVar(self.action_frame, value=str(self.movie.shape[0]))
+        self.r_end_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
+        self.r_end_frame.grid(row=0, column=3, pady=self.pad_val, padx=self.pad_val)  
+        
         #### show parameters : parametersFrame_linking
         
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white', font=("Helvetica", 8))
