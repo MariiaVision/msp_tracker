@@ -1,10 +1,10 @@
 # MSP-tracker
 This repository presents two modules with graphical interface: 
 1) particle tracker  (set parameters, check the results, run on complete movie) with extra module of membrane segmentation
-2) track viewer to visualise the tracks, provide statistics, also it allows to modify/delete tracks if necessary.
+2) track viewer to visualise the tracks, provide statistics, also it allows to modify/delete/add new tracks if necessary.
 
 
-The tracking approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
+The basis of the tracking approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
 
 
 ### Software installation
