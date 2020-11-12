@@ -2083,7 +2083,10 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path1_intensity_limit.get()!='':
             self.detector.tracklinking_path1_intensity_limit=float(self.l_tracklinking_path1_intensity_limit.get())
-
+            
+        if self.l_tracklinking_path1_track_duration_limit.get()!='':
+            self.detector.tracklinking_path1_track_duration_limit=int(self.l_tracklinking_path1_track_duration_limit.get())
+            
         # parameters: TRACKER: 2nd pass of tracklinking    
         if self.comboTopology_2.get()!='':
             self.detector.tracklinking_path2_topology=str(self.comboTopology_2.get())
@@ -2105,6 +2108,9 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path2_intensity_limit.get()!='':
             self.detector.tracklinking_path2_intensity_limit=float(self.l_tracklinking_path2_intensity_limit.get())
+            
+        if self.l_tracklinking_path2_track_duration_limit.get()!='':
+            self.detector.tracklinking_path2_track_duration_limit=int(self.l_tracklinking_path2_track_duration_limit.get())
 
 
         # parameters: TRACKER: 3d pass of tracklinking    
@@ -2127,7 +2133,11 @@ When finished the final tracks will appear in the linking window and also can be
             self.detector.tracklinking_path3_speed_limit=float(self.l_tracklinking_path3_speed_limit.get())
             
         if self.l_tracklinking_path3_intensity_limit.get()!='':
-            self.detector.tracklinking_path3_intensity_limit=float(self.l_tracklinking_path3_intensity_limit.get())            
+            self.detector.tracklinking_path3_intensity_limit=float(self.l_tracklinking_path3_intensity_limit.get()) 
+            
+        if self.l_tracklinking_path3_track_duration_limit.get()!='':
+            self.detector.tracklinking_path3_track_duration_limit=int(self.l_tracklinking_path3_track_duration_limit.get())    
+            
         # start and end frame
             
         if self.start_frame.get()!='':
