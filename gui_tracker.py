@@ -1950,11 +1950,20 @@ When finished the final tracks will appear in the linking window and also can be
             # read files 
             self.movie=skimage.io.imread(self.movie_protein_path)
             self.movie_length=self.movie.shape[0]  
-            lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
-            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            try:
+                self.lb_movie_d.destroy()
+            except:
+                pass
+            
+            try:
+                self.lb_movie_l.destroy()
+            except:
+                pass
+            self.lb_movie_d = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            self.lb_movie_d.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
               
-            lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
-            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            self.lb_movie_l = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            self.lb_movie_l.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
             
             #set the same "zoom"
             
@@ -1995,12 +2004,23 @@ When finished the final tracks will appear in the linking window and also can be
         
             # read files 
             self.movie=skimage.io.imread(self.movie_protein_path)
-            self.movie_length=self.movie.shape[0]  
-            lbl1 = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
-            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            self.movie_length=self.movie.shape[0] 
+            
+            try:
+                self.lb_movie_d.destroy()
+            except:
+                pass
+            
+            try:
+                self.lb_movie_l.destroy()
+            except:
+                pass
+            
+            self.lb_movie_d = tk.Label(master=self.viewFrame_detection, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            self.lb_movie_d.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
               
-            lbl1 = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
-            lbl1.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            self.lb_movie_l = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
+            self.lb_movie_l.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
             
             #set the same "zoom"
             self.axd.set_xlim(0,self.movie.shape[2])
@@ -2063,7 +2083,10 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path1_intensity_limit.get()!='':
             self.detector.tracklinking_path1_intensity_limit=float(self.l_tracklinking_path1_intensity_limit.get())
-
+            
+        if self.l_tracklinking_path1_track_duration_limit.get()!='':
+            self.detector.tracklinking_path1_track_duration_limit=int(self.l_tracklinking_path1_track_duration_limit.get())
+            
         # parameters: TRACKER: 2nd pass of tracklinking    
         if self.comboTopology_2.get()!='':
             self.detector.tracklinking_path2_topology=str(self.comboTopology_2.get())
@@ -2085,6 +2108,9 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path2_intensity_limit.get()!='':
             self.detector.tracklinking_path2_intensity_limit=float(self.l_tracklinking_path2_intensity_limit.get())
+            
+        if self.l_tracklinking_path2_track_duration_limit.get()!='':
+            self.detector.tracklinking_path2_track_duration_limit=int(self.l_tracklinking_path2_track_duration_limit.get())
 
 
         # parameters: TRACKER: 3d pass of tracklinking    
@@ -2107,7 +2133,11 @@ When finished the final tracks will appear in the linking window and also can be
             self.detector.tracklinking_path3_speed_limit=float(self.l_tracklinking_path3_speed_limit.get())
             
         if self.l_tracklinking_path3_intensity_limit.get()!='':
-            self.detector.tracklinking_path3_intensity_limit=float(self.l_tracklinking_path3_intensity_limit.get())            
+            self.detector.tracklinking_path3_intensity_limit=float(self.l_tracklinking_path3_intensity_limit.get()) 
+            
+        if self.l_tracklinking_path3_track_duration_limit.get()!='':
+            self.detector.tracklinking_path3_track_duration_limit=int(self.l_tracklinking_path3_track_duration_limit.get())    
+            
         # start and end frame
             
         if self.start_frame.get()!='':

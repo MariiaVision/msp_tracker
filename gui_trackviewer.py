@@ -1053,8 +1053,13 @@ class MainVisual(tk.Frame):
         # read files 
         self.movie=skimage.io.imread(self.movie_file)
         self.movie_length=self.movie.shape[0]  
-        lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        try:
+            self.lbl1.destroy()
+        except:
+            pass
+            
+        self.lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+        self.lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         
         # create a none-membrane movie
         self.membrane_movie=np.ones(self.movie.shape)
