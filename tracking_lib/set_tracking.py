@@ -43,6 +43,7 @@ class TrackingSetUp(object):
         #
         self.detection_parameter_path="detection_temp.txt"
         self.linking_parameter_path="linking_temp.txt"
+        self.detection_file_name="d_temp.txt"
         
         self.detection_choice=0
         
@@ -69,6 +70,7 @@ class TrackingSetUp(object):
         self.box_size_fit=8
         self.expected_radius=5
         self.cnn_model_path="dl_weight_update/cnn-weight-spiral-disk-v1.hdf5"
+        
         
     # # # # # LINKING parameters # # # # #
     
@@ -316,13 +318,13 @@ class TrackingSetUp(object):
              
             detection_dict={"detections": data}
             #save detection results to a temp file    
-            with open("d_temp.txt", 'w') as f:
+            with open(self.detection_file_name, 'w') as f:
                 json.dump(detection_dict, f, ensure_ascii=False)
                 
         else: # use previous detection
             
             # read detection from temp file
-            with open("d_temp.txt") as f:
+            with open(self.detection_file_name) as f:
                 data = json.load(f)          
                 
             detections=data["detections"]    
