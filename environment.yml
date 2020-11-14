@@ -11,6 +11,7 @@ dependencies:
     - pgmpy==0.1.9
     - tqdm
     - torch==1.0.1
+    - scikit-learn==0.20.3
   - numpy
   - scipy
   - matplotlib
