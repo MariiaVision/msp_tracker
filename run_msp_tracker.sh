@@ -18,4 +18,4 @@ RESULT_PATH=$ROOT_FOLDER"test_data/2018_06_12-50min_bio_10fps_AiryscanProcessing
 
 
 
-python tracking_pipeline.py --movie_path $MOVIE_PATH --detection_parameters_path $DETECTION_PARAMETERS_PATH  --linking_parameters_path $LINKING_PARAMETERS_PATH --use_existing_detection $USE_EXIST_DETECTION --detection_path $DETECTION_PATH --result_path $RESULT_PATH
+python tracking_lib/tracking_pipeline.py --movie_path $MOVIE_PATH --detection_parameters_path $DETECTION_PARAMETERS_PATH  --linking_parameters_path $LINKING_PARAMETERS_PATH --use_existing_detection $USE_EXIST_DETECTION --detection_path $DETECTION_PATH --result_path $RESULT_PATH
