@@ -105,7 +105,7 @@ class Detectors(object):
         self.threshold_rel=0.1 # min pix value in relation to the image
         
         self.box_size=16 # bounding box size for detection
-        self.box_size_fit= 8 # bounding box size for gaussian fit
+        self.box_size_fit= 16 # bounding box size for gaussian fit
         
         #CNN based classification        
         self.detection_threshold=0.99
@@ -162,7 +162,7 @@ class Detectors(object):
         image enhancement
         '''
 
-        img_new=filters.median(img, selem=None, out=None, mask=None, shift_x=False, shift_y=False)
+        img_new=filters.median(img, selem=None, out=None)
         img_enh=exposure.equalize_adapthist(img_new, kernel_size=None, clip_limit=0.01, nbins=256)
 
         
@@ -253,9 +253,7 @@ class Detectors(object):
     
     def mssef(self, img, c, k_max, k_min, sigma_min, sigma_max):
         '''
-        Multi-scale spot enhancing filter:
-the code is based on the paper "Tracking virus particles in fluorescence microscopy images 
-using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 2015
+        Multi-scale spot enhancing filter
         '''
         
         img_bin=np.ones(img.shape) # original array
@@ -333,7 +331,7 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         self.detected_candidates=[]
         
         # iterate over segments 
-        new_img=filters.median(img, selem=None, out=None, mask=None, shift_x=False, shift_y=False)
+        new_img=filters.median(img, selem=None, out=None)
         for i in range(1, np.max(spots_labeled)+1):
             mask_label=np.zeros(spots_labeled.shape)
             mask_label[spots_labeled==i]=1
@@ -356,21 +354,30 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
             for lm in updated_centers: # loop over all the found vesicles
                 # ROI for the vesicle
                 img=self.img_set[frameN,:,:]
-                img=filters.median(img, selem=None, out=None, mask=None, shift_x=False, shift_y=False)
-                img_roi= np.copy(img[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
-                
-                # radial fit
-                
-                x,y=self.new_fit( img_roi, self.expected_radius)
-#                x,y=self.radialsym_centre(img_roi)
-                if math.isnan(x):
+                img_m=filters.median(img, selem=None, out=None)
+                try: 
+                    img_roi_raw= np.copy(img[lm[0]-int(self.box_size_fit/2+1): lm[0]+int(self.box_size_fit/2+1), lm[1]-int(self.box_size_fit/2+1):lm[1]+int(self.box_size_fit/2+1)])  
+                    img_roi_processed= np.copy(img_m[lm[0]-int(self.box_size_fit/2+1): lm[0]+int(self.box_size_fit/2+1), lm[1]-int(self.box_size_fit/2+1):lm[1]+int(self.box_size_fit/2+1)])  
+                                    
+                    # sub-pixel localisation
+                    coordinates=[[int(self.box_size_fit/2),int(self.box_size_fit/2)]]               
+                    new_coor=tp.refine_com(raw_image=img_roi_raw, image=img_roi_processed, radius=int(self.expected_radius), coords=np.asarray(coordinates), shift_thresh=1)
+                    x=new_coor['x'][0]
+                    y=new_coor['y'][0]
+                    
+                    if math.isnan(x):
+                        x=lm[0]
+                        y=lm[1]
+                    else:
+                        x=lm[0]+x-int(self.box_size_fit/2)
+                        y=lm[1]+y-int(self.box_size_fit/2)
+                    point_new=[x, y]            
+                    self.detected_vesicles.append(point_new) 
+                except:
                     x=lm[0]
                     y=lm[1]
-                else:
-                    x=lm[0]+x-int(self.box_size_fit/2)
-                    y=lm[1]+y-int(self.box_size_fit/2)
-                point_new=[x, y]            
-                self.detected_vesicles.append(point_new) 
+                    point_new=[x, y]            
+                    self.detected_vesicles.append(point_new) 
         else:
             self.detected_vesicles=updated_centers
 #        print("detections: \n", self.detected_vesicles)
@@ -391,122 +398,3 @@ using two-step multi-frame association," Jaiswal,Godinez, Eils, Lehmann, Rohr 20
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 
         return self.detected_vesicles
-
-    def radialsym_centre(self, img):
-        '''
-         Calculates the center of a 2D intensity distribution.
-         
-     Method: Considers lines passing through each half-pixel point with slope
-     parallel to the gradient of the intensity at that point.  Considers the
-     distance of closest approach between these lines and the coordinate
-     origin, and determines (analytically) the origin that minimizes the
-     weighted sum of these distances-squared.
-     
-     code is based on the paper: Raghuveer Parthasarathy 
-    "Rapid, accurate particle tracking by calculation of radial symmetry centers"   
-    
-    input: 
-        img: array
-        image itself. Image dimensions should be even(not odd) number for both axis
-        
-    output:
-        x: float
-        x coordinate of the radial symmetry
-        y: float
-        y coordinate of the radial symmetry
-        '''
-        
-        def lsradialcenterfit(m, b, w):
-            '''
-            least squares solution to determine the radial symmetry center
-            inputs m, b, w are defined on a grid
-            w are the weights for each point
-            '''
-            wm2p1=np.divide(w,(np.multiply(m,m)+1))
-            sw=np.sum(wm2p1)
-            smmw = np.sum(np.multiply(np.multiply(m,m),wm2p1))
-            smw  = np.sum(np.multiply(m,wm2p1))
-            smbw = np.sum(np.multiply(np.multiply(m,b),wm2p1))
-            sbw  = np.sum(np.multiply(b,wm2p1))
-            det = smw*smw - smmw*sw
-            xc = (smbw*sw - smw*sbw)/det # relative to image center
-            yc = (smbw*smw - smmw*sbw)/det # relative to image center
-                
-            return xc, yc
-    
-        # GRID
-        #  number of grid points
-        Ny, Nx = img.shape
-        
-        # for x
-        val=int((Nx-1)/2.0-0.5)
-        xm_onerow = np.asarray(range(-val,val+1))
-        xm = np.ones((Nx-1,Nx-1))*xm_onerow
-        
-        # for y
-        val=int((Ny-1)/2.0-0.5)
-        ym_onerow = np.asarray(range(-val,val+1))
-        ym = (np.ones((Ny-1,Ny-1))*ym_onerow).transpose()
-    
-        # derivate along 45-degree shidted coordinates
-    
-        dIdu = np.subtract(img[0:Nx-1, 1:Ny].astype(float),img[1:Nx, 0:Ny-1].astype(float))
-        dIdv = np.subtract(img[0:Nx-1, 0:Ny-1].astype(float),img[1:Nx, 1:Ny].astype(float))
-        
-        
-        #smoothing
-        filter_core=np.ones((3,3))/9
-        fdu=sp.signal.convolve2d(dIdu,filter_core,  mode='same', boundary='fill', fillvalue=0)
-        fdv=sp.signal.convolve2d(dIdv,filter_core,  mode='same', boundary='fill', fillvalue=0)
-    
-        dImag2=np.multiply(fdu,fdu)+np.multiply(fdv,fdv)
-    
-        #slope of the gradient
-        m = np.divide(-(fdv + fdu), (fdu-fdv))
-        
-        # if some of values in m is NaN 
-        m[np.isnan(m)]=np.divide(dIdv+dIdu, dIdu-dIdv)[np.isnan(m)]
-        
-        # if some of values in m is still NaN
-        m[np.isnan(m)]=0 
-        
-        
-        # if some of values in m  are inifinite
-        
-        m[np.isinf(m)]=10*np.max(m)
-        
-        #shortband b
-        b = ym - m*xm
-        
-        #weighting
-        sdI2=np.sum(dImag2)
-        
-        xcentroid = np.sum(np.multiply(dImag2, xm))/sdI2
-        ycentroid = np.sum(np.multiply(dImag2, ym))/sdI2
-        w=np.divide(dImag2, np.sqrt(np.multiply((xm-xcentroid),(xm-xcentroid))+np.multiply((ym-ycentroid),(ym-ycentroid))))
-        
-        # least square minimisation
-        xc,yc=lsradialcenterfit(m, b, w)
-        
-        # output replated to upper left coordinate
-        x=xc + (Nx+1)/2
-        y=yc + (Ny+1)/2
-        
-        return x, y
-    
-    def new_fit(self, img, rad):
-        
-        
-        features = tp.locate(img, rad, topn=1, engine='python')
-        if features.empty:
-            pos=(float(img.shape[0]/2), float(img.shape[1]/2))
-        else:
-            pos=features[['x', 'y']].iloc[0].values
-        
-#        print("!!!!!!!!",pos)
-#        plt.figure()
-#        plt.imshow(img)
-#        plt.plot(pos[0], pos[1], 'r*')
-#        plt.show()
-        
-        return pos[0], pos[1]
