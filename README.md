@@ -65,7 +65,7 @@ To train the model with a new data, use bash script 'run_train_CNN.sh'
 3. run the bash script  'bash run_train_CNN.sh'
 4. Copy the trained model 'cnn-model-best.hdf5' to the folder with the existing weights, rename it and select it when setting parameters in MSP-tracker
 
-##### preparing data for training
+##### Preparing data for training
 The training data contains an image sequences paried up with two txt files. The txt files contain coordinates of the postivie samples(vesicles) and negative samples(non-vesicles) in separate files. One raw represents a single sample with the following order (position, x, y, frame). 
 
 To create the txt file, you can use ImageJ multi-point tool and with ctrl+M copy the coordinates into a new txt file. It is important to include large variety in the vesicle class. Non-vesicle class would include background, bright blobs, noisy areas without vesicles.
