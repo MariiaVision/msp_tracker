@@ -405,6 +405,7 @@ class TrackingSetUp(object):
             with open('temp.txt') as json_file:  # 'tracking_original.txt'
                 data = json.load(json_file)
                 
+                
             print("\n pass 2 : \n")
             self.tracks=[]
             
@@ -431,50 +432,7 @@ class TrackingSetUp(object):
             
             # set tracklets
             tracklink.rearrange_track_to_frame_start_end(data, self.movie)
-                
-            #connect tracklets       
-            tracklink.connect_tracklet_time()
-            
-            #final tracks
-            self.tracks=tracklink.tracks
 
-            #save tracks in temp file
-            tracklink.save_tracks("temp.txt")
-        
-
-        # # # # # # # # tracklinking path 3  # # # # # # # # # 
-        if self.tracklinking_Npass>2:
-            print("\n pass 3 : \n")
-            # read tracks
-            with open('temp.txt') as json_file:  # 'tracking_original.txt'
-                data = json.load(json_file)
-            self.tracks=[]
-            
-            # set parameters
-            tracklink=GraphicalModelTracking()
-            
-            tracklink.topology=self.tracklinking_path3_topology
-            tracklink.tracklets_pgm()
-            
-            tracklink.frame_gap_tracklinking_1=self.tracklinking_path3_frame_gap_1        
-            tracklink.direction_limit_tracklinking=self.tracklinking_path3_direction_limit
-            tracklink.distance_limit_tracklinking=self.tracklinking_path3_distance_limit
-            tracklink.connectivity_threshold=self.tracklinking_path3_connectivity_threshold
-            tracklink.speed_limit_tracklinking=self.tracklinking_path3_speed_limit
-            tracklink.intensity_limit_tracklinking=self.tracklinking_path3_intensity_limit
-    
-            tracklink.frame_search_range=tracklink.frame_gap_tracklinking_1+2 
-            tracklink.distance_search_range=tracklink.distance_limit_tracklinking+1
-            
-            # filter final tracks
-            tracklink.track_displacement_limit=self.tracklinking_path3_track_displacement_limit
-            tracklink.track_duration_limit=self.tracklinking_path3_track_duration_limit 
-            tracklink.movie=self.movie
-
-            
-            # set tracklets
-            tracklink.rearrange_track_to_frame_start_end(data, self.movie)
-                
             #connect tracklets       
             tracklink.connect_tracklet_time()
             
