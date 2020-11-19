@@ -188,7 +188,6 @@ At this step short tracklets are forms based on the distance. You need to specif
    
     c) Set one pass after another. 
 
-- Bayesian network topology - complete is the best option yet, which include all the nodes in the network
 - connectivity threshold - final threshold which decide on tracklets connection (from 0 to 1)
 - temporal gap - maximum number of frames which can be between two connections (when vesicle is not detected for a number of frames)
 - distance limit - maximum expected distance between two detections
@@ -1138,12 +1137,6 @@ When finished the final tracks will appear in the linking window and also can be
 
         lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: First pass ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Topology
-    
-        lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path1_topology,  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-    
     
     # tracklinking_path1_connectivity_threshold 
         lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path1_connectivity_threshold),  bg='white', font=("Helvetica", 8))
@@ -1183,12 +1176,7 @@ When finished the final tracks will appear in the linking window and also can be
             lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: Second pass ",  bg='white', font=("Helvetica", 8))
             lbl3.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val) 
             
-        # Topology
-        
-            lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path2_topology,  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=18, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
-        
+
         # tracklinking_path1_connectivity_threshold 
             lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path2_connectivity_threshold),  bg='white', font=("Helvetica", 8))
             lbl3.grid(row=19, column=1, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
@@ -1228,12 +1216,6 @@ When finished the final tracks will appear in the linking window and also can be
         if self.Npass>2:
             lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: Third pass ",  bg='white', font=("Helvetica", 8))
             lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val) 
-            
-        # Topology
-        
-            lbl3 = tk.Label(master=self.information_frame, text=" Bayesian network topology: "+self.detector.tracklinking_path3_topology,  bg='white', font=("Helvetica", 8))
-            lbl3.grid(row=7, column=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
-        
         
         # tracklinking_path1_connectivity_threshold 
             lbl3 = tk.Label(master=self.information_frame, text=" Connectivity threshold "+str(self.detector.tracklinking_path3_connectivity_threshold),  bg='white', font=("Helvetica", 8))
@@ -1305,20 +1287,6 @@ When finished the final tracks will appear in the linking window and also can be
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: first pass of tracklinking ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Topology
-    
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" Bayesian network topology ",  bg='white')
-        lbl3.grid(row=7, column=0)     
-        self.comboTopology_1 = ttk.Combobox(master=self.parametersFrame_linking_step1, 
-                            values=[
-                                    "complete", 
-                                    "no_intensity",
-                                    "no_orientation",
-                                    "no_motion",
-                                    "no_gap"]) # comboTopology.get()
-        self.comboTopology_1.grid(row=7, column=1) 
-        self.comboTopology_1.current(0)
     
     
     # tracklinking_path1_connectivity_threshold 
@@ -1414,21 +1382,6 @@ When finished the final tracks will appear in the linking window and also can be
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" TRACKER: second pass of tracklinking ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Topology
-    
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Bayesian network topology ",  bg='white')
-        lbl3.grid(row=7, column=0)     
-        self.comboTopology_2 = ttk.Combobox(master=self.parametersFrame_linking_step2, 
-                            values=[
-                                    "complete", 
-                                    "no_intensity",
-                                    "no_orientation",
-                                    "no_motion",
-                                    "no_gap"]) # comboTopology.get()
-        self.comboTopology_2.grid(row=7, column=1) 
-        self.comboTopology_2.current(0)
-    
     
     # tracklinking_path1_connectivity_threshold 
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" Connectivity threshold [0,1]  ",  bg='white')
@@ -1511,21 +1464,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" TRACKER: third pass of tracklinking ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-    # Topology
-    
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Bayesian network topology ",  bg='white')
-        lbl3.grid(row=7, column=0)     
-        self.comboTopology_3 = ttk.Combobox(master=self.parametersFrame_linking_step3, 
-                            values=[
-                                    "complete", 
-                                    "no_intensity",
-                                    "no_orientation",
-                                    "no_motion",
-                                    "no_gap"]) # comboTopology.get()
-        self.comboTopology_3.grid(row=7, column=1) 
-        self.comboTopology_3.current(0)
-    
+
     
     # tracklinking_path1_connectivity_threshold 
         lbl3 = tk.Label(master=self.parametersFrame_linking_step3, text=" Connectivity threshold [0,1]  ",  bg='white')
@@ -2062,10 +2001,6 @@ When finished the final tracks will appear in the linking window and also can be
             self.detector.tracker_max_track_length=int(self.l_tracker_max_track_length.get())
             
             
-        # parameters: TRACKER: 1st pass of tracklinking    
-        if self.comboTopology_1.get()!='':
-            self.detector.tracklinking_path1_topology=str(self.comboTopology_1.get())
-            
         if self.l_tracklinking_path1_connectivity_threshold.get()!='':
             self.detector.tracklinking_path1_connectivity_threshold=float(self.l_tracklinking_path1_connectivity_threshold.get())
             
@@ -2086,10 +2021,7 @@ When finished the final tracks will appear in the linking window and also can be
             
         if self.l_tracklinking_path1_track_duration_limit.get()!='':
             self.detector.tracklinking_path1_track_duration_limit=int(self.l_tracklinking_path1_track_duration_limit.get())
-            
-        # parameters: TRACKER: 2nd pass of tracklinking    
-        if self.comboTopology_2.get()!='':
-            self.detector.tracklinking_path2_topology=str(self.comboTopology_2.get())
+
             
         if self.l_tracklinking_path2_connectivity_threshold.get()!='':
             self.detector.tracklinking_path2_connectivity_threshold=float(self.l_tracklinking_path2_connectivity_threshold.get())
@@ -2112,10 +2044,6 @@ When finished the final tracks will appear in the linking window and also can be
         if self.l_tracklinking_path2_track_duration_limit.get()!='':
             self.detector.tracklinking_path2_track_duration_limit=int(self.l_tracklinking_path2_track_duration_limit.get())
 
-
-        # parameters: TRACKER: 3d pass of tracklinking    
-        if self.comboTopology_3.get()!='':
-            self.detector.tracklinking_path3_topology=str(self.comboTopology_3.get())
             
         if self.l_tracklinking_path3_connectivity_threshold.get()!='':
             self.detector.tracklinking_path3_connectivity_threshold=float(self.l_tracklinking_path3_connectivity_threshold.get())
@@ -2162,7 +2090,6 @@ When finished the final tracks will appear in the linking window and also can be
         print(" tracker_max_track_length ", self.detector.tracker_max_track_length)
         
         print(" \n number of pass, ", self.detector.tracklinking_Npass)
-        print(" topology", self.detector.tracklinking_path1_topology)
         print(" tracklinking_path1_connectivity_threshold", self.detector.tracklinking_path1_connectivity_threshold)
         print(" tracklinking_path1_frame_gap", self.detector.tracklinking_path1_frame_gap_1)
         print(" tracklinking_path1_distance_limit", self.detector.tracklinking_path1_distance_limit)
@@ -2171,7 +2098,6 @@ When finished the final tracks will appear in the linking window and also can be
         print(" tracklinking_path1_intensity_limit", self.detector.tracklinking_path1_intensity_limit)
         
         if self.detector.tracklinking_Npass>1:
-            print("\n topology 2", self.detector.tracklinking_path2_topology)
             print(" tracklinking_path2_connectivity_threshold", self.detector.tracklinking_path2_connectivity_threshold)
             print(" tracklinking_path2_frame_gap_1", self.detector.tracklinking_path2_frame_gap_1)
             print(" tracklinking_path2_distance_limit", self.detector.tracklinking_path2_distance_limit)
@@ -2180,7 +2106,6 @@ When finished the final tracks will appear in the linking window and also can be
             print(" tracklinking_path2_intensity_limit", self.detector.tracklinking_path2_intensity_limit)
 
         if self.detector.tracklinking_Npass>2:
-            print("\n topology 3", self.detector.tracklinking_path1_topology)
             print(" tracklinking_path3_connectivity_threshold", self.detector.tracklinking_path3_connectivity_threshold)
             print(" tracklinking_path3_frame_gap_1", self.detector.tracklinking_path3_frame_gap_1)
             print(" tracklinking_path3_distance_limit", self.detector.tracklinking_path3_distance_limit)
