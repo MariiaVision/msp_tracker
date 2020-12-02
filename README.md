@@ -70,6 +70,8 @@ The training data contains an image sequences paried up with two txt files. The 
 
 To create the txt file, you can use ImageJ multi-point tool and with ctrl+M copy the coordinates into a new txt file. It is important to include large variety in the vesicle class. Non-vesicle class would include background, bright blobs, noisy areas without vesicles.
 
+
+
 #### Trackviewer
 1. If necessary update the environment: `conda env update --file environment.yml`
 2. In a terminal, activate the environment: `source activate gui_tracker`
