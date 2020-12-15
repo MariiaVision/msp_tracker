@@ -1098,22 +1098,59 @@ class MainVisual(tk.Frame):
         global folder_path_output  
         filename = tk.filedialog.askopenfilename()
         self.track_file=filename
-        #read  the tracks data 
-        with open(self.track_file) as json_file:  
+        
+        
+        if self.track_file.endswith(".csv"):# read csv 
+            # read file
 
-            self.track_data_original = json.load(json_file)
+            json_tracks={"tracks":[]}
+            trackID_new=-1
+            track={}
+            with open(self.track_file, newline='') as f:
+                reader = csv.reader(f)
+                try:
+                    for row in reader:
+                        if row[0]!="TrackID":
+                            trackID=int(row[0])
+                            point=[float(row[1]), float(row[2])]
+                            frame=int(row[3])
+                            
+                            if trackID!=trackID_new: # new track
+                                #save the previous track
+                                if bool(track)==True :
+                                    json_tracks["tracks"].append(track)
+                                
+                                trackID_new=trackID
+                                track={"trackID":trackID, "trace":[point], "frames": [frame]}
+                            else: # update the existing track
+                                track["trace"].append(point)
+                                track["frames"].append(frame)
+                except:
+                    pass
+                self.track_data_original=json_tracks
+
             
-        # to save from dictionary to dict-list format:
-        if 'tracks' not in self.track_data_original.keys():
-            
-            
-            self.track_data={'tracks':[]}
-            
-            for pos in self.track_data_original:
-                p=self.track_data_original[pos]
-                self.track_data['tracks'].append(p)
+        else: # read json in txt (old format)
+                   
+            #read  the tracks data 
+            with open(self.track_file) as json_file:  
+    
+                self.track_data_original = json.load(json_file)
                 
-            self.track_data_original=self.track_data
+                
+            # to save from dictionary to dict-list format:
+            if 'tracks' not in self.track_data_original.keys():
+                
+                
+                self.track_data={'tracks':[]}
+                
+                for pos in self.track_data_original:
+                    p=self.track_data_original[pos]
+                    self.track_data['tracks'].append(p)
+                    
+                self.track_data_original=self.track_data
+                
+            
         #continue as it was before
         self.track_data=copy.deepcopy(self.track_data_original)
         self.track_data_filtered=self.track_data 
