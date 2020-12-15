@@ -213,7 +213,8 @@ if __name__ == '__main__':
     print("X_test", X_test.shape)
     
     modelCNN.create_shallowCNN((X_test.shape[1],X_test.shape[2],1), input_classes=2)
-    modelCNN.model.compile(loss='binary_crossentropy', optimizer='rmsprop', metrics=['acc', 'mse'])
+    opt = keras.optimizers.RMSprop(learning_rate=0.001)
+    modelCNN.model.compile(loss='binary_crossentropy', optimizer=opt, metrics=['acc', 'mse'])
     
     #summary
     modelCNN.model.summary()
