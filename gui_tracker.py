@@ -30,7 +30,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolb
 from tqdm import tqdm
 import skimage
 from skimage import io
-import json 
+import json
+import csv
 
 from set_tracking import  TrackingSetUp
 from msld import MultiscaleLineDetection
@@ -296,8 +297,8 @@ When finished the final tracks will appear in the linking window and also can be
         
 
         # main paths          
-        self.movie_protein_path="not defined"
-        self.result_path="not defined"
+        self.movie_protein_path="not_defined"
+        self.result_path="not_defined"
         
         # TABs 
         # set the style 
@@ -2106,9 +2107,43 @@ When finished the final tracks will appear in the linking window and also can be
         self.final_tracks=self.detector.linking()
         
         
-        # save tracks        
-        with open(self.result_path, 'w') as f:
+        
+        # save tracks to json file 
+        if not(self.result_path.endswith(".json")):
+            result_path_txt =self.result_path+ ".json"
+        with open(result_path_txt, 'w') as f:
             json.dump(self.final_tracks, f, ensure_ascii=False)
+            
+            
+        # save tracks to csv file 
+        # prepare csv file
+        ############## json ->csv ######################
+            
+        tracks_data=[]
+        
+        tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
+            
+        for trackID_pos in self.final_tracks:
+            trajectory=self.final_tracks[trackID_pos]
+            new_frames=trajectory["frames"]
+            new_trace=trajectory["trace"]
+            trackID=trajectory["trackID"]
+            for pos in range(0, len(new_frames)):
+                point=new_trace[pos]
+                frame=new_frames[pos]
+                tracks_data.append([trackID, point[0], point[1],  frame])
+
+
+                
+        # save to csv 
+        if not(self.result_path.endswith(".csv")):
+            result_path_csv =self.result_path+ ".csv"
+        with open(result_path_csv, 'w') as csvFile:
+            writer = csv.writer(csvFile)
+            writer.writerows(tracks_data)
+            csvFile.close()
+            
+
         
     
 if __name__ == "__main__":
