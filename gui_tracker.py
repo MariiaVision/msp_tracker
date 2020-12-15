@@ -2109,8 +2109,8 @@ When finished the final tracks will appear in the linking window and also can be
         
         
         # save tracks to json file 
-        if not(self.result_path.endswith(".json")):
-            result_path_txt =self.result_path+ ".json"
+        if not(self.result_path.endswith(".txt")):
+            result_path_txt =self.result_path+ ".txt"
         with open(result_path_txt, 'w') as f:
             json.dump(self.final_tracks, f, ensure_ascii=False)
             
