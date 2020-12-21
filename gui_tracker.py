@@ -45,7 +45,6 @@ class MainApplication(tk.Frame):
         #set the window size        
         self.window_width = int(parent.winfo_screenwidth()/2.5) # part of the monitor width
         self.window_height = int(parent.winfo_screenheight()*0.7)  # 0.7 of the monitor height
-#        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
 
 
         # menu
@@ -1978,7 +1977,7 @@ When finished the final tracks will appear in the linking window and also can be
     def read_from_file_linking(self):
         
         # choose file
-        filename = tk.filedialog.askopenfilename(title = "Open file with  linking parameters ")
+        filename = tk.filedialog.askopenfilename(title = "Open file with linking parameters ")
         
         # read from the file  
         if not filename:
@@ -2040,8 +2039,7 @@ When finished the final tracks will appear in the linking window and also can be
         if  bool(self.track_data_framed): # if the dict is not empty
 
             # plot tracks
-    #            print("self.frame_pos ", self.frame_pos)
-    #            print(self.track_data_framed['frames'][self.frame_pos])
+            
             for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
                 trace=p['trace']
                 self.axl.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
