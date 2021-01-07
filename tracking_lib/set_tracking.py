@@ -65,9 +65,9 @@ class TrackingSetUp(object):
         self.detection_threshold=0.8         
         self.substract_bg_step =100   
         
-        #option for Gaussian fit
+        #option for subpixel localisation
         self.gaussian_fit=True
-        self.box_size_fit=8
+        self.box_size_fit=16
         self.expected_radius=5
         self.cnn_model_path="dl_weight_update/cnn-weight-spiral-disk-v1.hdf5"
         
@@ -356,6 +356,10 @@ class TrackingSetUp(object):
                     }})
             
         self.tracklets=data
+        
+        # save tracklets  
+        with open("tracklets_temp.txt", 'w') as f:
+            json.dump(data, f, ensure_ascii=False)
 
         # step 2 tracklinking
         # # # # # # # # # # # # # # # # # # # # # # # # # # # 
