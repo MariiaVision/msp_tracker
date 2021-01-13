@@ -172,7 +172,7 @@ if __name__ == '__main__':
     
     print("creating ROI images to ", args.save_images_path, "folder ...")
     for pos in range(0,args.number_of_files):
-        
+        print(pos)
         movie_path=args.movie_path[pos]
         positive_coordinates_path=args.positive_coordinates_path[pos]
         negative_coordinates_path=args.negative_coordinates_path[pos]
@@ -230,7 +230,7 @@ if __name__ == '__main__':
     
     # training
     crn50 = modelCNN.model.fit(x=X_train, y=y_train, batch_size=args.roi_size, 
-            epochs=40, callbacks=callbacks_list, verbose=1, validation_data=(X_test, y_test), shuffle=True)
+            epochs=100, callbacks=callbacks_list, verbose=1, validation_data=(X_test, y_test), shuffle=True)
     
     
     #save the model
