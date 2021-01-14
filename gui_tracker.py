@@ -1514,11 +1514,15 @@ When finished the final tracks will appear in the linking window and also can be
         self.d_expected_radius = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_expected_radius.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
     
-    # cnn_model cnn model 
+    # cnn_model cnn model
+        try:
+            self.lbl_model.destroy()
+        except:
+            pass
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length*2)
         lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val)  
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        lbl3.grid(row=13, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        self.lbl_model = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
+        self.lbl_model.grid(row=13, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
     
   # # # # # #  # #
 
