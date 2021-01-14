@@ -1102,7 +1102,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=19, column=0, pady=self.pad_val, padx=self.pad_val) 
 
         
-        lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 1 ",  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" TRACKLET FORMATION ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=20, column=0,pady=self.pad_val, padx=self.pad_val) 
         
     # Maximum distance to link 
@@ -1123,7 +1123,7 @@ When finished the final tracks will appear in the linking window and also can be
         ######## second colomn ########
               
 
-        lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: First pass ",  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" FIRST PASS OF TRACKLINKING ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val) 
     
     # tracklinking_path1_connectivity_threshold 
@@ -1161,7 +1161,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val)    
         
         if self.Npass>1:
-            lbl3 = tk.Label(master=self.information_frame, text=" TRACKER: STEP 2 - tracklinking: Second pass ",  bg='white', font=("Helvetica", 8))
+            lbl3 = tk.Label(master=self.information_frame, text=" SECOND PASS OF TRACKLINKING ",  bg='white', font=("Helvetica", 8))
             lbl3.grid(row=16, column=1, pady=self.pad_val, padx=self.pad_val) 
             
 
@@ -1204,7 +1204,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         ##### step 1 #####
 
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: STEP 1 ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKLET FORMATION ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # Maximum distance to link 
@@ -1236,7 +1236,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" ",  bg='white', height=int(self.button_length/20))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
         
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" TRACKER: first pass of tracklinking ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step1, text=" FIRST PASS OF TRACKLINKING ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
     
     
@@ -1331,7 +1331,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" ",  bg='white', height=int(self.button_length/20))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)        
         
-        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" TRACKER: second pass of tracklinking ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_linking_step2, text=" SECOND PASS OF TRACKLINKING ",  bg='white')
         lbl3.grid(row=5, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
     
     # tracklinking_path1_connectivity_threshold 
