@@ -4,7 +4,7 @@ set ANACONDA_FOLDER=C:\Users\%USERNAME%\Anaconda3
 
 call %ANACONDA_FOLDER%\Scripts\activate.bat %root%
 
-call conda activate gui_tracker
+call conda activate msp
 
-call python gui_tracker.py
+call python msptracker.py
 

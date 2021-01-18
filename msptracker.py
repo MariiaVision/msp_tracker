@@ -176,11 +176,11 @@ You can test the detection on the current frame – button “Run test”, save 
                 
     a) Choose number of passes. 
     
-This is number of tracklinking passes. In most of the cases 1 pass is enough, but in case of dense vesicle population or difference in speed movement it can be beneficial to use few passes.
+This is number of tracklinking passes. In most of the cases 1 pass is enough, but in case of dense vesicle population or difference in speed movement it can be beneficial to use two passes.
 
-    b) Set STEP 1. 
+    b) Tracklet formation. 
     
-At this step short tracklets are forms based on the distance. You need to specify three parameters: 
+At this step short tracks (tracklets) are forms based on the distance. You need to specify three parameters: 
 
 - maximum distance to link - number of pixels between to detection which still can be linked
 - maximum skipped frames - how many frames can be skipped in the same tracklet between two detections
@@ -196,12 +196,12 @@ At this step short tracklets are forms based on the distance. You need to specif
 - intensity similarity limit - acceptable difference in intensity (from 0 to 1)
 - threshold of track length - the final tracks shorter than the number will be removed. Make it 0 for all the passes accept the last one.
 
-When you have multiple passes the idea is first to connect slowly moving vesicles:
+When you have two passes the idea is first to connect slowly moving vesicles:
     - smaller values for speed, intensity and orientation - it is not important
     - small values for temporal gaps - the connections should be close to each other in time
     - smaller value for the distance limit - this value depends on the speed you want to take into account
     
-And with second-third pass faster moving vesicles will be linked:
+And with second pass faster moving vesicles will be linked:
     - can increase values for speed, intensity and orientation, but not necessary 
     - increase the temporal gap 
     - increase the distance limit
@@ -373,7 +373,7 @@ When finished the final tracks will appear in the linking window and also can be
 
      # # # # # # # # # # # # # # # # # # # # # #    
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame_detection,text="   Select vesicle movie   ", command=self.select_vesicle_movie_detection, width=20, bg="#80818a")
+        self.button_mv = tk.Button(self.viewFrame_detection,text="   Select image sequence   ", command=self.select_vesicle_movie_detection, width=20, bg="#80818a")
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
 
         var_plot_detection = tk.IntVar()
@@ -506,7 +506,7 @@ When finished the final tracks will appear in the linking window and also can be
         self.parametersFrame_linking_step2.configure(background='white')
         
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame_linking,text="   Select vesicle movie   ", command=self.select_vesicle_movie_linking, width=20, bg="#80818a")
+        self.button_mv = tk.Button(self.viewFrame_linking,text="   Select image sequence   ", command=self.select_vesicle_movie_linking, width=20, bg="#80818a")
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
     
         var_plot_linking = tk.IntVar()
@@ -645,7 +645,7 @@ When finished the final tracks will appear in the linking window and also can be
 
      # # # # # # # # # # # # # # # # # # # # # #    
         # Framework: place monitor 
-        self.button_mv = tk.Button(self.viewFrame_membrane,text="   Select membrane movie   ", command=self.select_movie_membrane, width=20, bg="#80818a")
+        self.button_mv = tk.Button(self.viewFrame_membrane,text="   Select image sequence   ", command=self.select_movie_membrane, width=20, bg="#80818a")
         self.button_mv.grid(row=0, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)        
 
         var_plot_membrane = tk.IntVar()
