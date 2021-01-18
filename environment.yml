@@ -1,4 +1,4 @@
-name: gui_tracker
+name: msp
 channels:
   - defaults
   - conda-forge
