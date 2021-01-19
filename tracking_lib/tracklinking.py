@@ -159,7 +159,7 @@ class GraphicalModelTracking(object):
 # S  - sequence - join of overlap and order (0 - not affinity, 1- affinity)
 # P  - position - join of sequence and gap(0 - not affinity, 1- affinity)
 # D  - direction similarity  (0 - not similar, 1- similar)
-# C  - coordinates similarity (0 - not near, 1 - near)
+# C  - coordinates similarity (0 - 3 - near enough to connect;  4 - too far)
 # SP - speed similarity  (0 - not similar, 1- similar)
 # I  - intensity similarity  (0 - not similar, 1- similar)
 # A  - connectivity score  (0 , 1)
@@ -183,7 +183,7 @@ class GraphicalModelTracking(object):
         cpd_m = TabularCPD(variable='M', variable_card=2, values=[[0.99, 0.1, 0.1, 0.2],
                                                                   [0.01, 0.9, 0.9, 0.8]], evidence=['D','SP'], evidence_card=[2,2])
         
-        cpd_c = TabularCPD(variable='C', variable_card=2, values=[[0.1, 0.9]])
+        cpd_c = TabularCPD(variable='C', variable_card=5, values=[[0.2, 0.2, 0.2, 0.2, 0.2]])
         
         cpd_i = TabularCPD(variable='I', variable_card=2, values=[[0.5, 0.5]]) 
         
@@ -193,61 +193,11 @@ class GraphicalModelTracking(object):
         if self.topology=='complete':
         # all
             self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'P'), ('G', 'P'),('P', 'A'),('D', 'M'),('SP', 'M'),('M', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.95, 0.95, 0.25, 0.95, 0.05,  1.0, 0.95, 0.99, 0.9, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.05, 0.05, 0.75, 0.05, 0.95,  0.0, 0.05, 0.01, 0.1, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['I','P','M', 'C'], evidence_card=[2,2,2,2])     # not done    
+            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[0.95, 0.96, 0.97, 0.98, 1.0,     0.95,0.96, 0.97, 0.98, 0.99,      0.25,0.28,0.31,0.35,0.95,     0.05, 0.10, 0.15, 0.20, 0.95,       0.95, 0.96, 0.97, 0.98, 1.0,     0.9, 0.92, 0.94, 0.95, 0.99,      0.2, 0.24, 0.28, 0.3, 0.9,       0.0, 0.04, 0.07, 0.1, 0.9],
+                                                                      [0.05, 0.04, 0.03, 0.02, 0.0,     0.05,0.04, 0.03, 0.02, 0.01,      0.75,0.72,0.69,0.65,0.05,     0.95, 0.90, 0.85, 0.80, 0.05,       0.05, 0.04, 0.03, 0.02, 0.0,     0.1, 0.08, 0.06, 0.05, 0.01,      0.8, 0.76, 0.72, 0.7, 0.1,       1.0, 0.96, 0.93, 0.9, 0.1]], 
+                                                                    evidence=['I','P','M', 'C'], evidence_card=[2,2,2,5])  
+            print(cpd_a)
             self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_d, cpd_c, cpd_a, cpd_sp, cpd_m, cpd_i) # associating the CPDs with the network
-            
-        elif self.topology=='no_intensity':
-        # no intensity
-            self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'P'), ('G', 'P'),('P', 'A'),('D', 'M'),('SP', 'M'),('M', 'A'),('C', 'A')]) # graphical model
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.9, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.1, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['P','M', 'C'], evidence_card=[2,2,2]) 
-            self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_d, cpd_c, cpd_a, cpd_sp, cpd_m) # associating the CPDs with the network
-        
-        elif self.topology=='no_orientation':
-#        # no orientation
-            self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'P'), ('G', 'P'),('P', 'A'),('SP', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.95, 0.95, 0.25, 0.95, 0.05,  1.0, 0.95, 0.99, 0.9, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.05, 0.05, 0.75, 0.05, 0.95,  0.0, 0.05, 0.01, 0.1, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['I','P','SP', 'C'], evidence_card=[2,2,2,2])     # not done    
-            self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_c, cpd_a, cpd_sp, cpd_i) # associating the CPDs with the network
-            
-        elif self.topology=='no_speed':
-            # no speed
-            self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'P'), ('G', 'P'),('P', 'A'),('D', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.95, 0.95, 0.25, 0.95, 0.05,  1.0, 0.95, 0.99, 0.9, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.05, 0.05, 0.75, 0.05, 0.95,  0.0, 0.05, 0.01, 0.1, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['I','P','D', 'C'], evidence_card=[2,2,2,2])     # not done    
-            self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_d, cpd_c, cpd_a, cpd_i) # associating the CPDs with the network
-           
-        elif self.topology=='no_motion':
-        # no movement
-            self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'P'), ('G', 'P'),('P', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[ 0.99, 0.95,  0.95, 0.05,  0.99, 0.9, 0.9, 0.0],
-                                                                      [ 0.01, 0.05,  0.05, 0.95,  0.01, 0.1, 0.1, 1.0]], 
-                                                                    evidence=['I','P','C'], evidence_card=[2,2,2])     # not done    
-            self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_c, cpd_a, cpd_i) # associating the CPDs with the network
-
-        elif self.topology=='no_gap':
-        # no gap
-            self.bgm_tracklet.add_edges_from([('O', 'S'),('L', 'S'),('S', 'A'),('D', 'M'),('SP', 'M'),('M', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-    
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.95, 0.95, 0.25, 0.95, 0.05,  1.0, 0.95, 0.99, 0.9, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.05, 0.05, 0.75, 0.05, 0.95,  0.0, 0.05, 0.01, 0.1, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['I','S','M', 'C'], evidence_card=[2,2,2,2])     # not done    
-            self.bgm_tracklet.add_cpds(cpd_o, cpd_s, cpd_l, cpd_d, cpd_c, cpd_a, cpd_sp, cpd_m, cpd_i)    # associating the CPDs with the network     
-            
-        elif self.topology=='no_sequence':
-        # no gap
-            self.bgm_tracklet.add_edges_from([ ('G', 'A'),('D', 'M'),('SP', 'M'),('M', 'A'),('C', 'A'), ('I', 'A')]) # graphical model
-    
-            cpd_a = TabularCPD(variable='A', variable_card=2, values=[[1.0, 0.95, 0.99, 0.95, 0.98, 0.35, 0.9, 0.25, 0.95, 0.25, 0.95, 0.05,     1.0, 0.95, 0.99, 0.9, 0.99, 0.3, 0.85, 0.15, 0.9, 0.2, 0.9, 0.0],
-                                                                      [0.0, 0.05, 0.01, 0.05, 0.02, 0.65, 0.1, 0.75, 0.05, 0.75, 0.05, 0.95,     0.0, 0.05, 0.01, 0.1, 0.01, 0.7, 0.15, 0.85, 0.1, 0.8, 0.1, 1.0]], 
-                                                                    evidence=['I','G','M', 'C'], evidence_card=[2,3,2,2])     # not done    
-            self.bgm_tracklet.add_cpds( cpd_g, cpd_d, cpd_c, cpd_a, cpd_sp, cpd_m, cpd_i)    # associating the CPDs with the network         
-        
         else:
             print("the BN topology cannot be identify - check the self.topology parameter")
         print("topology: ", self.topology )
@@ -273,6 +223,8 @@ class GraphicalModelTracking(object):
 
         self.track1=track1
         self.track2=track2
+        print("track 1: ", track1) 
+        print("track 2: ", track2)
         
         # calculates values for the nodes 
         
@@ -285,7 +237,7 @@ class GraphicalModelTracking(object):
         # overLap of the tracks (0 - no overlap, 1 - overlap)
         val_L=self.decision_l()
 
-        # coordinates similarity (0 - not near, 1 - near)
+        # coordinates similarity (0 - 3 - near enough to connect;  4 - too far)
         val_C=self.decision_c()
 
         # orientation similarity  (0 - not similar, 1- similar)
@@ -304,30 +256,8 @@ class GraphicalModelTracking(object):
         if self.topology=='complete':
         #all
             q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1] 
-        
-        elif self.topology=='no_intensity':
-        #no intensity
-            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP}, joint=False)['A'].values[1] 
-
-        elif self.topology=='no_speed':
-        #no speed
-            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'I':val_I}, joint=False)['A'].values[1] 
-
-        elif self.topology=='no_orientation':
-        #no orientation
-            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1] 
-
-        elif self.topology=='no_motion':
-        #no motion
-            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'I':val_I}, joint=False)['A'].values[1] 
-
-        elif self.topology=='no_gap':
-        #no gap
-            q=infer.query(['A'], evidence={'O': val_O, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1]  
-
-        elif self.topology=='no_sequence':
-        #no gap
-            q=infer.query(['A'], evidence={'G':val_G, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1] 
+            print('O', val_O, '   G', val_G, '   L', val_L, '   C',val_C, '    D',val_D, '    SP',  val_SP, '    I',val_I)
+            print(q, "\n")
         else:
             q=0
             print("the BN topology cannot be identify - check the self.topology parameter")
@@ -398,19 +328,42 @@ class GraphicalModelTracking(object):
             
         return val
 
+#    def decision_c_old(self):
+#        '''
+#        decision on coordinates (0 - not near, 1 - near)
+#        '''
+#        #distance between tracks
+#        
+#        dist=np.sqrt((self.track2['trace'][0][0]-self.track1['trace'][-1][0])**2+(self.track2['trace'][0][1]-self.track1['trace'][-1][1])**2)
+#        N_frames_travelled=self.track2['frames'][0]-self.track1['frames'][-1]
+#
+#        if dist/N_frames_travelled<=self.distance_limit_tracklinking:
+#            val = 1
+#        else:
+#            val = 0
+#
+#        return val
+    
     def decision_c(self):
         '''
-        decision on coordinates (0 - not near, 1 - near)
+        decision on coordinates (0 - 3 - near enough to connect;  4 - too far)
         '''
         #distance between tracks
         
         dist=np.sqrt((self.track2['trace'][0][0]-self.track1['trace'][-1][0])**2+(self.track2['trace'][0][1]-self.track1['trace'][-1][1])**2)
         N_frames_travelled=self.track2['frames'][0]-self.track1['frames'][-1]
-
-        if dist/N_frames_travelled<=self.distance_limit_tracklinking:
-            val = 1
-        else:
-            val = 0
+        
+        dist_per_frame=dist/N_frames_travelled
+        
+        step=self.distance_limit_tracklinking/4 # where 4 is number of steps to consider
+        
+        # the distance is to far
+        if dist_per_frame>=self.distance_limit_tracklinking:
+            val = 4
+        else: # near vesicle grading
+            val=int(dist_per_frame/step) # no gap or medium gap
+        print("distance: ", dist, "   dist/frame: ", dist_per_frame, "      frame: ", N_frames_travelled)
+        print("coordinate_value", val)
 
         return val       
     
