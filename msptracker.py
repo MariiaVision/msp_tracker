@@ -473,7 +473,7 @@ When finished the final tracks will appear in the linking window and also can be
             self.detector.tracklinking_Npass=var_path_number.get()
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(self.parametersFrame_linking_path, text=" single passes ", variable=var_path_number, value=1, bg='white', command =update_detection_switch )
+        self.M1 = tk.Radiobutton(self.parametersFrame_linking_path, text=" single pass ", variable=var_path_number, value=1, bg='white', command =update_detection_switch )
         self.M1.grid(row=3, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val)  
         
         self.M2 = tk.Radiobutton(self.parametersFrame_linking_path, text=" two passes ", variable=var_path_number, value=2, bg='white',command = update_detection_switch ) #  command=sel)
@@ -600,7 +600,7 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" update the info ", command=update_info, width=int(self.button_length*2), bg="#80818a")
+        lbl3 = tk.Button(master=self.action_frame, text=" update info ", command=update_info, width=int(self.button_length*2), bg="#80818a")
         lbl3.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
           # empty space
         lbl3 = tk.Label(master=self.action_frame, text=" ",  bg='white', height=int(self.button_length/20))
@@ -1016,11 +1016,21 @@ When finished the final tracks will appear in the linking window and also can be
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
         
-        lbl3 = tk.Label(master=self.information_frame, text=" Original protein channel:  "+ self.movie_protein_path.split("/")[-1],  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
-        lbl3.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        #remove text if was there before
+        try:
+            self.original_label.destroy()
+        except:
+            pass       
         
-        lbl3 = tk.Label(master=self.information_frame, text=" Save final tracks to: "+ self.result_path,  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
-        lbl3.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        try:
+            self.final_tracks_label.destroy()
+        except:
+            pass
+        self.original_label = tk.Label(master=self.information_frame, text=" Original image sequence:  "+ self.movie_protein_path.split("/")[-1],  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
+        self.original_label.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.final_tracks_label = tk.Label(master=self.information_frame, text=" Save final tracks to: "+ self.result_path,  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
+        self.final_tracks_label.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
         
           # empty space
