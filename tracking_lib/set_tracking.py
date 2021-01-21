@@ -1,6 +1,6 @@
 #########################################################
 #
-# class to set parameters for the tracking
+# set parameters for the tracking and run it
 #        
 #########################################################
 
@@ -24,7 +24,7 @@ class TrackingSetUp(object):
     
     
     def __init__(self):
-        """Initialize variables
+        """Initialise variables
         """
         
         
@@ -41,20 +41,20 @@ class TrackingSetUp(object):
         self.tracklets=[]
         
         #
-        self.detection_parameter_path="detection_temp.txt"
-        self.linking_parameter_path="linking_temp.txt"
-        self.detection_file_name="d_temp.txt"
+        self.detection_parameter_path="temp/detection_temp.txt"
+        self.linking_parameter_path="temp/linking_temp.txt"
+        self.detection_file_name="temp/d_temp.txt"
         
         self.detection_choice=0
         
     # # # # # DETECTION parameters # # # # #
         
         #MSSEF
-        self.c=1.1 #0.01 # coef for the thresholding
-        self.k_max=5 # end of  the iteration
-        self.k_min=1 # start of the iteration
-        self.sigma_min=1 # min sigma for LOG
-        self.sigma_max=2# max sigma for LOG     
+        self.c=1.1 # MSSEF: coef for the thresholding
+        self.k_max=5 #  MSSEF: end of  the iteration
+        self.k_min=1 # MSSEF:  start of the iteration
+        self.sigma_min=1 # MSSEF:  min sigma for LOG
+        self.sigma_max=2#  MSSEF: max sigma for LOG     
         
         #thresholding
         self.min_distance=3 # minimum distance between two max after MSSEF
@@ -109,23 +109,7 @@ class TrackingSetUp(object):
         
         # filter final tracks
         self.tracklinking_path2_track_displacement_limit=0 # minimum displacement of the final track
-        self.tracklinking_path2_track_duration_limit=0 # minimum number of frames per final track
-
-
-
-
-        # tracking: tracklinking path 3
-        self.tracklinking_path3_topology='complete' # topology type      
-        self.tracklinking_path3_frame_gap_1=2        
-        self.tracklinking_path3_direction_limit=90
-        self.tracklinking_path3_distance_limit=7 # distance in pix between two tracklets to be connected 
-        self.tracklinking_path3_connectivity_threshold=0.7
-        self.tracklinking_path3_speed_limit=0.2
-        self.tracklinking_path3_intensity_limit=0.2
-        
-        # filter final tracks
-        self.tracklinking_path3_track_displacement_limit=0 # minimum displacement of the final track
-        self.tracklinking_path3_track_duration_limit=3 # minimum number of frames per final track        
+        self.tracklinking_path2_track_duration_limit=0 # minimum number of frames per final track     
         
 
     def detection(self, frameN):
@@ -137,7 +121,7 @@ class TrackingSetUp(object):
         detector=Detectors()
         
         #MSSEF
-        detector.c=self.c #0.01 # coef for the thresholding
+        detector.c=self.c # coef for the thresholding
         detector.k_max=self.k_max # end of  the iteration
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
@@ -161,10 +145,6 @@ class TrackingSetUp(object):
         # loading CNN        
         cnn_model=load_model(self.cnn_model_path) 
         #######################################################################
-
-            
-#        frame=self.movie[frameN,:,:]
-#        frame=(frame-np.min(frame))/(np.max(frame)-np.min(frame))
         
         self.detection_vesicles=detector.detect(frameN, cnn_model)    
 
@@ -182,7 +162,7 @@ class TrackingSetUp(object):
         detector=Detectors()
         
         #MSSEF
-        detector.c=self.c #0.01 # coef for the thresholding
+        detector.c=self.c # coef for the thresholding
         detector.k_max=self.k_max # end of  the iteration
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
@@ -203,7 +183,7 @@ class TrackingSetUp(object):
         #background substraction 
         img= detector.substract_bg_single(self.movie, frameN) 
         
-        # Convert BGR to GRAY
+        # image enhancement
         gray = detector.img_enhancement(img)
 
         # MSSEF
@@ -277,7 +257,7 @@ class TrackingSetUp(object):
         detector=Detectors()
         
         #MSSEF
-        detector.c=self.c #0.01 # coef for the thresholding
+        detector.c=self.c #=coef for the thresholding
         detector.k_max=self.k_max # end of  the iteration
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
@@ -464,12 +444,7 @@ class TrackingSetUp(object):
                     'tracklinking_path2_topology':self.tracklinking_path2_topology,
                     'tracklinking_path2_frame_gap_1':self.tracklinking_path2_frame_gap_1,'tracklinking_path2_direction_limit':self.tracklinking_path2_direction_limit,'tracklinking_path2_distance_limit':self.tracklinking_path2_distance_limit, 
                     'tracklinking_path2_connectivity_threshold':self.tracklinking_path2_connectivity_threshold, 'tracklinking_path2_speed_limit': self.tracklinking_path2_speed_limit, 'tracklinking_path2_intensity_limit':self.tracklinking_path2_intensity_limit,
-                    'tracklinking_path2_track_displacement_limit':self.tracklinking_path2_track_displacement_limit, 'tracklinking_path2_track_duration_limit':self.tracklinking_path2_track_duration_limit,
-                    
-                    'tracklinking_path3_topology':self.tracklinking_path3_topology,
-                    'tracklinking_path3_frame_gap_1':self.tracklinking_path3_frame_gap_1,'tracklinking_path3_direction_limit':self.tracklinking_path3_direction_limit,'tracklinking_path3_distance_limit':self.tracklinking_path3_distance_limit, 
-                    'tracklinking_path3_connectivity_threshold':self.tracklinking_path3_connectivity_threshold, 'tracklinking_path3_speed_limit': self.tracklinking_path3_speed_limit, 'tracklinking_path3_intensity_limit':self.tracklinking_path3_intensity_limit,
-                    'tracklinking_path3_track_displacement_limit':self.tracklinking_path3_track_displacement_limit, 'tracklinking_path3_track_duration_limit':self.tracklinking_path3_track_duration_limit}
+                    'tracklinking_path2_track_displacement_limit':self.tracklinking_path2_track_displacement_limit, 'tracklinking_path2_track_duration_limit':self.tracklinking_path2_track_duration_limit}
         data={'parameters':parameters}
         
         # save the parameters       
@@ -523,18 +498,3 @@ class TrackingSetUp(object):
         # filter final tracks
         self.tracklinking_path2_track_displacement_limit=settings['tracklinking_path2_track_displacement_limit']
         self.tracklinking_path2_track_duration_limit=settings['tracklinking_path2_track_duration_limit']
-            
-        #path3 
-        self.tracklinking_path3_topology=settings['tracklinking_path3_topology']      
-        self.tracklinking_path3_frame_gap_1=settings['tracklinking_path3_frame_gap_1']       
-        self.tracklinking_path3_direction_limit=settings['tracklinking_path3_direction_limit']
-        self.tracklinking_path3_distance_limit=settings['tracklinking_path3_distance_limit']
-        self.tracklinking_path3_connectivity_threshold=settings['tracklinking_path3_connectivity_threshold']
-        self.tracklinking_path3_speed_limit=settings['tracklinking_path3_speed_limit']
-        self.tracklinking_path3_intensity_limit=settings['tracklinking_path3_intensity_limit']
-        
-        # filter final tracks
-        self.tracklinking_path3_track_displacement_limit=settings['tracklinking_path3_track_displacement_limit']
-        self.tracklinking_path3_track_duration_limit=settings['tracklinking_path3_track_duration_limit']
-            
-                                        

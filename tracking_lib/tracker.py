@@ -1,43 +1,28 @@
-'''
-Tracker Using  Hungarian Algorithm
-'''
+#########################################################
+#
+# tracklet formation
+#        
+#########################################################
 
-# Import python libraries
+
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-from math import atan2,degrees
 
 class Track(object):
     '''
-    class with track object
-    '''
+    class of the track object
+     '''
 
     def __init__(self, first_point, first_frame, trackIdCount):
 
         self.track_id = trackIdCount  # identification of each track object
-        self.trace_frame = [first_frame]  # predicted centroids (x,y)
-        self.skipped_frames = 0  # number of frames skipped undetected
-        self.trace = [first_point]  # trace path
-        self.direction=720 # false value of the track orientation/direction
-    
-    def trackAngle(self):
-        if len(self.trace)>=2:
-            if len(self.trace)>=5:
-                p1=self.trace[-5]
-            else:
-                p1=self.trace[0]                
-            
-            p2=self.trace[-1]
-            xDiff = p2[0] - p1[0]
-            yDiff = p2[1] - p1[1]
-            self.direction= int(degrees(atan2(yDiff, xDiff)))
-        else:
-            self.direction=720
-
+        self.trace_frame = [first_frame]  # list of frames
+        self.skipped_frames = 0  # number of skipped frames (in sequence)
+        self.trace = [first_point]  # trace, list of particle coordinates
 
 class Tracker(object):
     '''
-    class for linking based on the Hungarian algorithm
+    class for linking with the Hungarian algorithm
     '''
 
     def __init__(self, dist_thresh=30, max_frames_to_skip=5, max_trace_length=100,
@@ -50,20 +35,19 @@ class Tracker(object):
         self.trackIdCount = trackIdCount # track ID to start with
         self.completeTracks=[] # final output
         
-        # plot main parameters
-        
-        print(" - - - - - tracker: - - - - - - - ")
-        print("dist_thresh ", self.dist_thresh)
-        print("max_frames_to_skip ", self.max_frames_to_skip)
-        print("max_trace_length ", self.max_trace_length)
+        # plot main parameters        
+        print(" - - - - - trackelt formation: - - - - - - - ")
+        print("Maximum distance to link: ", self.dist_thresh)
+        print("Maximum skupped frames:  ", self.max_frames_to_skip)
+        print("Maximum track length:  ", self.max_trace_length)
         
     def cost_calculation(self, detections):
         '''
-        calculate cost mastrix
+        calculate distance based cost mastrix
         '''
         N = len(self.tracks)
         M = len(detections)
-        cost = np.zeros((N, M))   # Cost matrix
+        cost = np.zeros((N, M))
         for i in range(len(self.tracks)):
             for j in range(len(detections)):
                 try:
@@ -74,7 +58,7 @@ class Tracker(object):
                 except:
                     pass
                 
-        # replace cost of the far distance with a ver huge number
+        # replace cost of the far distance with a very huge number
         cost_array=np.asarray(cost)
         cost_array[cost_array>self.dist_thresh]=10000
         cost=cost_array.tolist()        
@@ -112,29 +96,26 @@ class Tracker(object):
 
             # tracking the targets if there were tracks before
         else:
-            # Calculate cost using sum of square distance between predicted vs detected centroids
+            # Calculate cost matrix
             cost=self.cost_calculation(detections)
     
-            # Hungarian Algorithm assigning detection to tracks:
+            # Hungarian Algorithm assignment:
             assignment=self.assignDetectionToTracks(cost)
  
             # add the position to the assigned tracks and detect not assigned tracks
-            un_assigned_tracks = []
+
             for i in range(len(assignment)):
                 if (assignment[i] != -1):
                     # check with the cost distance threshold and remove if cost is high
                     if (cost[i][assignment[i]] > self.dist_thresh):
                         assignment[i] = -1
-                        un_assigned_tracks.append(i)
                         self.tracks[i].skipped_frames += 1
                         
                     else: # add the detection to the track
                         self.tracks[i].trace.append(detections[assignment[i]])
                         self.tracks[i].trace_frame.append(frameN)
                         self.tracks[i].skipped_frames = 0
-                        self.tracks[i].trackAngle()
-                else:
-                    un_assigned_tracks.append(i)
+                else: # add skipped frame to the track without assigned detection
                     self.tracks[i].skipped_frames += 1                
 
                         
@@ -158,13 +139,13 @@ class Tracker(object):
 
             del_tracks = []
             
-            #remove track which are longer than the max_length
+            #remove tracks which are longer than the max_length
             for i in range(len(self.tracks)):
                 
                 if ((self.tracks[i].trace_frame[-1]-self.tracks[i].trace_frame[0]+1) >= self.max_trace_length):
                     del_tracks.append(i)
                     
-                #  remove tracks which has high skipped_frame value    
+                #  remove tracks which has high number of skipped frames    
                 if (self.tracks[i].skipped_frames >= self.max_frames_to_skip) and i not in del_tracks:
                     del_tracks.append(i)
         
@@ -179,5 +160,3 @@ class Tracker(object):
                     self.completeTracks.append(self.tracks[new_id])
                     del self.tracks[new_id]
                     val_compensate_for_del+=1
-
-

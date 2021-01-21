@@ -1,6 +1,6 @@
 #########################################################
 #
-# class to connect tracklets
+# tracklinking: connecting tracklets (short tracks)
 #        
 #########################################################
 
@@ -22,97 +22,15 @@ import networkx as nx
 class GraphicalModelTracking(object):
     """
     Class to perform track linking with Bayesian network: 
-    The code builds a BN based with chosen topology and a given conditional probabilities
+    The code builds a BN with a given conditional probabilities
     The connection between tracklets are  based on the probability of the connectivity variable.
-    
-    Attributes
-    ----------
-
-    topology : str (default is 'complete')
-        type of the BN tolopogy: 'complete', 'no_gap', 
-        'no_speed', 'no_orientation', 'no_intensity', 'no_motion' 
-    movie : array  (default is []) 
-        original array of the image sequency      
-    tracklets: dict (default is{})
-        input tracklets 
-    tracks: dict  (default is{}) 
-        final tracks 
-    tracks_before_filter: dict  (default is{}) 
-        output tracks before short and not-moving tracks are removed 
-    data: dict (default is{}) 
-        arrange tracks to savei n json file 
-    bgm_tracklet (BayesianModel())
-        Bayesian model for tracklingking 
-    track1: dict (default is{}) 
-        first tracklet of the pair for comparison 
-    track2: dict (default is{}) 
-        second tracklet of the pair for comparison 
-    tracklets_connection: list (default is [])  
-        list of tracjlet pairs for connection  
-    track_pos: int (default is 0)
-        track ID for the  connected tracks, iteratively increasing 
-    track_data_framed: dict (default is{}) 
-        tracklets rearranged in frame based order 
-    track_data_framed_start: dict (default is{}) 
-        tracklets rearranged in staring frame order base
-    track_data_framed_end: dict (default is{}) 
-        tracklets rearranged in ending frame order base
-
-    # tracklinking parameters:
-    
-    frame_search_range: int (default is 6)
-        frame range to search connection between tracks   
-    distance_search_range: int (default is 12)
-        distance range to search connection between tracks           
-    frame_gap_tracklinking_1: int (default is 5)  
-        upper limit for the frame gap      
-    direction_limit_tracklinking: int (default 50)
-        limit for orientation similarity
-    distance_limit_tracklinking: int (deafault 10)
-        limit of the distance in pix between two tracklets to be connected
-    connectivity_threshold: float [0,1] (default 0.8)
-        threshold for the tracklet connection 
-    track_displacement_limit: float (default is 0) 
-        minimum displacement of the final track 
-    track_duration_limit: int(default is 1)  
-        minimum number of frames per final track
-    speed_limit_tracklinking: float (default 0.5)
-        proportional speed difference between traklets to be connected 
-    intensity_limit_tracklinking: float (default 0.4)
-        intensity difference between tracklets to be connected
-    roi_size: int (default 12)
-        dimension of the roi with the object in it 
-    
-    
-    Methods
-    ---------
-    tracklets_pgm()
-    save_tracks(filename) 
-    decision_tracklets_connection(track1, track2)
-    decision_s(val_o, val_l)
-    decision_o()
-    decision_g()
-    decision_l()
-    decision_c()
-    calculate_intensity(point, frameN))
-    decision_in()
-    decision_sp()
-    decision_d()
-    calculate_speed(trace, frames)
-    calculate_direction(trace)
-    join_tracklets(connections)
-    rearrange_track_to_frame_start_end(tracklets, movie)
-    train_model(data)
-    predic_connectivity_score(predict_data)
-    connect_tracklet_time()
     
     """
     def __init__(self):
         """Initialize variables
         """
         
-        self.topology='complete' # type of the BN topology: 
-                  #complete, no_gap, no_speed, no_orientation, no_intensity, no_motion
+        self.topology='complete' # type of the BN topology: currently only "complete" option is available
         self.movie=[]
         self.tracklets={} # input tracklets
         self.tracks={} # output tracks
@@ -196,11 +114,10 @@ class GraphicalModelTracking(object):
             cpd_a = TabularCPD(variable='A', variable_card=2, values=[[0.95, 0.96, 0.97, 0.98, 1.0,     0.95,0.96, 0.97, 0.98, 0.99,      0.25,0.28,0.31,0.35,0.95,     0.05, 0.10, 0.15, 0.20, 0.95,       0.95, 0.96, 0.97, 0.98, 1.0,     0.9, 0.92, 0.94, 0.95, 0.99,      0.2, 0.24, 0.28, 0.3, 0.9,       0.0, 0.04, 0.07, 0.1, 0.9],
                                                                       [0.05, 0.04, 0.03, 0.02, 0.0,     0.05,0.04, 0.03, 0.02, 0.01,      0.75,0.72,0.69,0.65,0.05,     0.95, 0.90, 0.85, 0.80, 0.05,       0.05, 0.04, 0.03, 0.02, 0.0,     0.1, 0.08, 0.06, 0.05, 0.01,      0.8, 0.76, 0.72, 0.7, 0.1,       1.0, 0.96, 0.93, 0.9, 0.1]], 
                                                                     evidence=['I','P','M', 'C'], evidence_card=[2,2,2,5])  
-            print(cpd_a)
+
             self.bgm_tracklet.add_cpds(cpd_o, cpd_g, cpd_s, cpd_l, cpd_p, cpd_d, cpd_c, cpd_a, cpd_sp, cpd_m, cpd_i) # associating the CPDs with the network
         else:
             print("the BN topology cannot be identify - check the self.topology parameter")
-        print("topology: ", self.topology )
         
         # check model: defined and sum to 1.
         self.bgm_tracklet.check_model()
@@ -223,8 +140,8 @@ class GraphicalModelTracking(object):
 
         self.track1=track1
         self.track2=track2
-        print("track 1: ", track1) 
-        print("track 2: ", track2)
+#        print("track 1: ", track1) 
+#        print("track 2: ", track2)
         
         # calculates values for the nodes 
         
@@ -256,8 +173,7 @@ class GraphicalModelTracking(object):
         if self.topology=='complete':
         #all
             q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1] 
-            print('O', val_O, '   G', val_G, '   L', val_L, '   C',val_C, '    D',val_D, '    SP',  val_SP, '    I',val_I)
-            print(q, "\n")
+
         else:
             q=0
             print("the BN topology cannot be identify - check the self.topology parameter")
@@ -267,7 +183,7 @@ class GraphicalModelTracking(object):
     
     def decision_s(self, val_o, val_l):
         '''
-        decision on sequence - join overlap and order(0 - not affinity, 1- affinity)
+        decision on sequence - join overlap and order (0 - not affinity, 1- affinity)
         '''
         if val_o==1 and val_l==0:
             val_s=1
@@ -327,22 +243,6 @@ class GraphicalModelTracking(object):
             val=0
             
         return val
-
-#    def decision_c_old(self):
-#        '''
-#        decision on coordinates (0 - not near, 1 - near)
-#        '''
-#        #distance between tracks
-#        
-#        dist=np.sqrt((self.track2['trace'][0][0]-self.track1['trace'][-1][0])**2+(self.track2['trace'][0][1]-self.track1['trace'][-1][1])**2)
-#        N_frames_travelled=self.track2['frames'][0]-self.track1['frames'][-1]
-#
-#        if dist/N_frames_travelled<=self.distance_limit_tracklinking:
-#            val = 1
-#        else:
-#            val = 0
-#
-#        return val
     
     def decision_c(self):
         '''
@@ -437,7 +337,7 @@ class GraphicalModelTracking(object):
             val = 0
         else:
             val = 1
-#        print("D: ", difference, "  ", val)
+            
         
         return val 
         
@@ -507,7 +407,7 @@ class GraphicalModelTracking(object):
         frames=[]
         trace=[]
 
-#        print("trackID: ", self.track_pos,  connections)
+
         for i in connections:
 
             tracklet=self.tracklets[str(int(i))]
@@ -532,8 +432,8 @@ class GraphicalModelTracking(object):
                     new_frames.append(frame_pos)
                     new_trace.append(trace[pos])             
 
-        # create new Track 
-#        print("frames: ", new_frames)
+        # create  a new Track 
+        
         new_track.update({'trackID': self.track_pos, 'frames': new_frames, 'trace': new_trace}) 
         self.tracks_before_filter.update({self.track_pos:new_track}) 
         
@@ -542,7 +442,7 @@ class GraphicalModelTracking(object):
 
     def rearrange_track_to_frame_start_end(self, tracklets, movie):
         '''
-        change data arrangment from tracks to frames
+        change data arrangment from orginised in terns of tracks to frames
         '''
         
         self.tracklets=tracklets
@@ -568,10 +468,10 @@ class GraphicalModelTracking(object):
                 self.track_data_framed_end.update({n_frame:track_list_end})
                 
     def train_model(self, data):       
-        ''' train the PGM '''
+        ''' train the BN '''
         self.bgm_tracklet.fit(data)
         self.bgm_tracklet.get_cpds()
-#        print(self.bgm_tracklet.get_cpds(('A')))
+        
     
     def predic_connectivity_score(self, predict_data):
         '''
@@ -590,7 +490,7 @@ class GraphicalModelTracking(object):
         in the order of their temproal positioning
         '''
         checked_connections=[] # list of reviewed connections       
-        possible_connections=[] # list of connection is a high connect. score
+        possible_connections=[] # list of connection is a high connectivity score
         
         #iterate over each frame with ending tracks
         print("scanning frames for possble connections ...")
@@ -608,14 +508,12 @@ class GraphicalModelTracking(object):
             
             # iterate over frame and form a list with possible connections
             # based on the start point
-            for frame_pos in range(n_frame+1,n_frame+self.frame_search_range): #!!! start from n_frame+1
+            for frame_pos in range(n_frame+1,n_frame+self.frame_search_range): 
  
                 if frame_pos in self.track_data_framed_start:
                     for trackID in self.track_data_framed_start[frame_pos]:
                          # get track ID
                         tracklets_to_check.append(trackID)
-                        
-                    #!!! calculate distance and check connectivity here ?
                         
                         # first position of the tracklet
                         track_one=self.tracklets.get(str(trackID))
@@ -681,13 +579,12 @@ class GraphicalModelTracking(object):
                         
                         possible_connections.append([track1['trackID'],track2['trackID'], connectivity_score])
                         pos_check+=1
-#                        print("tracklets", [ID_compare[0], ID_compare[1]]," possible connection", connectivity_score)
+                        
                 else:
 
                     checked_connections.append([ID_compare[0], ID_compare[1]])   
 
 
-#######################################################################
         connected_tracklets=[] # new connections
         
         print("looking through possible connections  ... ")
@@ -733,9 +630,8 @@ class GraphicalModelTracking(object):
                 
                 assignment=self.assignDetectionToTracks(prob_matrix) 
             
-                # check aarignment
+                # check the assignment
         
-                
                 for i in range(len(assignment)):
                     if (assignment[i] != -1):
                         # check with the cost distance threshold and remove if cost is high
@@ -785,8 +681,7 @@ class GraphicalModelTracking(object):
                            
             connected_tracklets=np.asarray(connected_tracklets)[:,0:-1].tolist()
 
-        
-    ########################################################
+
             # find connections
             
             G=nx.DiGraph()
@@ -799,7 +694,7 @@ class GraphicalModelTracking(object):
                 tracklets_to_track.sort()           
                 self.join_tracklets(tracklets_to_track)
 
-    ################################################################################        
+      
         # save not connected tracklets
         
         for t3 in tqdm(self.tracklets, "saving not connected tracklets"):
@@ -810,8 +705,6 @@ class GraphicalModelTracking(object):
                     self.join_tracklets([trackID]) 
             else:
                 self.join_tracklets([trackID])
-                
-                
                 
                
         # eliminate short  tracks:

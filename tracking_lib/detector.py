@@ -1,7 +1,8 @@
-'''
-    Cargo detector
-    Python Version    : 3.6
-'''
+#########################################################
+#
+# particle detection
+#        
+#########################################################
 
 import numpy as np
 import scipy as sp
@@ -23,66 +24,6 @@ class Detectors(object):
     """
     Class to detect secretory protein vesicles in a frame
     
-    Attributes
-    ----------
-
-    img_mssef: array
-        image after multi-scale spot enhancing filter (MSSEF) (default is empty)  
-        
-    binary_mssef: array
-        binary mask after mssef (default is empty)
-        
-    img_set: array
-        original image sequence (default is empty)
-
-    c: float
-    MSSEF parameter - thresholding coefficient (default is 0.8)
-    
-    k_max: int
-    MSSEF parameter - end of the iteration (default is 20)
-    
-    k_min: int 
-    MSSEF parameter - start of the iteration (default is 1)
-    
-    sigma_min: float
-    MSSEF parameter - min sigma for LOG  (default is 0.1)
-    
-    sigma_max: float
-    MSSEF parameter - max sigma for LOG   (default is 3)  
-    
-    min_distance: float
-    thresholding parameter - minimum distance between two max after MSSEF (default is 4.0)
-    
-    threshold_rel: float
-    thresholding parameter - minimum pix value in relation to the image (default is 0.1)   
-    
-    box_size: int
-    detection parameter -bounding box size (default is 32)  
-    
-    detection_threshold: float [0,1]
-    classifier parameter - detection_threshold (default is 0.99)
-
-    detected_vesicles: list
-    list of the detected vesicles after pruning (default is empty)
-    
-    detected_candidates: list
-    list of the detected vesicles before pruning(default is empty)
-    
-    substract_bg_step: int
-    pre-processing parameter: number of frame to consider for the b/g substraction (default is 100)
-    
-    
-    Methods
-    ---------
-    __init__(self)
-    img_enhancement(img, kernal_medfilter=3)
-    substract_bg_single(img_set, pos)
-    sef(img, img_sef_bin_prev, sigma, c, print_val=0)
-    mssef(img, c, k_max, k_min, sigma_min, sigma_max)
-    classify_vesicle(centers, img, new_model, segment_size=16)
-    detect(frameN, new_model)
-    radialsym_centre(img)
-    
     """
     def __init__(self):
         """Initialize variables
@@ -94,7 +35,7 @@ class Detectors(object):
         
         # parameters for approach
         #MSSEF
-        self.c=0.8 #0.01 # coef for the thresholding
+        self.c=0.8 # coef for the thresholding
         self.k_max=20 # end of  the iteration
         self.k_min=1 # start of the iteration
         self.sigma_min=0.1 # min sigma for LOG
@@ -188,33 +129,6 @@ class Detectors(object):
             
         return img_new
 
-    def detect_bg(self, img_set, pos, frameN):
-        '''
-        find in-situ background
-        
-        input:
-        
-        img_set: array
-            sequence of images
-        pos: int
-            frame number in the sequence
-        frameN: int
-            number of frames taken into account
-        
-        '''
-        start_i = pos-int(frameN/2) # start frame
-        if start_i<0:
-            start_i=0
-        end_i = start_i+frameN # end frame
-        if end_i>=img_set.shape[0]:
-            end_i=img_set.shape[0]
-            start_i=end_i-frameN
-    
-        insitu=np.min(img_set[start_i:end_i], axis=0) # insitu calculation    
-    
-            
-        return insitu
-
     def sef(self, img, img_sef_bin_prev, sigma, c, print_val=0):   
         '''
         spot enhancing filter
@@ -303,16 +217,6 @@ class Detectors(object):
         """
         Main function for the particle detection
         """
-#        print("----------- detector settings: ")
-#        print("self.c =             ", self.c)
-#        print("self.k_max =         ", self.k_max)
-#        print("self.k_min =         ", self.k_min)
-#        print("self.sigma_min =     ", self.sigma_min)
-#        print("self.sigma_max =     ", self.sigma_max)
-#        print("self.min_distance =  ", self.min_distance)
-#        print("self.threshold_rel = ", self.threshold_rel)
-#        print("self.box_size =      ", self.box_size)
-
         #background substraction 
         img= self.substract_bg_single(self.img_set, frameN) 
         
@@ -335,10 +239,23 @@ class Detectors(object):
         for i in range(1, np.max(spots_labeled)+1):
             mask_label=np.zeros(spots_labeled.shape)
             mask_label[spots_labeled==i]=1
-            img_label=skimage.img_as_float(np.asarray(mask_label*new_img).astype(np.int))
-            local_peaks=peak_local_max(img_label,  threshold_rel=self.threshold_rel, min_distance=int(self.min_distance))
             
-            for point in local_peaks:
+            img_label=np.asarray(mask_label*new_img)
+
+            local_peaks=peak_local_max(img_label, threshold_rel=self.threshold_rel,  min_distance=int(self.min_distance))
+
+            #remove detections which are too close to each other
+            check_centres=[[-10,-10]]
+            local_peaks_updated=[]
+            for pos in range(0, len(local_peaks)):
+                
+                res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(local_peaks[pos]))**2, axis=1))
+                if all(res_distance>self.min_distance):
+                    
+                    check_centres.append(local_peaks[pos])
+                    local_peaks_updated.append(local_peaks[pos])
+                                    
+            for point in local_peaks_updated:
                 check_pos_var= (point[1]-self.box_size/2)>0 and  (gray.shape[1]-point[1]-self.box_size/2)>0 and (point[0]-self.box_size/2)>0 and  (gray.shape[0]-point[0]-self.box_size/2)>0
                 if check_pos_var==True: # remove spots close to the boarder
                     point_new=[point[0], point[1]]
@@ -346,8 +263,7 @@ class Detectors(object):
                     self.detected_candidates.append(point_new)   
     
     # # # # segmentation using watershed new_img
-        updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model, segment_size=self.box_size)  
-#        updated_centers=self.classify_vesicle(local_max, new_img, new_model)  
+        updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model, segment_size=self.box_size)    
         
         if self.gaussian_fit==True:
 
@@ -382,7 +298,6 @@ class Detectors(object):
                     self.detected_vesicles.append(point_new) 
         else:
             self.detected_vesicles=updated_centers
-#        print("detections: \n", self.detected_vesicles)
             
         #remove detections which are too close to each other
         
