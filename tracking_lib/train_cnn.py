@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-training CNN of the candidate prunning with new data
+training CNN for the candidate prunning with new data
 """
 from keras import backend as K
 import keras
@@ -20,6 +20,7 @@ from skimage import io
 import argparse
 import glob
 from tqdm import tqdm
+import csv
 
 class CnnPrunning:
     '''
@@ -105,36 +106,43 @@ def save_imgs(file_img, file_txt, path_save, box_size=16, pos=0):
             fill_mode='nearest')
     
     img_set=skimage.io.imread(file_img)
-
-    f = open(file_txt, 'r')
-    for line in tqdm(f):    
-        field = line.split()
-        
-        frameN=int(int(field[3]))-1
-        
-        img= substract_bg_single(img_set, frameN, step=100) 
-        img=(img-np.min(img))/(np.max(img)-np.min(img))
-        
-        for new_pos in range(0,2):
-        
-            x_step=np.random.randint(low=-1, high=2)
-            y_step=np.random.randint(low=-1, high=2)
-            center=[int(float(field[2])+x_step), int(float(field[1])+y_step)]
-            if int(center[0]-box_size/2)>0 and int(box_size/2+center[0])< img.shape[0] and int(center[1]-box_size/2)>0 and int(box_size/2+center[1])<img.shape[1]:
-                segment=img[int(center[0]-box_size/2):int(box_size/2+center[0]),int(center[1]-box_size/2):int(box_size/2+center[1])]
-        
-                x = segment.reshape((1,) + segment.shape)
-                x=x.reshape((x.shape[0],x.shape[1],x.shape[2], 1))
-                i = 0
-                # generate images
-                for batch in datagen.flow(x, batch_size=1,
-                                          save_to_dir=path_save, save_prefix='particle_'+str(pos)+"_"+str(field[0]), save_format='png'):
-
-                    i += 1
-                    if i > 3:
-                        break 
-    f.close()        
     
+    # if file is txt
+    if file_txt.split(".")[-1]=="txt":
+        f = open(file_txt, 'r')
+        for line in tqdm(f):    
+            field = line.split()
+            
+            frameN=int(int(field[3]))-1
+            
+            img= substract_bg_single(img_set, frameN, step=100) 
+    #        img= img_set[frameN,:,:] 
+            
+            
+            img=(img-np.min(img))/(np.max(img)-np.min(img))
+            
+            for new_pos in range(0,2):
+            
+                x_step=np.random.randint(low=-1, high=2)
+                y_step=np.random.randint(low=-1, high=2)
+                center=[int(float(field[2])+x_step), int(float(field[1])+y_step)]
+                if int(center[0]-box_size/2)>0 and int(box_size/2+center[0])< img.shape[0] and int(center[1]-box_size/2)>0 and int(box_size/2+center[1])<img.shape[1]:
+                    segment=img[int(center[0]-box_size/2):int(box_size/2+center[0]),int(center[1]-box_size/2):int(box_size/2+center[1])]
+            
+                    x = segment.reshape((1,) + segment.shape)
+                    x=x.reshape((x.shape[0],x.shape[1],x.shape[2], 1))
+                    i = 0
+                    # generate images
+                    for batch in datagen.flow(x, batch_size=1,
+                                              save_to_dir=path_save, save_prefix='particle_'+str(pos)+"_"+str(field[0]), save_format='png'):
+    
+                        i += 1
+                        if i > 3:
+                            break 
+        f.close()
+
+    else:
+        print("cannot read the file")
 def get_args():
     parser = argparse.ArgumentParser(description='train CNN model for MSP detector',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -171,7 +179,8 @@ if __name__ == '__main__':
     path_negative=args.save_images_path+"negative"
     
     print("creating ROI images to ", args.save_images_path, "folder ...")
-    for pos in range(0,args.number_of_files):
+    
+    for pos in range(0, args.number_of_files):
         print(pos)
         movie_path=args.movie_path[pos]
         positive_coordinates_path=args.positive_coordinates_path[pos]
@@ -233,8 +242,8 @@ if __name__ == '__main__':
             epochs=100, callbacks=callbacks_list, verbose=1, validation_data=(X_test, y_test), shuffle=True)
     
     
-    #save the model
-
-    # serialize weights to HDF5
-    modelCNN.model.save_weights(args.save_model_path+"cnn-model-last.hdf5")
+#    #save the model
+#
+#    # serialize weights to HDF5
+#    modelCNN.model.save_weights(args.save_model_path+"cnn-model-last.hdf5")
     print("Saved to the disk ")
