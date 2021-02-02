@@ -31,11 +31,11 @@ The basis of the tracking approach is described in the paper "Protein Tracking B
 1. In necessary update the environment: `conda env update --file environment.yml`
 2. In a terminal (Anaconda prompt for Windows) navigate to the software folder, activate the environment: `conda activate msp'
 3. To run the software: `python msptracker.py`:
-  - Load the movie
+  - load the image sequence
   - set detection parameters
   - set linking parameter
-  - run it in all the movie
-  - select membrane, set parameters and run in all the movie
+  - run for the entire image sequence
+  - select membrane, set parameters and run for the entire image sequence 
   
 2a. For window machine double click on `run_tracker_windows.bat` - it should do all the work
 
@@ -74,9 +74,9 @@ To create the txt file, you can use ImageJ multi-point tool and with ctrl+M copy
 
 #### Trackviewer
 1. If necessary update the environment: `conda env update --file environment.yml`
-2. In a terminal, activate the environment: `source activate msp`
+2. In a terminal, activate the environment: `conda activate msp`
 3. To run the software: `python mspviewer.py`:
   - load protein movie
-  - select the tracks (.txt file, json format)
+  - select the tracks (.txt file, json format or csv file)
   - optional: select membrane movie
 
