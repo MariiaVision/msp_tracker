@@ -17,7 +17,8 @@ import scipy as sp
 from scipy.optimize import linear_sum_assignment 
 
 import networkx as nx
-
+import warnings
+warnings.filterwarnings("ignore")
 
 class GraphicalModelTracking(object):
     """
@@ -52,9 +53,9 @@ class GraphicalModelTracking(object):
         self.distance_search_range=12 # distance range to search connection between tracks
         
         self.frame_gap_tracklinking_1=5        
-        self.direction_limit_tracklinking=50
+        self.direction_limit_tracklinking=180
         self.distance_limit_tracklinking=10 # distance in pix between two tracklets to be connected
-        self.connectivity_threshold=0.8
+        self.connectivity_threshold=0.7
         
         self.track_displacement_limit=0 # minimum displacement of the final track
         self.track_duration_limit=1 # minimum number of frames per final track
@@ -140,8 +141,6 @@ class GraphicalModelTracking(object):
 
         self.track1=track1
         self.track2=track2
-#        print("track 1: ", track1) 
-#        print("track 2: ", track2)
         
         # calculates values for the nodes 
         
@@ -172,8 +171,9 @@ class GraphicalModelTracking(object):
         
         if self.topology=='complete':
         #all
-            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False)['A'].values[1] 
-
+            q=infer.query(['A'], evidence={'O': val_O, 'G': val_G, 'L': val_L, 'C':val_C, 'D':val_D, 'SP': val_SP, 'I':val_I}, joint=False, show_progress=False)['A'].values[1] 
+#            print('O', val_O, '   G', val_G, '   L', val_L, '   C',val_C, '    D',val_D, '    SP',  val_SP, '    I',val_I)
+#            print("q ", q)
         else:
             q=0
             print("the BN topology cannot be identify - check the self.topology parameter")
@@ -205,7 +205,6 @@ class GraphicalModelTracking(object):
         else:
             val=0 # there is no overlap
         
-#        print("O: ", val)
         return val
         
     def decision_g(self):
@@ -262,8 +261,6 @@ class GraphicalModelTracking(object):
             val = 4
         else: # near vesicle grading
             val=int(dist_per_frame/step) # no gap or medium gap
-        print("distance: ", dist, "   dist/frame: ", dist_per_frame, "      frame: ", N_frames_travelled)
-        print("coordinate_value", val)
 
         return val       
     
@@ -495,7 +492,7 @@ class GraphicalModelTracking(object):
         #iterate over each frame with ending tracks
         print("scanning frames for possble connections ...")
         for n_frame in tqdm(self.track_data_framed_end):
-#            print("frame ", n_frame)
+#
             tracklets_to_check=[]
             
             #for the distance calculation
@@ -572,7 +569,7 @@ class GraphicalModelTracking(object):
 
                     checked_connections.append([ID_compare[0], ID_compare[1]])
                     connectivity_score=self.decision_tracklets_connection(track1, track2)
-#                    print("tracklets", [ID_compare[0], ID_compare[1]]," possible connection", connectivity_score)
+#                    print("\n tracklets", [ID_compare[0], ID_compare[1]]," possible connection", connectivity_score, " possible connection:", connectivity_score>=self.connectivity_threshold)
                     
                     # remove pairs with small connectivity score
                     if connectivity_score>=self.connectivity_threshold:
@@ -724,7 +721,7 @@ class GraphicalModelTracking(object):
                 self.data.update({t:track})
 
  
-        print("ALL the tracks: ", len(self.tracks))            
+        print("\n The MSP-tracker found ", len(self.tracks), " tracks")            
     
     def assignDetectionToTracks(self, cost):
         '''
