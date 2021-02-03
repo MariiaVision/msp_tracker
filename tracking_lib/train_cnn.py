@@ -20,7 +20,6 @@ from skimage import io
 import argparse
 import glob
 from tqdm import tqdm
-import csv
 
 class CnnPrunning:
     '''
@@ -61,7 +60,6 @@ class CnnPrunning:
         for filename in files:
             
             segment = io.imread(filename)
-#            segment = skimage.color.rgb2gray(img) 
             segment=(segment-np.min(segment))/(np.max(segment)-np.min(segment))
             segment_array.append(segment)
             label_array.append(label)
@@ -116,10 +114,6 @@ def save_imgs(file_img, file_txt, path_save, box_size=16, pos=0):
             frameN=int(int(field[3]))-1
             
             img= substract_bg_single(img_set, frameN, step=100) 
-    #        img= img_set[frameN,:,:] 
-            
-            
-            img=(img-np.min(img))/(np.max(img)-np.min(img))
             
             for new_pos in range(0,2):
             
@@ -244,6 +238,6 @@ if __name__ == '__main__':
     
 #    #save the model
 #
-#    # serialize weights to HDF5
+#    # final weights to HDF5
 #    modelCNN.model.save_weights(args.save_model_path+"cnn-model-last.hdf5")
     print("Saved to the disk ")

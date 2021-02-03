@@ -22,7 +22,7 @@ import json
 
 class Detectors(object):
     """
-    Class to detect secretory protein vesicles in a frame
+    Class to detect particles in a frame
     
     """
     def __init__(self):
@@ -67,17 +67,17 @@ class Detectors(object):
         
     def read_param_from_file(self, file_name):
         '''
-        Read parameters from the fiven file
+        Read parameters from the given file
         '''
         
         with open(file_name) as json_file: 
             data = json.load(json_file)
 
         settings=data['parameters']
-        print("\n reading data: ", settings)
+        print("\n reading data: \n", settings)
             
         #MSSEF
-        self.c=settings['c'] #0.01 # coef for the thresholding
+        self.c=settings['c']  # coef for the thresholding
         self.k_max=settings['k_max'] # end of  the iteration
         self.k_min=settings['k_min'] # start of the iteration
         self.sigma_min=settings['sigma_min'] # min sigma for LOG
@@ -199,6 +199,7 @@ class Detectors(object):
                 y_st=int(lm[1]-segment_size/2)
                 y_end=y_st+segment_size
                 img_segment= np.copy(img[x_st: x_end, y_st:y_end])
+                
                 #preprocess the segment
                 img_segment_set[i,:,:]=(img_segment-np.min(img_segment))/(np.max(img_segment)-np.min(img_segment))
                 i=i+1
@@ -263,7 +264,10 @@ class Detectors(object):
                     self.detected_candidates.append(point_new)   
     
     # # # # segmentation using watershed new_img
-        updated_centers=self.classify_vesicle(local_max, self.img_set[frameN,:,:], new_model, segment_size=self.box_size)    
+        #normalised frame
+        frame_img_classify=self.img_set[frameN,:,:]
+        
+        updated_centers=self.classify_vesicle(local_max, frame_img_classify, new_model, segment_size=self.box_size)    
         
         if self.gaussian_fit==True:
 
@@ -273,7 +277,7 @@ class Detectors(object):
                 img=self.img_set[frameN,:,:]
                 img_m=filters.median(img, selem=None, out=None)
                 try: 
-                    img_roi_raw=       np.copy(img[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
+                    img_roi_raw= np.copy(img[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
                     img_roi_processed= np.copy(img_m[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
                                     
                     # sub-pixel localisation
