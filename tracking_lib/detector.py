@@ -19,6 +19,8 @@ from keras.layers import Dense, Dropout, Flatten, Conv2D, MaxPooling2D
 
 import trackpy as tp
 import json
+import warnings
+warnings.filterwarnings("ignore")
 
 class Detectors(object):
     """
