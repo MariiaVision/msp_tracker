@@ -86,7 +86,7 @@ class TrackingSetUp(object):
         # tracking: tracklinking path 1
         self.tracklinking_path1_topology='complete' # topology type    
         self.tracklinking_path1_frame_gap_1=5        
-        self.tracklinking_path1_direction_limit=80
+        self.tracklinking_path1_direction_limit=180
         self.tracklinking_path1_distance_limit=5 # distance in pix between two tracklets to be connected 
         self.tracklinking_path1_connectivity_threshold=0.7
         self.tracklinking_path1_speed_limit=0.5
@@ -103,7 +103,7 @@ class TrackingSetUp(object):
         self.tracklinking_path2_frame_gap_1=3        
         self.tracklinking_path2_direction_limit=90
         self.tracklinking_path2_distance_limit=5 # distance in pix between two tracklets to be connected 
-        self.tracklinking_path2_connectivity_threshold=0.7
+        self.tracklinking_path2_connectivity_threshold=0.6
         self.tracklinking_path2_speed_limit=0.2
         self.tracklinking_path2_intensity_limit=0.2
         
