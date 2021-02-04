@@ -1,6 +1,6 @@
 #!/bin/bash
 
-conda activate gui_tracker
+conda activate msp
 
 ################## SET PATHS BELOW: 
 
