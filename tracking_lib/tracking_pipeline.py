@@ -23,6 +23,16 @@ import json
 from set_tracking import  TrackingSetUp
 import argparse
 
+def str2bool(v):
+    if isinstance(v, bool):
+       return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+        
 def get_args():
     parser = argparse.ArgumentParser(description='MSP-tracking script',
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -35,7 +45,7 @@ def get_args():
     parser.add_argument('-lpp', '--linking_parameters_path', type=str, default="",
                         help='path to the file with linking parameters', dest='linking_parameters_path')
     
-    parser.add_argument('-d', '--use_existing_detection', dest='use_existing_detection', type=bool, default=False,
+    parser.add_argument('-d', '--use_existing_detection', dest='use_existing_detection', type=str2bool, default=False,
                         help='Use existing detection and read it from a file')
     
     parser.add_argument('-dp', '--detection_path', dest='detection_path', type=str, default="d_temp.txt",
@@ -123,6 +133,7 @@ if __name__ == '__main__':
     #run tracking
     
     # detection from a file or a new one
+    print(type(args.use_existing_detection))
     if args.use_existing_detection==True:
         detector.detection_choice=1
     else:
