@@ -412,7 +412,7 @@ See the Manual for the detailed description of the software.
             filename=tk.filedialog.asksaveasfilename(title = "Save tracking results ")
             # save in parameters
             if not filename:
-                print("file was not given")
+                print("File was not provided")
             else:
                 self.result_path=filename
                 self.show_parameters()
@@ -826,16 +826,6 @@ See the Manual for the detailed description of the software.
      
     # parameters 
     def show_parameters(self):
-        
-        
-        #### update frames
-        
-        
-        lb_start = tk.Label(master=self.action_frame, text=" end frame ",  bg='white')
-        lb_start.grid(row=0, column=2) 
-        v=tk.StringVar(self.action_frame, value=str(self.movie.shape[0]))
-        self.r_end_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
-        self.r_end_frame.grid(row=0, column=3, pady=self.pad_val, padx=self.pad_val)  
         
         #### show parameters : parametersFrame_linking
         
@@ -1671,6 +1661,14 @@ See the Manual for the detailed description of the software.
               
             self.lb_movie_l = tk.Label(master=self.viewFrame_linking, text="movie: "+self.movie_protein_path.split("/")[-1], bg='white')
             self.lb_movie_l.grid(row=1, column=0, columnspan=9, pady=self.pad_val, padx=self.pad_val)
+            
+                    
+            ### update frames in the run detection tub
+            
+            v=tk.StringVar(self.action_frame, value=str(self.movie.shape[0]))
+            self.r_end_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
+            self.r_end_frame.grid(row=0, column=3, pady=self.pad_val, padx=self.pad_val)  
+        
             
             #set the same "zoom"
             self.axd.set_xlim(0,self.movie.shape[2])
