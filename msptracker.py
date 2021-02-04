@@ -149,12 +149,12 @@ See the Manual for the detailed description of the software.
         
         
         # detection
-        detectionFrame = tk.Frame(master=tab_detection)
-        detectionFrame.pack(expand=1, fill='both')
+        self.detectionFrame = tk.Frame(master=tab_detection)
+        self.detectionFrame.pack(expand=1, fill='both')
         
         # linking 
-        linkingFrame = tk.Frame(master=tab_linking)
-        linkingFrame.pack(expand=1, fill='both')
+        self.linkingFrame = tk.Frame(master=tab_linking)
+        self.linkingFrame.pack(expand=1, fill='both')
         
         # run 
         self.runFrame = tk.Frame(master=tab_run)
@@ -169,7 +169,7 @@ See the Manual for the detailed description of the software.
 
     ########################## DETECTION ######################
      # # # # # # # # # # # # # # # # # # # # # #   
-        detectionFrame.configure(background='white')
+        self.detectionFrame.configure(background='white')
         
         ############################################
 
@@ -187,12 +187,12 @@ See the Manual for the detailed description of the software.
         #############################################
 
         # Framework: place monitor and view point
-        self.viewFrame_detection = tk.Frame(master=detectionFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_detection = tk.Frame(master=self.detectionFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
         self.viewFrame_detection.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
 
            
         # place parameters and buttons
-        self.parametersFrame_detection = tk.Frame(master=detectionFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_detection = tk.Frame(master=self.detectionFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.parametersFrame_detection.grid(row=0, column=11, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
         
 
@@ -244,7 +244,7 @@ See the Manual for the detailed description of the software.
 ############################ Linking #################
 
         #set the window colour        
-        linkingFrame.configure(background='white')
+        self.linkingFrame.configure(background='white')
         
         ############################################
 
@@ -259,16 +259,16 @@ See the Manual for the detailed description of the software.
     
     
         # Framework: place monitor and view point
-        self.viewFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrame_linking = tk.Frame(master=self.linkingFrame, width=int(self.window_width*0.6), height=self.window_height, bg="white")
         self.viewFrame_linking.grid(row=0, column=0, rowspan=2,  pady=self.pad_val, padx=self.pad_val)   
 
 
         # place number of paths choice
-        self.parametersFrame_linking_path = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_linking_path = tk.Frame(master=self.linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.parametersFrame_linking_path.grid(row=0, column=11, columnspan=1, rowspan=1, pady=self.pad_val, padx=self.pad_val)   
            
         # place parameters and buttons
-        self.parametersFrame_linking = tk.Frame(master=linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.parametersFrame_linking = tk.Frame(master=self.linkingFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.parametersFrame_linking.grid(row=1, column=11, columnspan=1, rowspan=1, pady=self.pad_val, padx=self.pad_val)    
 
         
@@ -832,6 +832,7 @@ See the Manual for the detailed description of the software.
 
             
         self.information_frame.destroy()
+        self.information_frame.forget()
         self.information_frame = tk.Frame(master=self.runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.information_frame.grid(row=0, column=2, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)   
 
