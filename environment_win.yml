@@ -7,15 +7,15 @@ dependencies:
   - pip
   - pip:
     - opencv-python
-    - trackpy
+    - trackpy==0.4.2
     - pgmpy==0.1.9
     - tqdm
     - scikit-learn==0.20.3
   - pytorch-cpu==1.0.1
   - numpy
-  - scipy
-  - matplotlib
-  - scikit-image
+  - scipy==1.5.2
+  - matplotlib==3.3.2
+  - scikit-image==0.17.2
   - tk
   - pandas
   - keras==2.3.1
