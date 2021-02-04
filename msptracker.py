@@ -1,6 +1,6 @@
 #########################################################
 #
-#  main framework to run the GUI and tracking module 
+#  main framework to run the MSP-tracker GUI 
 #        
 #########################################################
 
@@ -68,28 +68,28 @@ class MainApplication(tk.Frame):
             T.config(yscrollcommand=S.set)
             T.configure(font=("Helvetica", 12))
             # widget in there with a text 
-            text_help=""" Information about the software: 
-                
-The tracking software allows to set parameters and test them before running the tracker for the movie. 
-
+            text_help="""
+            
+The MSP-tracker provides tools for particle tracking and membrane segmentation. 
+The tracking software allows to set parameters and test them before running the tracker for the entire image sequence. 
 You can test detection on a single frame and linking on a sequence of frames.   
 
 Follow the steps to run the tracker: 
     
-1) load the movie (button "Select vesicle movie")
+1) load the movie (button "Select image sequence")
 It should be single channel movie.
 
 2) Set detection parameters (load from a file if set earlier): 
-    a) Set parameter for candidate detection.  
-    b) Set parameters for candidate pruning. 
-    c) Run test and change parameters until satisfied with the results.  
+    a) Set parameter for candidate detection  
+    b) Set parameters for candidate pruning
+    c) Run test and change parameters until satisfied with the results 
 
 3) Set Linking parameters (load from a file if set earlier): 
-    a) Choose number of passes.  
-    b) Set STEP 1. 
-    c) Set one pass after another. 
-    d) Set start and end frame for testing. 
-    e) Run test and change parameters until satisfied with the results. 
+    a) Choose number of passes  
+    b) Set parameters for TRACKLET FORMATION
+    c) Set one pass after another for TRACKLINKING
+    d) Set start and end frame for testing
+    e) Run test and change parameters until satisfied with the result. 
 
 4) Run the tracker:  
     a) Check the parameters 
@@ -101,193 +101,18 @@ You should not close the software until the tracking is complete.
 You can follow the tracking progress in the terminal. 
 When finished the final tracks will appear in the linking window and also can be opened in the separate viewer software. 
 
-The tracking algorithm is described in 
-“Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network” 
-Mariia Dmitrieva,  Helen L Zenner, Jennifer Richens, Daniel St Johnston, Jens Rittscher, 
-2019 IEEE 29th International Workshop on Machine Learning for Signal Processing (MLSP) 
 
+The membrane segmentation is a complimentary tool. It allows to set parameters, test the result on a couple of frames and run the membrane segmentation for the entire sequence.
 
-            """
-            
-#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
-            T.insert(tk.END, text_help)
-            T.pack(side=tk.LEFT, fill=tk.Y)
-            
-            
-        def HelpDetection():
-            # create a new window
-            self.new_window_help = tk.Toplevel(self.master)
-            self.new_window_help.title("Detection ")
-#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
-            self.new_window_help.configure(background='white')
-            # widget in there with a text 
-            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
-            S = tk.Scrollbar(self.new_window_help)
-            S.config(command=T.yview)
-            S.pack(side=tk.RIGHT, fill=tk.Y)
-            T.config(yscrollcommand=S.set)
-            T.configure(font=("Helvetica", 12))
-            # widget in there with a text 
-            text_help=""" Detection:
-    
-    a) Set parameter for candidate detection. 
-    
-        - Firstly, set Multi Scale Spot Enhancing Filter (MSSEF) choosing Threshold coefficient and Sigma. You can use “Show MSSEF” button to check the  enhanced spots. 
-The ideal image is when all the vesicles appear as separate spots without any holes inside and area outside the cell doesn't produce any spots.
-Threshold coefficient - intensity of the spots (from 0 up to 2-5)
-Sigma - range of blur for spot enhancement, influence the spot size and its shape.
-
-        - Set Relevant peak height (from 0 to 1). Increase the value to detect only bright spots and decrease it if darker spots have to be detected as well.
-        
-    b) Set parameter for candidate pruning.
-    
-- Minimum distance between detections - number of pixels expected between centers of two vesicles
-- Region of Interest size - region for classifier 8 or 16. At this stage it is 16 for all models unless states opposite.
-- Threshold coefficient - threshold for the classifier (from 0 to 1)
-- Load CNN model - there is a number of different trained models (folder "dl_weight"), if the classification results are not good you can try another model
-- Subpixel localisation - on/off 
--Region for Subpix localisation - region of interest for the task of subpixel localisation
-- Expected particle radius - odd number of pixels
- 
-You can test the detection on the current frame – button “Run test”, save the parameters into a file – button “Save to file” and load saved parameters “Read from file”. 
-            
-
-"""
-            
-#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
-            T.insert(tk.END, text_help)
-            T.pack(side=tk.LEFT, fill=tk.Y)    
-            
-        def HelpLinking():
-            # create a new window
-            self.new_window_help = tk.Toplevel(self.master)
-            self.new_window_help.title("Linking ")
-#            self.new_window_help.geometry(str(int(self.window_width/2))+"x"+str(int(self.window_height/2)))
-            self.new_window_help.configure(background='white')
-            # widget in there with a text 
-            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
-            S = tk.Scrollbar(self.new_window_help)
-            S.config(command=T.yview)
-            S.pack(side=tk.RIGHT, fill=tk.Y)
-            T.config(yscrollcommand=S.set)
-            T.configure(font=("Helvetica", 12))
-            
-            text_help="""Linking:
-                
-    a) Choose number of passes. 
-    
-This is number of tracklinking passes. In most of the cases 1 pass is enough, but in case of dense vesicle population or difference in speed movement it can be beneficial to use two passes.
-
-    b) Tracklet formation. 
-    
-At this step short tracks (tracklets) are forms based on the distance. You need to specify three parameters: 
-
-- maximum distance to link - number of pixels between to detection which still can be linked
-- maximum skipped frames - how many frames can be skipped in the same tracklet between two detections
-- maximum track length - number of frames in one tracklet. Could be 5-10 in general, but for a dense movement should be about 3-4.
-   
-    c) Set one pass after another. 
-
-- connectivity threshold - final threshold which decide on tracklets connection (from 0 to 1)
-- temporal gap - maximum number of frames which can be between two connections (when vesicle is not detected for a number of frames)
-- distance limit - maximum expected distance between two detections
-- orientation similarity - acceptable difference in orientation (from 0 to 180)
-- speed similarity limit - acceptable proportional difference in speed (from 0 to 1)
-- intensity similarity limit - acceptable difference in intensity (from 0 to 1)
-- threshold of track length - the final tracks shorter than the number will be removed. Make it 0 for all the passes accept the last one.
-
-When you have two passes the idea is first to connect slowly moving vesicles:
-    - smaller values for speed, intensity and orientation - it is not important
-    - small values for temporal gaps - the connections should be close to each other in time
-    - smaller value for the distance limit - this value depends on the speed you want to take into account
-    
-And with second pass faster moving vesicles will be linked:
-    - can increase values for speed, intensity and orientation, but not necessary 
-    - increase the temporal gap 
-    - increase the distance limit
-
-    d) Set start and end frame for testing. 
-It can be about 10-40 frames at the time when the most complex movement is happening
-
-    e) Run test and change parameters until satisfied with results. 
-    
-    
-            """
-            
-#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
-            T.insert(tk.END, text_help)
-            T.pack(side=tk.LEFT, fill=tk.Y)
-                    
-            
-            
-        def HelpTracking():
-            # create a new window
-            self.new_window_help = tk.Toplevel(self.master)
-            self.new_window_help.title("Tracking ")
-#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
-            self.new_window_help.configure(background='white')
-                        # widget in there with a text 
-            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
-            S = tk.Scrollbar(self.new_window_help)
-            S.config(command=T.yview)
-            S.pack(side=tk.RIGHT, fill=tk.Y)
-            T.config(yscrollcommand=S.set)
-            T.configure(font=("Helvetica", 12))
-            text_help=""" Run the tracker: 
-                
-    a) Check the parameters. 
-    b) Choose start and end frames 
-    c) Select location and name of the file with tracking results 
-    d) Run the tracker with button “RUN TRACKING” 
-
-You should not close the software until the tracking is complete. 
-You can see the progress in the terminal. 
-When finished the final tracks will appear in the linking window and also can be opened in the separate viewer software. 
-
+See the Manual for the detailed description of the software.
 
             """
             
-        def HelpMembrane():
-            # create a new window
-            self.new_window_help = tk.Toplevel(self.master)
-            self.new_window_help.title("Membrane segmentation ")
-#            self.new_window_help.geometry(str(int(self.window_width/10))+"x"+str(int(self.window_height/10)))
-            self.new_window_help.configure(background='white')
-                        # widget in there with a text 
-            T = tk.Text(self.new_window_help, wrap=tk.WORD) #, height=int(self.window_height/4), width=int(self.window_width/4))
-            S = tk.Scrollbar(self.new_window_help)
-            S.config(command=T.yview)
-            S.pack(side=tk.RIGHT, fill=tk.Y)
-            T.config(yscrollcommand=S.set)
-            T.configure(font=("Helvetica", 12))
-            text_help=""" Membrane segmentation: 
-                
-    a) Set parameters:
-            - Line length min, pix - should be an even number, the shortest line which will be fitted 
-            - Line length max, pix - should be an even number, the longest line which will be fitted 
-            - Line length step, pix - should be an odd number, the step while iterating over the line with different length
-            - Orientation threshold - float in range [0,5], defines which proportion between preeminent orientation and others should be to be accepted as a line
-            - Intensity threshold - float in range [0,1], defines minimum intensity of the pixel to be considered for the line fitting (normilised value in relation to the maximum intensity in the region)
-            - Orientation step, degrees - integer in range [1,180], defines step between line orientations which will be fitted. Good choice would be number between 10-40 degrees, but the choice depends on the membrane structure
-            - Minimum Segment size, pix - integer to define requirement to the minimum number of pixels per segment. It allows to remove small segments. 
-            - Region size, pix - integer defines region width and height to be processed at once. Use smaller region to compensate for the intensity variation in a single frame
-
-    b) Test the result for a number of frames
-    c) Save/read parameters in required
-    d) Run the segmentation for the entire video sequence with "Run membrane segmentation"
-    
-            """            
-#            lb_start = tk.Label(master=self.new_window_help, text=" Information about the software",  bg='white')
             T.insert(tk.END, text_help)
             T.pack(side=tk.LEFT, fill=tk.Y)
-                 
+          
             
-            
-        helpmenu.add_command(label="About...", command=HelpAbout)
-        helpmenu.add_command(label="Detection", command=HelpDetection)
-        helpmenu.add_command(label="Linking", command=HelpLinking)
-        helpmenu.add_command(label="Run tracking", command=HelpTracking)
-        helpmenu.add_command(label="Membrane segmentation", command=HelpMembrane)
+        helpmenu.add_command(label="About the software", command=HelpAbout)
         
         # set movie and class for parameter settings
         self.movie=np.ones((1,200,200))
@@ -687,7 +512,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         filename = tk.filedialog.askopenfilename()
         if not filename:
-            print("File was not chosen")
+            print("File was not selected")
         else:   
         
             # read files 
@@ -881,12 +706,13 @@ When finished the final tracks will appear in the linking window and also can be
         
         # choose the file
         filename=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
-        if not(filename.endswith(".txt")):
-                filename += ".txt" 
+ 
         # save into the file
         if not filename:
-            print("file name was not given. Nothing will be saved")
+            print("File name was not provided. The data was not saved.")
         else:
+            if not(filename.endswith(".txt")):
+                filename += ".txt"
             # create data with parameters
             parameters={'W_start':self.segmentation.W_start, 'W':self.segmentation.W , 'step':self.segmentation.step,
             'threshold_membrane':self.threshold_membrane,  'img_threshold_membrane':self.img_threshold_membrane,  'degree_step':self.segmentation.degree_step,
@@ -908,7 +734,7 @@ When finished the final tracks will appear in the linking window and also can be
         filename = tk.filedialog.askopenfilename(title = "Select file with saved parameters")
         
         if not filename:
-            print("file name was not given.")
+            print("File was not selected")
         else:       
             # save parameters
             with open(filename) as json_file: 
@@ -940,7 +766,7 @@ When finished the final tracks will appear in the linking window and also can be
         filename=tk.filedialog.asksaveasfilename(title = "Save segmentation into the file ")
         
         if not filename :
-            print("the file name is not given")
+            print("File name was not provided. The data was not saved.")
         else:
             if not(filename.endswith(".tif") or filename.endswith(".tiff")):
                 filename += ".tif" 
@@ -1592,7 +1418,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # save in parameters
         if not filename:
-            print("file was not chosen")
+            print("File was not selected")
         else:
             self.detector.cnn_model_path=filename
             self.set_detection_parameters_frame()
@@ -1676,7 +1502,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # save into the file
         if not filename:
-            print("file name was not given. Nothing will be saved")
+            print("File name was not provided. The data was not saved.")
         else:
             self.detector.detection_parameter_path= filename
             self.set_detection_parameters_frame()
@@ -1690,7 +1516,7 @@ When finished the final tracks will appear in the linking window and also can be
         filename = tk.filedialog.askopenfilename(title = "Open file with parameters ")
         # read from the file
         if not filename:
-            print("file name was not selected")
+            print("File was not selected")
         else:
             self.detector.detection_parameters_from_file(filename)     
         
@@ -1767,7 +1593,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         filename = tk.filedialog.askopenfilename()
         if not filename:
-            print("File was not chosen")
+            print("File was not selected")
         else:   
             self.movie_protein_path=filename
         
@@ -1822,7 +1648,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         filename = tk.filedialog.askopenfilename()
         if not filename:
-            print("File was not chosen")
+            print("File was not selected")
         else:   
             self.movie_protein_path=filename
         
@@ -1984,7 +1810,7 @@ When finished the final tracks will appear in the linking window and also can be
         filename=tk.filedialog.asksaveasfilename(title = "Save parameters into json file")
         
         if not filename:
-            print("File was not chosen. Nothing will be saved! ")
+            print("File was not selected. The data was not saved. ")
         else:   
             self.detector.linking_parameter_path=filename
             self.detector.linking_parameter_to_file()
@@ -1996,7 +1822,7 @@ When finished the final tracks will appear in the linking window and also can be
         
         # read from the file  
         if not filename:
-            print("File was not chosen. ")
+            print("File was not selected ")
         else:
             self.detector.linking_parameters_from_file(filename)
         
