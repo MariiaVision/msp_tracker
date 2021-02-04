@@ -14,7 +14,9 @@ from tracker import Tracker
 
 from keras.models import  load_model
 import json 
-
+import os
+import warnings
+warnings.filterwarnings("ignore")
 
 class TrackingSetUp(object):
     '''
@@ -41,9 +43,13 @@ class TrackingSetUp(object):
         self.tracklets=[]
         
         #
-        self.detection_parameter_path="temp/detection_temp.txt"
-        self.linking_parameter_path="temp/linking_temp.txt"
-        self.detection_file_name="temp/d_temp.txt"
+        
+        if not os.path.exists('temp'):
+            print(" creating")
+            os.makedirs('temp')
+        self.detection_parameter_path="temp/detection_parameters_temp.txt"
+        self.linking_parameter_path="temp/linking_parameters_temp.txt"
+        self.detection_file_name="temp/detection_temp.txt"
         
         self.detection_choice=0
         
@@ -338,7 +344,7 @@ class TrackingSetUp(object):
         self.tracklets=data
         
         # save tracklets  
-        with open("tracklets_temp.txt", 'w') as f:
+        with open("temp/tracklets_temp.txt", 'w') as f:
             json.dump(data, f, ensure_ascii=False)
 
         # step 2 tracklinking
@@ -380,13 +386,13 @@ class TrackingSetUp(object):
         self.tracks=tracklink.tracks
 
         #save tracks in temp file
-        tracklink.save_tracks("temp.txt")
+        tracklink.save_tracks("temp/tracks_pass1_temp.txt")
         # # # # # # # # tracklinking path 2  # # # # # # # # # 
         
         if self.tracklinking_Npass>1:
                         
             # read tracks
-            with open('temp.txt') as json_file:  # 'tracking_original.txt'
+            with open('temp/tracks_pass1_temp.txt') as json_file:  # 'tracking_original.txt'
                 data = json.load(json_file)
                 
                 
