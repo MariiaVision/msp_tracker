@@ -294,7 +294,7 @@ class TrackingSetUp(object):
 
         if self.detection_choice==0: # first detection and then linking
             data={}
-            for frameN in range(self.start_frame,self.end_frame):
+            for frameN in range(self.start_frame,self.end_frame+1):
                 print("frame ", frameN)
                 #detection
                 vesicles=detector.detect(frameN, cnn_model)
@@ -317,7 +317,7 @@ class TrackingSetUp(object):
                 
             
             # create tracklets
-            for frameN in range(self.start_frame,self.end_frame):
+            for frameN in range(self.start_frame,self.end_frame+1):
                 print("frame ", frameN)
                 try:
                     vesicles=detections[str(frameN)]

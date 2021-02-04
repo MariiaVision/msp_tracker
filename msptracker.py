@@ -157,8 +157,8 @@ See the Manual for the detailed description of the software.
         linkingFrame.pack(expand=1, fill='both')
         
         # run 
-        runFrame = tk.Frame(master=tab_run)
-        runFrame.pack(expand=1, fill='both')
+        self.runFrame = tk.Frame(master=tab_run)
+        self.runFrame.pack(expand=1, fill='both')
         
         # membrane segmentation 
         membraneFrame = tk.Frame(master=tab_membrane)
@@ -376,14 +376,14 @@ See the Manual for the detailed description of the software.
 #################################  run tracking: runFrame ##############################
         
         #set the window colour        
-        runFrame.configure(background='white')
+        self.runFrame.configure(background='white')
 
         # Framework: place monitor and view point
-        self.action_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.action_frame = tk.Frame(master=self.runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.action_frame.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)   
 
         # place parameters and buttons
-        self.gap_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.1), height=self.window_height, bg="white")
+        self.gap_frame = tk.Frame(master=self.runFrame, width=int(self.window_width*0.1), height=self.window_height, bg="white")
         self.gap_frame.grid(row=0, column=1, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)      
 
         lbl3 = tk.Label(master=self.gap_frame, text=" ",  bg='white', width=int(self.button_length), height=int(self.button_length/3))
@@ -391,7 +391,7 @@ See the Manual for the detailed description of the software.
         
         
         # place parameters and buttons
-        self.information_frame = tk.Frame(master=runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.information_frame = tk.Frame(master=self.runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
         self.information_frame.grid(row=0, column=2, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)    
         
         # set start and end frame
@@ -829,19 +829,26 @@ See the Manual for the detailed description of the software.
         
         #### show parameters : parametersFrame_linking
         
+
+            
+        self.information_frame.destroy()
+        self.information_frame = tk.Frame(master=self.runFrame, width=int(self.window_width*0.4), height=self.window_height, bg="white")
+        self.information_frame.grid(row=0, column=2, columnspan=1, rowspan=10, pady=self.pad_val, padx=self.pad_val)   
+
+        
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
         
         #remove text if was there before
-        try:
-            self.original_label.destroy()
-        except:
-            pass       
-        
-        try:
-            self.final_tracks_label.destroy()
-        except:
-            pass
+#        try:
+#            self.original_label.destroy()
+#        except:
+#            pass       
+#        
+#        try:
+#            self.final_tracks_label.destroy()
+#        except:
+#            pass
         self.original_label = tk.Label(master=self.information_frame, text=" Original image sequence:  "+ self.movie_protein_path.split("/")[-1],  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
         self.original_label.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
