@@ -1954,8 +1954,8 @@ See the Manual for the detailed description of the software.
         
         # save tracks to json file 
         if not(self.result_path.endswith(".txt")):
-            result_path_txt =self.result_path+ ".txt"
-        with open(result_path_txt, 'w') as f:
+            self.result_path=self.result_path+ ".txt"
+        with open(self.result_path, 'w') as f:
             json.dump(self.final_tracks, f, ensure_ascii=False)
             
             
