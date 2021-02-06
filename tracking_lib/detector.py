@@ -211,7 +211,7 @@ class Detectors(object):
             for pos in range(0, len(centers)):
                 if score_set[pos][1]>self.detection_threshold:
         
-                    updated_centers.append(centers[pos])
+                    updated_centers.append([float(centers[pos][0]), float(centers[pos][1])])
 
         return updated_centers
 
@@ -294,13 +294,13 @@ class Detectors(object):
                     else:
                         x=lm[0]+x-int(self.box_size_fit/2)
                         y=lm[1]+y-int(self.box_size_fit/2)
-                    point_new=[x, y]            
+                    point_new=[float(x), float(y)]            
                     self.detected_vesicles.append(point_new) 
                     
                 except:
                     x=lm[0]
                     y=lm[1]
-                    point_new=[x, y]            
+                    point_new=[float(x), float(y)]            
                     self.detected_vesicles.append(point_new) 
         else:
             self.detected_vesicles=updated_centers
