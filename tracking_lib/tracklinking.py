@@ -711,10 +711,10 @@ class GraphicalModelTracking(object):
             track=self.tracks_before_filter.get(t)
 #            print(track)
             if len(track['trace'])>0:
-                duration=track['frames'][-1]-track['frames'][0]
+                duration=track['frames'][-1]-track['frames'][0]+1
             else:
                 duration=-1
-            if  duration>self.track_duration_limit:
+            if  duration>=self.track_duration_limit:
                 self.tracks.update({t:track})
                 
                 # this is for transition to the distionary storage - to display in list yet
