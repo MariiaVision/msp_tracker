@@ -443,7 +443,8 @@ class GraphicalModelTracking(object):
         '''
         
         self.tracklets=tracklets
-        
+        self.track_data_framed_start={}
+        self.track_data_framed_end={}
         for n_frame in range(0, movie.shape[0]):
             #rearrange the data
             track_list_start=[]
