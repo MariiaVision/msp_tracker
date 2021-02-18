@@ -403,9 +403,22 @@ class GraphicalModelTracking(object):
         new_track={}
         frames=[]
         trace=[]
+#        print("connections ID ", self.track_pos, "  : ", connections)
 
-
+        #sort order
+        
+        frame_pos=[]
         for i in connections:
+            tracklet=self.tracklets[str(int(i))]
+            frame_pos.append(tracklet['frames'][0])
+        
+        frame_pos_order=(np.asarray(frame_pos)).argsort()
+        
+        connections_ordered=list(np.asarray(connections)[frame_pos_order])
+        
+#        print(connections_ordered)
+        
+        for i in connections_ordered:
 
             tracklet=self.tracklets[str(int(i))]
             # join frames

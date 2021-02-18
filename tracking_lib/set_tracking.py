@@ -428,7 +428,8 @@ class TrackingSetUp(object):
             
             #final tracks
             self.tracks=tracklink.tracks
-            
+            #save tracks in temp file
+            tracklink.save_tracks("temp/tracks_pass2_temp.txt")            
     
         # # # # # # # # # # # # # # # # # # # # # # # # # # # #
         
