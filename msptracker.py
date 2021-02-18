@@ -1978,15 +1978,17 @@ See the Manual for the detailed description of the software.
                 tracks_data.append([trackID, point[0], point[1],  frame])
 
 
-                
         # save to csv 
         if not(self.result_path.endswith(".csv")):
-            result_path_csv =self.result_path+ ".csv"
+            if self.result_path.endswith(".txt"):
+                result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
+            else:
+                result_path_csv =self.result_path+ ".csv"
+                
         with open(result_path_csv, 'w') as csvFile:
             writer = csv.writer(csvFile)
             writer.writerows(tracks_data)
             csvFile.close()
-            
 
         
     
