@@ -1,10 +1,11 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jan  3 13:41:16 2019
 
-@author: maria dmitrieva
-"""
+#########################################################
+#
+#  MSP-viewer GUI 
+#        
+#########################################################
+
+
 import numpy as np
 import scipy as sp
 
@@ -53,7 +54,6 @@ class MainVisual(tk.Frame):
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # half the monitor width
         self.window_height = int(master.winfo_screenheight()*0.7)  # 0.9 of the monitor height
-#        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
 
         
         
@@ -114,20 +114,20 @@ class MainVisual(tk.Frame):
         ### frames ###
     
         # Framework: filtering tracks
-        self.filterframe= tk.Frame(root, bg='white') #, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.filterframe= tk.Frame(root, bg='white') 
         self.filterframe.grid(row=2, column=5, columnspan=4,rowspan=4,  pady=self.pad_val, padx=self.pad_val) 
         
         # Framework: saving/plotting results
-        self.resultbuttonframe= tk.Frame(root, bg='white') #, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.resultbuttonframe= tk.Frame(root, bg='white')
         self.resultbuttonframe.grid(row=13, column=5, columnspan=4,rowspan=4,  pady=self.pad_val, padx=self.pad_val)
         
         
         # Framework: place monitor navigation
-        self.viewFrametool = tk.Frame(root, bg='white') #, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.viewFrametool = tk.Frame(root, bg='white')
         self.viewFrametool.grid(row=13, column=0, columnspan=4,rowspan=2,  pady=self.pad_val, padx=self.pad_val)  
 
         # Framework: list navigation
-        self.listframework = tk.Frame(root, bg='white') #, width=int(self.window_width*0.6), height=self.window_height, bg="white")
+        self.listframework = tk.Frame(root, bg='white') 
         self.listframework.grid(row=7, column=5, columnspan=4,rowspan=6,  pady=self.pad_val, padx=self.pad_val)           
 
         
@@ -143,7 +143,7 @@ class MainVisual(tk.Frame):
         self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
   
 
-#    # # # # # # filter choice:membrane on/off # # # # # # #   
+#    # # # # # # filter choice: membrane on/off # # # # # # #   
         var_membrane = tk.IntVar()
         
         def update_membrane_switch():            
@@ -160,6 +160,8 @@ class MainVisual(tk.Frame):
         
         self.M3 = tk.Radiobutton(root, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
         self.M3.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
+        
+        
 #    # # # # # # filter choice:tracks # # # # # # #   
         var = tk.IntVar()
         
@@ -314,7 +316,7 @@ class MainVisual(tk.Frame):
     
     def save_track_plot(self):
         '''
-        plot and save the plot of all the tracks on a single frame
+        save the plot of all the tracks on a single frame
         '''
         
                 
@@ -340,7 +342,7 @@ class MainVisual(tk.Frame):
                 skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
                 # create an individual cmap with red colour
                 cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-                cmap_new._init() # create the _lut array, with rgba values
+                cmap_new._init() 
                 alphas = np.linspace(0, 0.8, cmap_new.N+3)
                 cmap_new._lut[:,-1] = alphas
                 #plot the membrane border on the top
@@ -355,6 +357,7 @@ class MainVisual(tk.Frame):
     def update_movie_parameters(self):
         '''
         read movie parameters and orientation given by the user
+        
         '''
         
         # read movie parameters
@@ -373,7 +376,7 @@ class MainVisual(tk.Frame):
         
     def save_orientation_info(self):
         '''
-        save track orientation into a file
+        save track orientation into file
         
         '''        
         
@@ -420,6 +423,7 @@ class MainVisual(tk.Frame):
     def plot_multiple_motion_map(self):
         '''
         load and plot multiple orientations together
+        
         '''
         
         # load multiple files
@@ -493,6 +497,7 @@ class MainVisual(tk.Frame):
     def plot_motion_map(self):
         '''
         plot motion map with given AP
+        
         '''
         
         
@@ -559,7 +564,6 @@ class MainVisual(tk.Frame):
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
             
             ax = fig.add_subplot(122, projection='polar')
-    #        plt.xticks(np.radians(range(0, 30, 180)),['0', '30', '60', '90', '120', '150', '180'])
     
     
             plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
@@ -576,6 +580,10 @@ class MainVisual(tk.Frame):
             
         
     def save_movie(self):
+        '''
+        save image sequence with plotted trajectories
+        
+        '''
         
         # update movie parameters
         self.update_movie_parameters()
@@ -599,13 +607,12 @@ class MainVisual(tk.Frame):
             lim_x1=int(ylim_old[0])
             lim_y0=int(xlim_old[0]) # because y-axis is inverted
             lim_y1=int(xlim_old[1]) # because y-axis is inverted
-    #        print (lim_x0, lim_x1, lim_y0, lim_y1)
+
             saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
             saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
     
-    #        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
-            if saved_movie.shape[1]<700 and saved_movie.shape[2]<700:
-                #save tiff file for small cell solution
+            if saved_movie.shape[1]<700 and saved_movie.shape[2]<700: # hard threshold to create tiff stack or video sequence
+                # save tiff file
                 final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3))
     
                 for frameN in range(0, saved_movie.shape[0]):
@@ -613,7 +620,7 @@ class MainVisual(tk.Frame):
                     plot_info=self.track_data_framed['frames'][frameN]['tracks']
                     frame_img=saved_movie[frameN,:,:]
                     membrane_img=saved_membrane[frameN,:,:]
-                    # Make a colour image frame
+                    # make a colour image frame
                     orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
             
                     img=frame_img/np.max(frame_img)+membrane_img*0.2
@@ -628,7 +635,7 @@ class MainVisual(tk.Frame):
                         clr = trackID % len(self.color_list)
                         if (len(trace) > 1):
                             for j in range(len(trace)-1):
-                                # Draw trace line
+                                # draw trace line
                                 point1=trace[j]
                                 point2=trace[j+1]
                                 x1 = int(point1[1])-lim_y0
@@ -651,7 +658,7 @@ class MainVisual(tk.Frame):
                     
                 imageio.volwrite(save_file, final_img_set)
             else:
-                #save avi file for large movies
+                # save avi file for large movies
     
                 if not(save_file.endswith(".avi")):
                     save_file += ".avi"
@@ -663,7 +670,8 @@ class MainVisual(tk.Frame):
                     plot_info=self.track_data_framed['frames'][frameN]['tracks']
                     frame_img=saved_movie[frameN,:,:]
                     membrane_img=saved_movie[frameN,:,:]
-                    # Make a colour image frame
+                    
+                    # create a colour image frame
                     orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
             
                     img=frame_img/np.max(frame_img)+membrane_img*0.2
@@ -702,9 +710,12 @@ class MainVisual(tk.Frame):
             
     
     def save_in_file(self):
+        '''
+        save corrected trajecotires to json and csv formats
         
-        # ask for the file location
+        '''
         
+        # ask for the file location        
         save_file = tk.filedialog.asksaveasfilename()
         
         if not save_file:
@@ -750,21 +761,28 @@ class MainVisual(tk.Frame):
     
 
     def move_to_previous(self):
-        
+        '''
+        move back one frame
+        '''
         if self.frame_pos!=0:
             self.frame_pos-=1
-
         self.scale_movie.set(self.frame_pos) 
         
     def move_to_next(self):
+        '''
+        move forward one frame
+        '''
         
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
-  #      self.show_tracks()
         self.scale_movie.set(self.frame_pos) 
         
         
-    def show_tracks(self):    
+    def show_tracks(self):  
+        '''
+        update image monitor with plots
+        
+        '''
                
         # update movie parameters
         self.update_movie_parameters()
@@ -809,8 +827,7 @@ class MainVisual(tk.Frame):
             #plot the membrane border on the top
             self.ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
 
-        #set the same "zoom"
-        
+        #set the same "zoom"        
         self.ax.set_xlim(xlim_old[0],xlim_old[1])
         self.ax.set_ylim(ylim_old[0],ylim_old[1])
         
@@ -848,6 +865,10 @@ class MainVisual(tk.Frame):
         
 
     def filtering(self):
+        '''
+        filtering tracks
+        
+        '''
         
                 
         # update movie parameters
@@ -924,6 +945,9 @@ class MainVisual(tk.Frame):
         lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
 
     def list_update(self):
+        '''
+        update track list
+        '''
                 
         # update movie parameters
         self.update_movie_parameters()
@@ -948,6 +972,9 @@ class MainVisual(tk.Frame):
             
             
         def detele_track_question():
+            '''
+            function for the delete track button
+            '''
             # close windows if open
             cancel_action()
             
@@ -974,6 +1001,9 @@ class MainVisual(tk.Frame):
             
             
         def detele_track():
+            '''
+            delete selected track
+            '''
             self.deleted_tracks_N+=1
             delete_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
             
@@ -999,6 +1029,10 @@ class MainVisual(tk.Frame):
             cancel_action()
 
         def duplicate_track_question():
+            '''
+            function for the duplicate track button
+            
+            '''
             
             # close windows if open
             cancel_action()
@@ -1024,6 +1058,9 @@ class MainVisual(tk.Frame):
             
             
         def new_track_question():
+            '''
+            function for the new track button
+            '''
             # close windows if open
             cancel_action()
             
@@ -1046,6 +1083,10 @@ class MainVisual(tk.Frame):
             self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
         def cancel_action():
+            '''
+            destroy the windows
+            '''
+            
             try:
                 self.create_window.destroy()
             except: 
@@ -1058,6 +1099,9 @@ class MainVisual(tk.Frame):
             
             
         def duplicate_track():
+            '''
+            duplicate a track
+            '''
             
             # read ap axis
             if self.trackID_parameter.get()!='':
@@ -1092,6 +1136,9 @@ class MainVisual(tk.Frame):
             
             
         def create_track():
+            '''
+            create a track
+            '''
             
             #read ap axis
             if self.trackID_parameter.get()!='':
@@ -1122,10 +1169,7 @@ class MainVisual(tk.Frame):
         
         # show track statistics
         lbl2 = tk.Label(master=self.listframework, text="deleted tracks: "+str(self.deleted_tracks_N), width=int(self.button_length*1.5), bg='white',  font=("Times", 12,))
-        lbl2.grid(row=8, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)        
-
-#        lbl2 = tk.Label(master=root, text="created tracks: "+str(self.created_tracks_N), width=30, bg='white',  font=("Times", 12))
-#        lbl2.grid(row=6, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)  
+        lbl2.grid(row=8, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)         
 
         lbl2 = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 12))
         lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
@@ -1174,6 +1218,9 @@ class MainVisual(tk.Frame):
             
             
     def select_vesicle_movie(self):
+        '''
+        function for select particle movie button
+        '''
         
         filename = tk.filedialog.askopenfilename()
         if not filename:
@@ -1217,6 +1264,9 @@ class MainVisual(tk.Frame):
             self.scale_movie.grid(row=0, column=1,  sticky=tk.W)
 
     def select_membrane_movie(self):
+        '''
+        function for select membrane movie button
+        '''
         
         filename = tk.filedialog.askopenfilename()
         if not filename:
@@ -1267,7 +1317,7 @@ class MainVisual(tk.Frame):
                     self.track_data_original=json_tracks
     
                 
-            else: # read json in txt (old format)
+            else: # read json in txt 
                        
                 #read  the tracks data 
                 with open(self.track_file) as json_file:  
@@ -1301,7 +1351,6 @@ class MainVisual(tk.Frame):
         provide motion type evaluation to select directed movement for speed evaluation
         '''
 
-#        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
         segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
         motion_type=segmentation_result[:len(track_data_original['frames'])]
 
@@ -1440,7 +1489,6 @@ class TrackViewer(tk.Frame):
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # half the monitor width
         self.window_height = int(master.winfo_screenheight()*0.7)  # 0.9 of the monitor height
-#        parent.geometry(str(self.window_width)+"x"+str(self.window_height)) #"1200x1000")
 
         
         # save important data
@@ -1581,9 +1629,6 @@ class TrackViewer(tk.Frame):
         changeInY = pointB[1] - pointA[1]
         
         return int((math.degrees(math.atan2(changeInY,changeInX))+360-90-self.ap_axis)%360)
-#        return int(math.degrees(math.atan2(changeInY,changeInX)) )
-
-
 
         
     def change_position(self):
