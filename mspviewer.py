@@ -2034,7 +2034,7 @@ class TrackViewer(tk.Frame):
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSP-viewer")
+        parent.title("MSP-viewer 0.1")
         parent.configure(background='white')
 #        parent.geometry("1200x1000") #Width x Height
         self.main = MainVisual(parent)

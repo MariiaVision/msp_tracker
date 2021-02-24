@@ -1,3 +1,4 @@
+
 #########################################################
 #
 #  main framework to run the MSP-tracker GUI 
@@ -40,7 +41,7 @@ from msld import MultiscaleLineDetection
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSP-tracker")
+        parent.title("MSP-tracker 0.1")
         parent.configure(background='white')
         
         #set the window size        
