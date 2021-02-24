@@ -316,35 +316,40 @@ class MainVisual(tk.Frame):
         '''
         plot and save the plot of all the tracks on a single frame
         '''
-        # plot
         
-        plt.figure()
-        plt.imshow(self.image, cmap="gray")
-        for trackID in range(0, len(self.track_data_filtered['tracks'])):
-            track=self.track_data_filtered['tracks'][trackID]
-            trace=track['trace']
-            plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
-            if self.monitor_switch==0:
-                plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
-        
-        if self.memebrane_switch==2:
-            #extract skeleton
-            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
-            # create an individual cmap with red colour
-            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-            cmap_new._init() # create the _lut array, with rgba values
-            alphas = np.linspace(0, 0.8, cmap_new.N+3)
-            cmap_new._lut[:,-1] = alphas
-            #plot the membrane border on the top
-            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)        
-        
+                
         # request file name name
-        save_file = tk.filedialog.asksaveasfilename()      
+        save_file = tk.filedialog.asksaveasfilename()  
         
-        # save the image
-        plt.savefig(save_file)
-        # close the image
-        plt.close()     
+        if not save_file:
+            print("File name was not provided. The data was not saved.")
+        else:
+            # plot
+            
+            plt.figure()
+            plt.imshow(self.image, cmap="gray")
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                track=self.track_data_filtered['tracks'][trackID]
+                trace=track['trace']
+                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
+                if self.monitor_switch==0:
+                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
+            
+            if self.memebrane_switch==2:
+                #extract skeleton
+                skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+                # create an individual cmap with red colour
+                cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+                cmap_new._init() # create the _lut array, with rgba values
+                alphas = np.linspace(0, 0.8, cmap_new.N+3)
+                cmap_new._lut[:,-1] = alphas
+                #plot the membrane border on the top
+                plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)         
+            
+            # save the image
+            plt.savefig(save_file)
+            # close the image
+            plt.close()     
         
         
     def update_movie_parameters(self):
@@ -369,41 +374,48 @@ class MainVisual(tk.Frame):
     def save_orientation_info(self):
         '''
         save track orientation into a file
-        '''
-        #read ap axis
-        if self.ap_parameter.get()!='':
-            self.ap_axis=int(self.ap_parameter.get())
-            
-        if self.axis_name_parameter.get()!='':
-            self.axis_name=self.axis_name_parameter.get()
-  
-        #calculate orientation for each trajectory
-        orintation_array=[]
         
-        for trackID in range(0, len(self.track_data_filtered['tracks'])):
-            track=self.track_data_filtered['tracks'][trackID]
-        #    calculate parameters
-            point_start=track['trace'][0]
-            point_end=track['trace'][-1]
-
-            # calculate orientation
-            y=point_end[1]-point_start[1]
-            x=point_end[0]-point_start[0]
-            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
-            
-            orintation_array.append(orintation_move)    
-            
-        # save the array into the file
+        '''        
         
         # request file name name
-        save_file = tk.filedialog.asksaveasfilename()   
-        
-        if not(save_file.endswith(".txt")):
-            save_file += ".txt"  
+        save_file = tk.filedialog.asksaveasfilename()
+         
+        if not save_file:
+            print("File name was not provided. The data was not saved.")
+        else:
             
-        # save in json format                    
-        with open(save_file, 'w') as f:
-            json.dump({'orientation':orintation_array}, f, ensure_ascii=False) 
+            #read ap axis
+            if self.ap_parameter.get()!='':
+                self.ap_axis=int(self.ap_parameter.get())
+                
+            if self.axis_name_parameter.get()!='':
+                self.axis_name=self.axis_name_parameter.get()
+      
+            #calculate orientation for each trajectory
+            orintation_array=[]
+            
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                track=self.track_data_filtered['tracks'][trackID]
+            #    calculate parameters
+                point_start=track['trace'][0]
+                point_end=track['trace'][-1]
+    
+                # calculate orientation
+                y=point_end[1]-point_start[1]
+                x=point_end[0]-point_start[0]
+                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+                
+                orintation_array.append(orintation_move)    
+                
+            # save the array into the file
+    
+            
+            if not(save_file.endswith(".txt")):
+                save_file += ".txt"  
+                
+            # save in json format                    
+            with open(save_file, 'w') as f:
+                json.dump({'orientation':orintation_array}, f, ensure_ascii=False) 
         
     def plot_multiple_motion_map(self):
         '''
@@ -413,143 +425,155 @@ class MainVisual(tk.Frame):
         # load multiple files
         load_files = tk.filedialog.askopenfilenames(title='Choose all files together')
         print(load_files)
-        
-        # create the joint orientation list
-        
-        orientation_all=[]
-        
-        for file_name in load_files:
+         
+        if not load_files:
+            print("Files were not selected. The data will not be processed.")
+        else:
+                    
+            # request file name
+            save_file = tk.filedialog.asksaveasfilename()         
             
-            #read from json format 
-            with open(file_name) as json_file:  
-                orientation_new = json.load(json_file)
+            if not save_file:
+                print("File name was not provided. The data was not saved.")
+            else:
+            
+            
+                # create the joint orientation list
                 
-            orientation_all+=orientation_new['orientation']        
+                orientation_all=[]
+                
+                for file_name in load_files:
+                    
+                    #read from json format 
+                    with open(file_name) as json_file:  
+                        orientation_new = json.load(json_file)
+                        
+                    orientation_all+=orientation_new['orientation']        
+                
+                # axis name
+                    
+                if self.axis_name_parameter.get()!='':
+                    self.axis_name=self.axis_name_parameter.get()
+                    
+                    
+                axis_name=self.axis_name.split(",")
+                if axis_name[0]:
+                    first_name=axis_name[0]
+                else:
+                    first_name=" "
+                
+                if axis_name[1]:
+                    second_name=axis_name[1]
+                else:
+                    second_name=" "
+                    
+                    
+                # plot and save 
+                plt.figure(figsize=(8,8))
+                
+                ax_new = plt.subplot(111, projection='polar')
+                
+                bin_size=10
+                a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
         
-#        print(orientation_all)
+                plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+                   [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+                ax_new.set_theta_direction(1)
+                ax_new.set_title(" movement orientation \n based on track count ")
+    
         
-        # axis name
-            
-        if self.axis_name_parameter.get()!='':
-            self.axis_name=self.axis_name_parameter.get()
-            
-            
-        axis_name=self.axis_name.split(",")
-        if axis_name[0]:
-            first_name=axis_name[0]
-        else:
-            first_name=" "
-        
-        if axis_name[1]:
-            second_name=axis_name[1]
-        else:
-            second_name=" "
-            
-            
-        # plot and save 
-        plt.figure(figsize=(8,8))
-        
-        ax_new = plt.subplot(111, projection='polar')
-        
-        bin_size=10
-        a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
-        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
-
-        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-           [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
-        ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
-        ax_new.set_theta_direction(1)
-        ax_new.set_title(" movement orientation \n based on track count ")
-        
-        # request file name
-        save_file = tk.filedialog.asksaveasfilename() 
-
-        if not(save_file.endswith(".png")):
-            save_file += ".png"        
-        plt.savefig(save_file) 
-        
-        
-        
-        
+                if not(save_file.endswith(".png")):
+                    save_file += ".png"        
+                plt.savefig(save_file) 
+                
+                
         
     def plot_motion_map(self):
         '''
         plot motion map with given AP
         '''
-        #read ap axis
-        if self.ap_parameter.get()!='':
-            self.ap_axis=int(self.ap_parameter.get())
-            
-        if self.axis_name_parameter.get()!='':
-            self.axis_name=self.axis_name_parameter.get()
-  
-        orintation_array=[]
         
-        fig = plt.figure(figsize=(15,6))
-        plt.axis('off')
-        ax = fig.add_subplot(121)
-        ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
-               
-        
-        # position of axis
-        axis_name=self.axis_name.split(",")
-        if axis_name[0]:
-            first_name=axis_name[0]
-        else:
-            first_name=" "
-        
-        if axis_name[1]:
-            second_name=axis_name[1]
-        else:
-            second_name=" "
-        
-        arrow_a=[30,30]
-        dist=20
-        arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
-
-        ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-        ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
-        ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
-
-        for trackID in range(0, len(self.track_data_filtered['tracks'])):
-            track=self.track_data_filtered['tracks'][trackID]
-        #    calculate parameters
-            point_start=track['trace'][0]
-            point_end=track['trace'][-1]
-
-            # calculate orientation
-            y=point_end[1]-point_start[1]
-            x=point_end[0]-point_start[0]
-            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
-            
-            orintation_array.append(orintation_move)
-   
-            color='r'
-            plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
-                      fc=color, ec=color, length_includes_head = True)
-        
-        bin_size=10
-        a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
-        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
-        
-        ax = fig.add_subplot(122, projection='polar')
-#        plt.xticks(np.radians(range(0, 30, 180)),['0', '30', '60', '90', '120', '150', '180'])
-
-
-        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-           [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
-        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
-        ax.set_theta_direction(1)
-        ax.set_title(" movement orientation \n based on track count ")
         
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
-
-        if not(save_file.endswith(".png")):
-            save_file += ".png"        
-        plt.savefig(save_file) 
         
-        
+        if not save_file:
+            print("File name was not provided. The data was not saved. ")
+        else: 
+            #read ap axis
+            if self.ap_parameter.get()!='':
+                self.ap_axis=int(self.ap_parameter.get())
+                
+            if self.axis_name_parameter.get()!='':
+                self.axis_name=self.axis_name_parameter.get()
+      
+            orintation_array=[]
+            
+            fig = plt.figure(figsize=(15,6))
+            plt.axis('off')
+            ax = fig.add_subplot(121)
+            ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
+                   
+            
+            # position of axis
+            axis_name=self.axis_name.split(",")
+            if axis_name[0]:
+                first_name=axis_name[0]
+            else:
+                first_name=" "
+            
+            if axis_name[1]:
+                second_name=axis_name[1]
+            else:
+                second_name=" "
+            
+            arrow_a=[30,30]
+            dist=20
+            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+    
+            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
+            ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
+            ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
+    
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                track=self.track_data_filtered['tracks'][trackID]
+            #    calculate parameters
+                point_start=track['trace'][0]
+                point_end=track['trace'][-1]
+    
+                # calculate orientation
+                y=point_end[1]-point_start[1]
+                x=point_end[0]-point_start[0]
+                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+                
+                orintation_array.append(orintation_move)
+       
+                color='r'
+                plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
+                          fc=color, ec=color, length_includes_head = True)
+            
+            bin_size=10
+            a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
+            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
+            
+            ax = fig.add_subplot(122, projection='polar')
+    #        plt.xticks(np.radians(range(0, 30, 180)),['0', '30', '60', '90', '120', '150', '180'])
+    
+    
+            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+               [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+            ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+            ax.set_theta_direction(1)
+            ax.set_title(" movement orientation \n based on track count ")
+            
+    
+            if not(save_file.endswith(".png")):
+                save_file += ".png"        
+            plt.savefig(save_file) 
+            
+            
         
     def save_movie(self):
         
@@ -559,133 +583,171 @@ class MainVisual(tk.Frame):
         
         f_start=0
         f_end=self.movie.shape[0]
-#        final_img_set = np.zeros((length, self.movie.shape[1], self.movie.shape[2], 3))
         
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
         
-                # read limits
-        xlim_old=self.ax.get_xlim()
-        ylim_old=self.ax.get_ylim()
+        if not save_file:
+            print("File name was not provided. The data was not saved. ")
+        else: 
         
-        lim_x0=int(ylim_old[1])
-        lim_x1=int(ylim_old[0])
-        lim_y0=int(xlim_old[0]) # because y-axis is inverted
-        lim_y1=int(xlim_old[1]) # because y-axis is inverted
-#        print (lim_x0, lim_x1, lim_y0, lim_y1)
-        saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
-        saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
-
-#        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
-        if saved_movie.shape[1]<700 and saved_movie.shape[2]<700:
-            #save tiff file for small cell solution
-            final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3))
-
-            for frameN in range(0, saved_movie.shape[0]):
-          
-                plot_info=self.track_data_framed['frames'][frameN]['tracks']
-                frame_img=saved_movie[frameN,:,:]
-                membrane_img=saved_membrane[frameN,:,:]
-                # Make a colour image frame
-                orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
-        
-                img=frame_img/np.max(frame_img)+membrane_img*0.2
-                orig_frame [:,:,0] = img/np.max(img)*256
-                orig_frame [:,:,1] = img/np.max(img)*256
-                orig_frame [:,:,2] = img/np.max(img)*256
-                
-                for p in plot_info:
-                    trace=p['trace']
-                    trackID=p['trackID']
-                    
-                    clr = trackID % len(self.color_list)
-                    if (len(trace) > 1):
-                        for j in range(len(trace)-1):
-                            # Draw trace line
-                            point1=trace[j]
-                            point2=trace[j+1]
-                            x1 = int(point1[1])-lim_y0
-                            y1 = int(point1[0])-lim_x0
-                            x2 = int(point2[1])-lim_y0
-                            y2 = int(point2[0])-lim_x0                        
-                            cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                                     self.color_list[clr], 1)
-                            
-                # Display the resulting tracking frame
-                cv2.imshow('Tracking', orig_frame)
-                final_img_set[frameN,:,:,:]=orig_frame
-
-            #save the file
-            final_img_set=final_img_set/np.max(final_img_set)*255
-            final_img_set=final_img_set.astype('uint8')
+            # read limits
+            xlim_old=self.ax.get_xlim()
+            ylim_old=self.ax.get_ylim()
             
-            if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
-                save_file += ".tif"
-                
-            imageio.volwrite(save_file, final_img_set)
-        else:
-            #save avi file for large movies
-
-            if not(save_file.endswith(".avi")):
-                save_file += ".avi"
-
-            out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
+            lim_x0=int(ylim_old[1])
+            lim_x1=int(ylim_old[0])
+            lim_y0=int(xlim_old[0]) # because y-axis is inverted
+            lim_y1=int(xlim_old[1]) # because y-axis is inverted
+    #        print (lim_x0, lim_x1, lim_y0, lim_y1)
+            saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
+            saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
     
-            for frameN in range(0, saved_movie.shape[0]):
-          
-                plot_info=self.track_data_framed['frames'][frameN]['tracks']
-                frame_img=saved_movie[frameN,:,:]
-                membrane_img=saved_movie[frameN,:,:]
-                # Make a colour image frame
-                orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
-        
-                img=frame_img/np.max(frame_img)+membrane_img*0.2
-                orig_frame [:,:,0] = img/np.max(img)*256
-                orig_frame [:,:,1] = img/np.max(img)*256
-                orig_frame [:,:,2] = img/np.max(img)*256
-                
-                for p in plot_info:
-                    trace=p['trace']
-                    trackID=p['trackID']
+    #        if self.movie.shape[1]<700 and self.movie.shape[2]<550:
+            if saved_movie.shape[1]<700 and saved_movie.shape[2]<700:
+                #save tiff file for small cell solution
+                final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3))
+    
+                for frameN in range(0, saved_movie.shape[0]):
+              
+                    plot_info=self.track_data_framed['frames'][frameN]['tracks']
+                    frame_img=saved_movie[frameN,:,:]
+                    membrane_img=saved_membrane[frameN,:,:]
+                    # Make a colour image frame
+                    orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
+            
+                    img=frame_img/np.max(frame_img)+membrane_img*0.2
+                    orig_frame [:,:,0] = img/np.max(img)*256
+                    orig_frame [:,:,1] = img/np.max(img)*256
+                    orig_frame [:,:,2] = img/np.max(img)*256
                     
-                    clr = trackID % len(self.color_list)
-                    if (len(trace) > 1):
-                        for j in range(len(trace)-1):
-                            # Draw trace line
-                            point1=trace[j]
-                            point2=trace[j+1]
-                            x1 = int(point1[1])
-                            y1 = int(point1[0])
-                            x2 = int(point2[1])
-                            y2 = int(point2[0])                        
-                            cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                                     self.color_list[clr], 1)
-                            
-                # Display the resulting tracking frame
-                cv2.imshow('Tracking', orig_frame)
-                # write the flipped frame
-                out.write(np.uint8(orig_frame))
+                    for p in plot_info:
+                        trace=p['trace']
+                        trackID=p['trackID']
+                        
+                        clr = trackID % len(self.color_list)
+                        if (len(trace) > 1):
+                            for j in range(len(trace)-1):
+                                # Draw trace line
+                                point1=trace[j]
+                                point2=trace[j+1]
+                                x1 = int(point1[1])-lim_y0
+                                y1 = int(point1[0])-lim_x0
+                                x2 = int(point2[1])-lim_y0
+                                y2 = int(point2[0])-lim_x0                        
+                                cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
+                                         self.color_list[clr], 1)
+                                
+                    # Display the resulting tracking frame
+                    cv2.imshow('Tracking', orig_frame)
+                    final_img_set[frameN,:,:,:]=orig_frame
     
+                #save the file
+                final_img_set=final_img_set/np.max(final_img_set)*255
+                final_img_set=final_img_set.astype('uint8')
                 
-            out.release()
-
-        cv2.destroyAllWindows()
+                if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
+                    save_file += ".tif"
+                    
+                imageio.volwrite(save_file, final_img_set)
+            else:
+                #save avi file for large movies
+    
+                if not(save_file.endswith(".avi")):
+                    save_file += ".avi"
+    
+                out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
         
-        print("movie location: ", save_file)
+                for frameN in range(0, saved_movie.shape[0]):
+              
+                    plot_info=self.track_data_framed['frames'][frameN]['tracks']
+                    frame_img=saved_movie[frameN,:,:]
+                    membrane_img=saved_movie[frameN,:,:]
+                    # Make a colour image frame
+                    orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
+            
+                    img=frame_img/np.max(frame_img)+membrane_img*0.2
+                    orig_frame [:,:,0] = img/np.max(img)*256
+                    orig_frame [:,:,1] = img/np.max(img)*256
+                    orig_frame [:,:,2] = img/np.max(img)*256
+                    
+                    for p in plot_info:
+                        trace=p['trace']
+                        trackID=p['trackID']
+                        
+                        clr = trackID % len(self.color_list)
+                        if (len(trace) > 1):
+                            for j in range(len(trace)-1):
+                                # Draw trace line
+                                point1=trace[j]
+                                point2=trace[j+1]
+                                x1 = int(point1[1])
+                                y1 = int(point1[0])
+                                x2 = int(point2[1])
+                                y2 = int(point2[0])                        
+                                cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
+                                         self.color_list[clr], 1)
+                                
+                    # Display the resulting tracking frame
+                    cv2.imshow('Tracking', orig_frame)
+                    # write the flipped frame
+                    out.write(np.uint8(orig_frame))
         
+                    
+                out.release()
+    
+            cv2.destroyAllWindows()
+            
+            print("movie location: ", save_file)
+            
     
     def save_in_file(self):
         
+        # ask for the file location
+        
         save_file = tk.filedialog.asksaveasfilename()
         
-        if not(save_file.endswith(".txt")):
-            save_file += ".txt"  
+        if not save_file:
+            print("File name was not provided. The data was not saved. ")
             
-        with open(save_file, 'w') as f:
-            json.dump(self.track_data_filtered, f, ensure_ascii=False) 
+        else: 
+            # save txt file with json format            
+            if not(save_file.endswith(".txt")):
+                save_file += ".txt"  
+                
+            with open(save_file, 'w') as f:
+                json.dump(self.track_data_filtered, f, ensure_ascii=False) 
+                
+            print("tracks are saved in json format to  ", save_file)                
+                          
+            # save tracks to csv file 
+            # prepare csv file                
+            tracks_data=[]
             
-        print("tracks are saved in  ", save_file, " file")
+            tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
+            for trajectory in self.track_data_filtered["tracks"]:
+                new_frames=trajectory["frames"]
+                new_trace=trajectory["trace"]
+                trackID=trajectory["trackID"]
+                for pos in range(0, len(new_frames)):
+                    point=new_trace[pos]
+                    frame=new_frames[pos]
+                    tracks_data.append([trackID, point[0], point[1],  frame])
+    
+    
+            # save to csv 
+            result_path_csv =save_file.split(".txt")[0]+ ".csv"
+                
+                    
+            with open(result_path_csv, 'w') as csvFile:
+                writer = csv.writer(csvFile)
+                writer.writerows(tracks_data)
+                csvFile.close()
 
+                
+
+            print("                 in csv format to  ", result_path_csv)
+    
 
     def move_to_previous(self):
         
@@ -1203,90 +1265,98 @@ class MainVisual(tk.Frame):
 
     def save_data_csv(self):
         '''
-        save csv file
+        save csv file with parameters of all the trajectories
         '''
                 
         # update movie parameters
         self.update_movie_parameters()
         
-        # create the data for saving
-        self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
-        self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                         ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
-                         ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                         'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
-
-
-        print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
-        for trackID in range(0, len(self.track_data_filtered['tracks'])):
-            print(" track ", trackID+1)
-            track=self.track_data_filtered['tracks'][trackID]
-            trajectory=track['trace']
-            
-            x=np.asarray(trajectory)[:,0]    
-            y=np.asarray(trajectory)[:,1]
-            x_0=np.asarray(trajectory)[0,0]
-            y_0=np.asarray(trajectory)[0,1]
-            
-            x_e=np.asarray(trajectory)[-1,0]
-            y_e=np.asarray(trajectory)[-1,1]
-            
-            displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
-            #calculate all type of displacements
-            # max displacement
-            max_displacement=np.round(np.max(displacement_array),2)
-            
-            # displacement from start to the end
-            net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
-            
-            # total displacement
-            x_from=np.asarray(trajectory)[0:-1,0] 
-            y_from=np.asarray(trajectory)[0:-1,1] 
-            x_to=np.asarray(trajectory)[1:,0] 
-            y_to=np.asarray(trajectory)[1:,1] 
-            
-            #orientation
-            total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
-            pointB=trajectory[-1]                        
-            pointA=trajectory[0]    
-            
-            y=pointB[1]-pointA[1]
-            x=pointB[0]-pointA[0]
-            net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
-            
-            # frames        
-            time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
-            
-            # speed 
-                    
-            #evaluate motion 
-            track['motion']=self.motion_type_evaluate(track)
-            average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
-            average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
-                                 
-            moving_mcs=np.round(self.tg.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
-            moving_msls=np.round(self.tg.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
-            
-            
-            
-            self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
-                                     max_displacement, time,
-                                     net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
-            
+        
         # select file location and name
         save_file = tk.filedialog.asksaveasfilename()
-        if not(save_file.endswith(".csv")):
-                save_file += ".csv"
-
-        with open(save_file, 'w') as csvFile:
-            writer = csv.writer(csvFile)
-            writer.writerows(self.stat_data)
-
-        csvFile.close()
-         
-        print("csv file has been saved to ", save_file)    
         
+        if not save_file:
+            print("File name was not provided. The data was not saved. ")
+            
+        else:         
+            
+            # create the data for saving
+            self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
+            self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
+                             ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
+                             ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
+                             'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
     
+    
+            print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                print(" track ", trackID+1)
+                track=self.track_data_filtered['tracks'][trackID]
+                trajectory=track['trace']
+                
+                x=np.asarray(trajectory)[:,0]    
+                y=np.asarray(trajectory)[:,1]
+                x_0=np.asarray(trajectory)[0,0]
+                y_0=np.asarray(trajectory)[0,1]
+                
+                x_e=np.asarray(trajectory)[-1,0]
+                y_e=np.asarray(trajectory)[-1,1]
+                
+                displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
+                #calculate all type of displacements
+                # max displacement
+                max_displacement=np.round(np.max(displacement_array),2)
+                
+                # displacement from start to the end
+                net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+                
+                # total displacement
+                x_from=np.asarray(trajectory)[0:-1,0] 
+                y_from=np.asarray(trajectory)[0:-1,1] 
+                x_to=np.asarray(trajectory)[1:,0] 
+                y_to=np.asarray(trajectory)[1:,1] 
+                
+                #orientation
+                total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
+                pointB=trajectory[-1]                        
+                pointA=trajectory[0]    
+                
+                y=pointB[1]-pointA[1]
+                x=pointB[0]-pointA[0]
+                net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
+                
+                # frames        
+                time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
+                
+                # speed 
+                        
+                #evaluate motion 
+                track['motion']=self.motion_type_evaluate(track)
+                average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
+                average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
+                                     
+                moving_mcs=np.round(self.tg.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
+                moving_msls=np.round(self.tg.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
+                
+                
+                
+                self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
+                                         max_displacement, time,
+                                         net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
+                
+    
+            if not(save_file.endswith(".csv")):
+                    save_file += ".csv"
+    
+            with open(save_file, 'w') as csvFile:
+                writer = csv.writer(csvFile)
+                writer.writerows(self.stat_data)
+    
+            csvFile.close()
+             
+            print("csv file has been saved to ", save_file)    
+            
+        
 ############################################################
 
 class TrackViewer(tk.Frame):
