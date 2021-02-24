@@ -954,7 +954,6 @@ class MainVisual(tk.Frame):
             # get  trackID from the list
             try:
                 
-                test=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
                 # open new window
                 self.delete_window = tk.Toplevel(root)
     
@@ -998,24 +997,47 @@ class MainVisual(tk.Frame):
             
             #close the window
             cancel_action()
+
+        def duplicate_track_question():
+            
+            # close windows if open
+            cancel_action()
+            
+            self.new_trackID=1000
+            
+            # open new window
+            self.create_window = tk.Toplevel(root)
+            
+            self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
+            self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            v = tk.StringVar(root, value=str(self.new_trackID))
+            self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
+            self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
+
+                
+            self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=duplicate_track, width=int(self.button_length/2),  bg='green')
+            self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
+            self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            
+            
             
         def new_track_question():
             # close windows if open
             cancel_action()
+            
+            self.new_trackID=1000
             
             # open new window
             self.create_window = tk.Toplevel(root)
             
             self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-            v = tk.StringVar(root, value=str(1000))
+            v = tk.StringVar(root, value=str(self.new_trackID))
             self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
             self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
-                
-                
-            #read ap axis
-            if self.trackID_parameter.get()!='':
-                self.new_trackID=int(self.trackID_parameter.get())
+
                 
             self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=create_track, width=int(self.button_length/2),  bg='green')
             self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
@@ -1035,11 +1057,50 @@ class MainVisual(tk.Frame):
                 pass
             
             
-        def create_track():
-            self.created_tracks_N+=1
-#            new_trackID=len(self.track_data_filtered['tracks'])+1
+        def duplicate_track():
             
-            p={"trackID":self. new_trackID, "trace":[[0,0]], "frames":[0], "skipped_frames": 0}
+            # read ap axis
+            if self.trackID_parameter.get()!='':
+                print(self.trackID_parameter.get())
+                self.new_trackID=int(self.trackID_parameter.get())
+                
+            # update counting of the new tracks
+            self.created_tracks_N+=1
+            duplicate_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
+            
+            for p in self.track_data['tracks']:
+                
+                if p['trackID']==duplicate_trackID:
+                    duplicated_track=p
+                
+            
+            new_track={"trackID":self.new_trackID, "trace":duplicated_track['trace'], "frames":duplicated_track['frames']}
+            
+            self.track_data['tracks'].append(new_track)
+            
+            print(" track is duplicated with new trackID ", self.new_trackID)
+            
+            #visualise without the track
+            self.filtering()
+            self.track_to_frame()
+            
+            #update the list
+            self.list_update()
+            
+            # close the windows
+            cancel_action()        
+            
+            
+        def create_track():
+            
+            #read ap axis
+            if self.trackID_parameter.get()!='':
+                print(self.trackID_parameter.get())
+                self.new_trackID=int(self.trackID_parameter.get())
+                
+            self.created_tracks_N+=1
+            
+            p={"trackID":self. new_trackID, "trace":[[0,0]], "frames":[0]}
             
             self.track_data['tracks'].append(p)
             
@@ -1083,13 +1144,19 @@ class MainVisual(tk.Frame):
         
         #delete button
         
-        deletbutton = tk.Button(master=self.resultbuttonframe, text="DELETE TRACK", command=detele_track_question, width=int(self.button_length*0.5),  bg='red')
+        deletbutton = tk.Button(master=self.resultbuttonframe, text="DELETE TRACK", command=detele_track_question, width=int(self.button_length*0.8),  bg='red')
         deletbutton.grid(row=13, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         # add button
 
-        deletbutton = tk.Button(master=self.resultbuttonframe, text="ADD TRACK", command=new_track_question, width=int(self.button_length*0.5),  bg='green')
+        deletbutton = tk.Button(master=self.resultbuttonframe, text="ADD TRACK", command=new_track_question, width=int(self.button_length*0.8),  bg='green')
         deletbutton.grid(row=14, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+
+        # duplicate button
+        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="DUPLICATE TRACK", command=duplicate_track_question, width=int(self.button_length*0.8),  bg='green')
+        duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        
         
 
        # plot the tracks from filtered folder 
