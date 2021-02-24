@@ -133,7 +133,7 @@ class MainVisual(tk.Frame):
         
      # # # # # # menu to choose files and print data # # # # # #
         
-        self.button_mv = tk.Button(text="   Select vesicle movie   ", command=self.select_vesicle_movie, width=self.button_length)
+        self.button_mv = tk.Button(text="   Select particle movie   ", command=self.select_vesicle_movie, width=self.button_length)
         self.button_mv.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         self.button_mm = tk.Button(text="   Select membrane movie   ", command=self.select_membrane_movie, width=self.button_length)
@@ -1907,7 +1907,7 @@ class TrackViewer(tk.Frame):
         
         #plot the border of the membrane if chosen
         if self.membrane_switch==2:
-            #extract skeleton self.membrane_movie[self.frame_pos,:,:]
+            #extract skeleton 
             skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,x_min:x_max, y_min:y_max]).astype(np.int)
             # create an individual cmap with red colour
             cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
@@ -1928,8 +1928,7 @@ class TrackViewer(tk.Frame):
     def show_parameters(self): 
 
                 # show the list of data with scroll bar
-        
-        
+               
         listNodes_parameters = tk.Listbox(master=self.viewer, width=50,  font=("Times", 12), selectmode='single')
         listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
         
@@ -1938,13 +1937,11 @@ class TrackViewer(tk.Frame):
         listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
 
         listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
-#        listNodes_parameters.itemconfig(1, {'bg':'gray'})
+
         listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
         
         listNodes_parameters.insert(tk.END, " Total trajectory time             "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
-#        listNodes_parameters.insert(tk.END, " Final stop duration               "+str(np.round(FusionEvent.calculate_stand_length(self, self.trace, self.frames, self.max_movement_stay)/self.frame_rate, 5))+" sec")
-#        listNodes_parameters.itemconfig(3, {'bg':'gray'})
         listNodes_parameters.insert(tk.END, " Net orientation                   "+str(self.calculate_direction(self.trace))+ " degrees")
 
         listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average   "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
@@ -1990,7 +1987,7 @@ class TrackViewer(tk.Frame):
         
     def intensity_calculation(self):
         '''
-        Calculates changes in intersity for the given the track
+        Calculates changes in intersity for the given track
         and plot it into a canva
         '''
         trace=self.trace
@@ -2029,9 +2026,8 @@ class TrackViewer(tk.Frame):
         
         intensity_array_1=[]
         intensity_array_2=[]
-        #
         
-        check_border=0 # variable for the
+        check_border=0 
         for N in range(0,len(frames)):
             frameN=frames[N]
             point=trace[N]
@@ -2044,11 +2040,12 @@ class TrackViewer(tk.Frame):
                 
                 # create img
                 track_img[N,:,:]= self.movie[frameN, x_min:x_max, y_min:y_max]
+                
                 #segment img
                 int_size=5
                 segmented_vesicle=img_segmentation(track_img[N,:,:]/np.max(track_img[N,:,:]), int_size, patch_size)
-                #calculate mean intensity inside the segment
                 
+                #calculate mean intensity inside the segment                
                 intensity_1=np.sum(track_img[N,:,:]*segmented_vesicle)/np.sum(segmented_vesicle)
                 intensity_2=np.sum(track_img[N,:,:])/(patch_size*patch_size)
                 intensity_array_1.append(intensity_1)
@@ -2060,11 +2057,8 @@ class TrackViewer(tk.Frame):
         
         # plotting
         fig1 = plt.figure(figsize=self.figsize_value)
-        #        fig1.tight_layout()
         plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-b", label="segmented vesicle")
-#        self.im =  plt.plot(frames, intensity_array_2/np.max(intensity_array_2), "-r", frames, intensity_array_1/np.max(intensity_array_1), "-g")
-#        plt.plot(frames, intensity_array_1/np.max(intensity_array_1), "-g", label="segmented vesicle")
-#plt.xlabel("frames", fontsize='small')
+
         plt.ylabel("intensity", fontsize='small')
         plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-k", label="without segmentation")
         if check_border==0:
@@ -2111,7 +2105,6 @@ class TrackViewer(tk.Frame):
         fig = plt.figure(figsize=self.figsize_value)
         
         disaplcement=self.displacement_array*self.img_resolution
-#        self.im = plt.plot(self.frames, disaplcement) 
         
         # plot dosplacement colour
         for i in range(1, len(self.motion)):
@@ -2121,7 +2114,6 @@ class TrackViewer(tk.Frame):
                 colourV='g'
             plt.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
             
-        #       plt.xlabel('frames', fontsize='small')
         plt.ylabel('Displacement (nm)', fontsize='small')
 
         plt.title('Displacement per frame', fontsize='small')
@@ -2136,7 +2128,6 @@ class TrackViewer(tk.Frame):
         provide motion type evaluation to select directed movement for speed evaluation
         '''
 
-#        segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
         segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
         motion_type=segmentation_result[:len(track_data_original['frames'])]
 
@@ -2148,7 +2139,7 @@ class MainApplication(tk.Frame):
         tk.Frame.__init__(self, parent)
         parent.title("MSP-viewer 0.1")
         parent.configure(background='white')
-#        parent.geometry("1200x1000") #Width x Height
+        
         self.main = MainVisual(parent)
 
         parent.protocol('WM_DELETE_WINDOW', self.close_app)
