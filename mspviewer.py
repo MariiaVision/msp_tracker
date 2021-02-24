@@ -1047,117 +1047,125 @@ class MainVisual(tk.Frame):
     def select_vesicle_movie(self):
         
         filename = tk.filedialog.askopenfilename()
-        self.movie_file=filename
-        root.update()
-        
-        # read files 
-        self.movie=skimage.io.imread(self.movie_file)
-        self.movie_length=self.movie.shape[0]  
-        try:
-            self.lbl1.destroy()
-        except:
-            pass
+        if not filename:
+            print("File was not selected")
+        else:  
+            self.movie_file=filename
+            root.update()
             
-        self.lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
-        self.lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-        
-        # create a none-membrane movie
-        self.membrane_movie=np.ones(self.movie.shape)
-
-        
-        # set axes
-        #set the same "zoom"
-        self.ax.viewLim.x0=0
-        self.ax.viewLim.x1=self.movie.shape[2] 
-        self.ax.viewLim.y0=0
-        self.ax.viewLim.y1=self.movie.shape[1]         
-        
-        # plot image
-        self.show_tracks()        
-           #  #  # # # # next and previous buttons
-        def show_values(v):
-            self.frame_pos=int(v)
-            self.show_tracks() 
-              
+            # read files 
+            self.movie=skimage.io.imread(self.movie_file)
+            self.movie_length=self.movie.shape[0]  
+            try:
+                self.lbl1.destroy()
+            except:
+                pass
+                
+            self.lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
+            self.lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
             
-        self.scale_movie = tk.Scale(self.viewFrametool, from_=0, to=self.movie_length-1, tickinterval=100, length=self.figsize_value[1]*self.dpi, width=10, orient="horizontal", command=show_values)
-        self.scale_movie.set(0)        
-        self.scale_movie.grid(row=0, column=1,  sticky=tk.W)
+            # create a none-membrane movie
+            self.membrane_movie=np.ones(self.movie.shape)
+    
+            
+            # set axes
+            #set the same "zoom"
+            self.ax.viewLim.x0=0
+            self.ax.viewLim.x1=self.movie.shape[2] 
+            self.ax.viewLim.y0=0
+            self.ax.viewLim.y1=self.movie.shape[1]         
+            
+            # plot image
+            self.show_tracks()        
+               #  #  # # # # next and previous buttons
+            def show_values(v):
+                self.frame_pos=int(v)
+                self.show_tracks() 
+                  
+                
+            self.scale_movie = tk.Scale(self.viewFrametool, from_=0, to=self.movie_length-1, tickinterval=100, length=self.figsize_value[1]*self.dpi, width=10, orient="horizontal", command=show_values)
+            self.scale_movie.set(0)        
+            self.scale_movie.grid(row=0, column=1,  sticky=tk.W)
 
     def select_membrane_movie(self):
         
         filename = tk.filedialog.askopenfilename()
-        # read files 
-        self.membrane_movie=skimage.io.imread(filename)
-        #normalise the membrane values
-        self.membrane_movie=self.membrane_movie/np.max(self.membrane_movie)
-#        self.membrane_movie[self.membrane_movie>0]=1
+        if not filename:
+            print("File was not selected")
+        else:  
+            # read files 
+            self.membrane_movie=skimage.io.imread(filename)
+            #normalise the membrane values
+            self.membrane_movie=self.membrane_movie/np.max(self.membrane_movie)
     
     def select_track(self):
         
         global folder_path_output  
         filename = tk.filedialog.askopenfilename()
-        self.track_file=filename
-        
-        
-        if self.track_file.endswith(".csv"):# read csv 
-            # read file
-
-            json_tracks={"tracks":[]}
-            trackID_new=-1
-            track={}
-            with open(self.track_file, newline='') as f:
-                reader = csv.reader(f)
-                try:
-                    for row in reader:
-                        if row[0]!="TrackID":
-                            trackID=int(row[0])
-                            point=[float(row[1]), float(row[2])]
-                            frame=int(row[3])
-                            
-                            if trackID!=trackID_new: # new track
-                                #save the previous track
-                                if bool(track)==True :
-                                    json_tracks["tracks"].append(track)
-                                
-                                trackID_new=trackID
-                                track={"trackID":trackID, "trace":[point], "frames": [frame]}
-                            else: # update the existing track
-                                track["trace"].append(point)
-                                track["frames"].append(frame)
-                except:
-                    pass
-                self.track_data_original=json_tracks
-
+        if not filename:
+            print("File was not selected")
+        else:  
+            self.track_file=filename
             
-        else: # read json in txt (old format)
-                   
-            #read  the tracks data 
-            with open(self.track_file) as json_file:  
+            
+            if self.track_file.endswith(".csv"):# read csv 
+                # read file
     
-                self.track_data_original = json.load(json_file)
+                json_tracks={"tracks":[]}
+                trackID_new=-1
+                track={}
+                with open(self.track_file, newline='') as f:
+                    reader = csv.reader(f)
+                    try:
+                        for row in reader:
+                            if row[0]!="TrackID":
+                                trackID=int(row[0])
+                                point=[float(row[1]), float(row[2])]
+                                frame=int(row[3])
+                                
+                                if trackID!=trackID_new: # new track
+                                    #save the previous track
+                                    if bool(track)==True :
+                                        json_tracks["tracks"].append(track)
+                                    
+                                    trackID_new=trackID
+                                    track={"trackID":trackID, "trace":[point], "frames": [frame]}
+                                else: # update the existing track
+                                    track["trace"].append(point)
+                                    track["frames"].append(frame)
+                    except:
+                        pass
+                    self.track_data_original=json_tracks
+    
                 
-                
-            # to save from dictionary to dict-list format:
-            if 'tracks' not in self.track_data_original.keys():
-                
-                
-                self.track_data={'tracks':[]}
-                
-                for pos in self.track_data_original:
-                    p=self.track_data_original[pos]
-                    self.track_data['tracks'].append(p)
-                    
-                self.track_data_original=self.track_data
-                
-            
-        #continue as it was before
-        self.track_data=copy.deepcopy(self.track_data_original)
-        self.track_data_filtered=self.track_data 
-        self.track_to_frame()
-            
-        self.list_update()      
+            else: # read json in txt (old format)
+                       
+                #read  the tracks data 
+                with open(self.track_file) as json_file:  
         
+                    self.track_data_original = json.load(json_file)
+                    
+                    
+                # to save from dictionary to dict-list format:
+                if 'tracks' not in self.track_data_original.keys():
+                    
+                    
+                    self.track_data={'tracks':[]}
+                    
+                    for pos in self.track_data_original:
+                        p=self.track_data_original[pos]
+                        self.track_data['tracks'].append(p)
+                        
+                    self.track_data_original=self.track_data
+                    
+                
+            #continue as it was before
+            self.track_data=copy.deepcopy(self.track_data_original)
+            self.track_data_filtered=self.track_data 
+            self.track_to_frame()
+                
+            self.list_update()      
+            
         
     def motion_type_evaluate(self, track_data_original):
         '''
