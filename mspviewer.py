@@ -1346,14 +1346,30 @@ class MainVisual(tk.Frame):
             self.list_update()      
             
         
-    def motion_type_evaluate(self, track_data_original):
+    def motion_type_evaluate(self, track_data_original, traj_segm_switch_var=2):
+
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
+        if traj_segm_switch_var==0: # noe segmentation required
+            motion_type=[0] * len(track_data_original['frames'])
+            
+        elif  traj_segm_switch_var==1: # MSD based segmentation
+            # set trajectory length
+            self.tg.window_length=10
+            # run segmentation
+            segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+            motion_type=segmentation_result[:len(track_data_original['frames'])]
+            
+        else: # U-Net based segmentation
+            # set trajectory length
+            self.tg.window_length=8
+            # run segmentation
+            segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
+            motion_type=segmentation_result[:len(track_data_original['frames'])]
 
-        segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
-        motion_type=segmentation_result[:len(track_data_original['frames'])]
-
+        
+        return motion_type 
         
         return motion_type
     
