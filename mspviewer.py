@@ -1510,8 +1510,12 @@ class TrackViewer(tk.Frame):
         self.axis_name=axis_name
         
         # segmentation 
+        self.traj_segm_switch_var=0 # calculate and show motion type
         self.tg = TrajectorySegment()     
-        self.tg.window_length=8
+        self.tg.window_length=8            
+        #update motion information
+        self.motion=self.motion_type_evaluate(self.track_data)
+        self.track_data['motion']=self.motion 
         
         self.max_movement_stay=max_movement_stay # evaluate stopped vesicle - movement within the threshold
         
@@ -1519,6 +1523,7 @@ class TrackViewer(tk.Frame):
         self.vesicle_patch_size=10
         
         self.membrane_switch=0 # switch between membrane and no membrane
+        self.traj_segm_switch_var=0 # calculate and show motion type
         
         #track evaluation 
         self.displacement_array=[]
@@ -1571,7 +1576,7 @@ class TrackViewer(tk.Frame):
         buttonnext = tk.Button(master=self.viewer, text=" >> ", command=self.move_to_next, width=5)
         buttonnext.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
-     # buttins to change the position
+     # buttons to change the position
      
         buttonnext = tk.Button(master=self.viewer,text="change", command=self.change_position, width=int(self.button_length/2))
         buttonnext.grid(row=0, column=5, pady=self.pad_val, padx=self.pad_val)     
@@ -1583,6 +1588,37 @@ class TrackViewer(tk.Frame):
         buttonnext.grid(row=0, column=7, pady=self.pad_val, padx=self.pad_val)    
         
         
+     # button segmentation choice
+        self.lbftracjsegm = tk.Label(master=self.viewer, text=" Trajectory segmentation: ",  bg='white')
+        self.lbftracjsegm.grid(row=0, column=9, columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+
+        var_traj_segm_switch = tk.IntVar()
+        
+        def update_traj_segm_switch():            
+            self.traj_segm_switch_var=var_traj_segm_switch.get()
+            
+            #update motion information
+            self.motion=self.motion_type_evaluate(self.track_data)
+            self.track_data['motion']=self.motion            
+            # change image
+            self.plot_image()
+            
+            # change plot
+            self.plot_displacement()
+            
+            # change parameters
+            self.show_parameters()
+            
+     
+        self.segmentation_switch_off = tk.Radiobutton(master=self.viewer,text="without",variable=var_traj_segm_switch, value=0, bg='white', command =update_traj_segm_switch )
+        self.segmentation_switch_off.grid(row=1, column=9, pady=self.pad_val, padx=self.pad_val)     
+
+        self.segmentation_switch_msd = tk.Radiobutton(master=self.viewer,text="MSD based",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+        self.segmentation_switch_msd.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)     
+        
+        self.segmentation_switch_unet = tk.Radiobutton(master=self.viewer,text="U-Net based", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+        self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)    
+                
           
 #    # # # # # # filter choice:membrane on/off # # # # # # #   
         var_membrane = tk.IntVar()
@@ -1840,8 +1876,9 @@ class TrackViewer(tk.Frame):
             img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+0.1*self.membrane_movie[self.frame_pos,:,:]
         else:
             img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        #calculate window position
-        
+
+
+        #calculate window position        
         left_point_y=int(np.min(np.asarray(self.trace)[:,1])-self.pixN_basic)
         right_point_y=int(np.max(np.asarray(self.trace)[:,1])+self.pixN_basic)
         top_point_x=int(np.min(np.asarray(self.trace)[:,0])-self.pixN_basic)
@@ -1896,7 +1933,7 @@ class TrackViewer(tk.Frame):
             
             plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
             
-        elif self.plot_switch==2: # plotting motion type
+        elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
             #define colour
             red_c= (abs(np.array(self.motion)-1)).tolist()
             green_c= self.motion
@@ -2127,9 +2164,22 @@ class TrackViewer(tk.Frame):
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
-
-        segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
-        motion_type=segmentation_result[:len(track_data_original['frames'])]
+        if self.traj_segm_switch_var==0: # noe segmentation required
+            motion_type=[0] * len(track_data_original['frames'])
+            
+        elif  self.traj_segm_switch_var==1: # MSD based segmentation
+            # set trajectory length
+            self.tg.window_length=10
+            # run segmentation
+            segmentation_result=self.tg.msd_based_segmentation(track_data_original['trace'])
+            motion_type=segmentation_result[:len(track_data_original['frames'])]
+            
+        else: # U-Net based segmentation
+            # set trajectory length
+            self.tg.window_length=8
+            # run segmentation
+            segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
+            motion_type=segmentation_result[:len(track_data_original['frames'])]
 
         
         return motion_type   
