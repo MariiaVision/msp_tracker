@@ -266,11 +266,19 @@ class TrajectorySegment(object):
         #Mean curvilinear speed
 
         # separated arrays for coordinates
-        x_1=np.asarray(trajectory)[1:,0]    
-        y_1=np.asarray(trajectory)[1:,1]   
+        if len(frames)>1:
+            x_1=np.asarray(trajectory)[1:,0]    
+            y_1=np.asarray(trajectory)[1:,1]   
+    
+            x_2=np.asarray(trajectory)[0:-1,0]    
+            y_2=np.asarray(trajectory)[0:-1,1]  
+        else:
+            x_1=np.asarray(trajectory)[:,0]    
+            y_1=np.asarray(trajectory)[:,1]   
+    
+            x_2=np.asarray(trajectory)[:,0]    
+            y_2=np.asarray(trajectory)[:,1]              
 
-        x_2=np.asarray(trajectory)[0:-1,0]    
-        y_2=np.asarray(trajectory)[0:-1,1]   
 
         # calculate the discplacement
 
