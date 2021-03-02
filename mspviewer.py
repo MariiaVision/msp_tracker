@@ -960,7 +960,7 @@ class MainVisual(tk.Frame):
              
             # create the track set with motion
             this_track=self.track_data_filtered['tracks'][position_in_list]
-            motion_type=self.motion_type_evaluate(this_track)
+            motion_type=[0]*len(this_track['frames']) #self.motion_type_evaluate(this_track)
             this_track['motion']=motion_type
             
             
