@@ -960,7 +960,7 @@ class MainVisual(tk.Frame):
              
             # create the track set with motion
             this_track=self.track_data_filtered['tracks'][position_in_list]
-            motion_type=[0]*len(this_track['frames']) #self.motion_type_evaluate(this_track)
+            motion_type=[0]*len(this_track['frames'])
             this_track['motion']=motion_type
             
             
@@ -1360,7 +1360,7 @@ class MainVisual(tk.Frame):
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
-        if traj_segm_switch_var==0: # noe segmentation required
+        if traj_segm_switch_var==0: # no segmentation required
             motion_type=[0] * len(track_data_original['frames'])
             
         elif  traj_segm_switch_var==1: # MSD based segmentation
@@ -1376,9 +1376,6 @@ class MainVisual(tk.Frame):
             # run segmentation
             segmentation_result=self.tg.unet_segmentation(track_data_original['trace'])
             motion_type=segmentation_result[:len(track_data_original['frames'])]
-
-        
-        return motion_type 
         
         return motion_type
     
@@ -1404,99 +1401,166 @@ class MainVisual(tk.Frame):
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
 
+
+    def ask_about_traj_segmentation_mode(self):
+        
+
+        print("test")
+        return 0
+    
     def save_data_csv(self):
         '''
         save csv file with parameters of all the trajectories
         '''
+        
+        def cancel_window():
+            '''
+            destroy the window
+            
+            '''
+            try:
+                self.choose_traj_segmentation.destroy()
+            except:
+                pass
+                    
+        
+        def run_main_parameters_set():
+            '''
+            the main code run after OK button
+            
+            '''
+            
+            # destroy the question window 
+            cancel_window()
+            
+            # select file location and name
+            save_file = tk.filedialog.asksaveasfilename()
+            
+            if not save_file:
+                print("File name was not provided. The data was not saved. ")
+                
+            else:         
+                
+                # create the data for saving
+                self.stat_data=[]
+                self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
+                self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
+                                 ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
+                                 ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
+        
+        
+                print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
+                for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                    print(" track ", trackID+1)
+                    track=self.track_data_filtered['tracks'][trackID]
+                    trajectory=track['trace']
+                    
+                    x=np.asarray(trajectory)[:,0]    
+                    y=np.asarray(trajectory)[:,1]
+                    x_0=np.asarray(trajectory)[0,0]
+                    y_0=np.asarray(trajectory)[0,1]
+                    
+                    x_e=np.asarray(trajectory)[-1,0]
+                    y_e=np.asarray(trajectory)[-1,1]
+                    
+                    displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
+                    #calculate all type of displacements
+                    # max displacement
+                    max_displacement=np.round(np.max(displacement_array),2)
+                    
+                    # displacement from start to the end
+                    net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+                    
+                    # total displacement
+                    x_from=np.asarray(trajectory)[0:-1,0] 
+                    y_from=np.asarray(trajectory)[0:-1,1] 
+                    x_to=np.asarray(trajectory)[1:,0] 
+                    y_to=np.asarray(trajectory)[1:,1] 
+                    
+                    #orientation
+                    total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
+                    pointB=trajectory[-1]                        
+                    pointA=trajectory[0]    
+                    
+                    y=pointB[1]-pointA[1]
+                    x=pointB[0]-pointA[0]
+                    net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
+                    
+                    # frames        
+                    time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
+                    
+                    # speed 
+                            
+                    #evaluate motion 
+                    track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
+                    average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
+                    average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
+                                         
+                    moving_mcs=np.round(self.tg.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
+                    moving_msls=np.round(self.tg.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
+                    
+                    
+                    
+                    self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
+                                             max_displacement, time,
+                                             net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
+                    
+        
+                if not(save_file.endswith(".csv")):
+                        save_file += ".csv"
+        
+                with open(save_file, 'w') as csvFile:
+                    writer = csv.writer(csvFile)
+                    writer.writerows(self.stat_data)
+        
+                csvFile.close()
+                 
+                print("csv file has been saved to ", save_file)    
+                
+                
+                
                 
         # update movie parameters
         self.update_movie_parameters()
         
+        # ask what trajectory segmentation to use
+                
+        # open new window
+        self.choose_traj_segmentation = tk.Toplevel(root,  bg='white')
         
-        # select file location and name
-        save_file = tk.filedialog.asksaveasfilename()
+        #default value -> no segmentation
+        self.traj_segmentation_var=0
         
-        if not save_file:
-            print("File name was not provided. The data was not saved. ")
+        self.qnewtext = tk.Label(master=self.choose_traj_segmentation, text=" Select trajectory segmentation mode:  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        
+        # radiobutton to choose
+        
+        var_traj_segm_switch = tk.IntVar()
+        
+        def update_traj_segm_switch():            
+            self.traj_segmentation_var=var_traj_segm_switch.get()
             
-        else:         
+     
+        segmentation_switch_off = tk.Radiobutton(master=self.choose_traj_segmentation,text=" without ",variable=var_traj_segm_switch, value=0, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_off.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_traj_segmentation,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+        
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_traj_segmentation,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
             
-            # create the data for saving
-            self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
-            self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
-                             ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
-                             ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                             'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
-    
-    
-            print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
-            for trackID in range(0, len(self.track_data_filtered['tracks'])):
-                print(" track ", trackID+1)
-                track=self.track_data_filtered['tracks'][trackID]
-                trajectory=track['trace']
+        self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_main_parameters_set, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2),  bg='green')
+        self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+  
                 
-                x=np.asarray(trajectory)[:,0]    
-                y=np.asarray(trajectory)[:,1]
-                x_0=np.asarray(trajectory)[0,0]
-                y_0=np.asarray(trajectory)[0,1]
-                
-                x_e=np.asarray(trajectory)[-1,0]
-                y_e=np.asarray(trajectory)[-1,1]
-                
-                displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
-                #calculate all type of displacements
-                # max displacement
-                max_displacement=np.round(np.max(displacement_array),2)
-                
-                # displacement from start to the end
-                net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
-                
-                # total displacement
-                x_from=np.asarray(trajectory)[0:-1,0] 
-                y_from=np.asarray(trajectory)[0:-1,1] 
-                x_to=np.asarray(trajectory)[1:,0] 
-                y_to=np.asarray(trajectory)[1:,1] 
-                
-                #orientation
-                total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
-                pointB=trajectory[-1]                        
-                pointA=trajectory[0]    
-                
-                y=pointB[1]-pointA[1]
-                x=pointB[0]-pointA[0]
-                net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
-                
-                # frames        
-                time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
-                
-                # speed 
-                        
-                #evaluate motion 
-                track['motion']=self.motion_type_evaluate(track)
-                average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
-                average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
-                                     
-                moving_mcs=np.round(self.tg.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
-                moving_msls=np.round(self.tg.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
-                
-                
-                
-                self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
-                                         max_displacement, time,
-                                         net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
-                
-    
-            if not(save_file.endswith(".csv")):
-                    save_file += ".csv"
-    
-            with open(save_file, 'w') as csvFile:
-                writer = csv.writer(csvFile)
-                writer.writerows(self.stat_data)
-    
-            csvFile.close()
-             
-            print("csv file has been saved to ", save_file)    
-            
         
 ############################################################
 
