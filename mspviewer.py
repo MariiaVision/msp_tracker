@@ -1242,7 +1242,8 @@ class MainVisual(tk.Frame):
             
             # create a none-membrane movie
             self.membrane_movie=np.ones(self.movie.shape)
-    
+            
+             
             
             # set axes
             #set the same "zoom"
@@ -1262,6 +1263,13 @@ class MainVisual(tk.Frame):
             self.scale_movie = tk.Scale(self.viewFrametool, from_=0, to=self.movie_length-1, tickinterval=100, length=self.figsize_value[1]*self.dpi, width=10, orient="horizontal", command=show_values)
             self.scale_movie.set(0)        
             self.scale_movie.grid(row=0, column=1,  sticky=tk.W)
+            
+            # rearrange the tracks in order of the frames
+            try:
+                self.track_to_frame()
+            except:
+                pass
+            
 
     def select_membrane_movie(self):
         '''
@@ -1276,6 +1284,7 @@ class MainVisual(tk.Frame):
             self.membrane_movie=skimage.io.imread(filename)
             #normalise the membrane values
             self.membrane_movie=self.membrane_movie/np.max(self.membrane_movie)
+            
     
     def select_track(self):
         
