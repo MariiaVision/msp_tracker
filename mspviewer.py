@@ -1571,8 +1571,8 @@ class TrackViewer(tk.Frame):
         self.viewer = master
         
         #set the window size        
-        self.window_width = int(master.winfo_screenwidth()/2.5) # half the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.7)  # 0.9 of the monitor height
+        self.window_width = int(master.winfo_screenwidth()/2.5) # of the monitor width
+        self.window_height = int(master.winfo_screenheight()*0.7)  # of the monitor height
 
         
         # save important data
@@ -1752,26 +1752,28 @@ class TrackViewer(tk.Frame):
     def change_position(self):
         
         self.action_cancel()
+        
+        self.correct_position_window = tk.Toplevel(root, bg='white')
 
-        self.lbframechange = tk.Label(master=self.viewer, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=int(self.button_length*1.5), bg='white')
+        self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=int(self.button_length*1.5), bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
-        self.lbpose = tk.Label(master=self.viewer, text=" x, y ", width=int(self.button_length/2), bg='white')
+        self.lbpose = tk.Label(master=self.correct_position_window, text=" x, y ", width=int(self.button_length/2), bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
-        self.txt_position = tk.Entry(self.viewer, width=int(self.button_length/2))
+        self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length/2))
         self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
-        self.buttonOK= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_change, width=int(self.button_length/2))
+        self.buttonOK= tk.Button(master=self.correct_position_window,text=" apply ", command=self.action_apply_change, width=int(self.button_length/2))
         self.buttonOK.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)   
         
-        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
+        self.button_cancel= tk.Button(master=self.correct_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)          
         
     def action_apply_change(self):
         
-        self.trace[self.frame_pos_to_change]=[int(self.txt_position.get().split(',')[0]), int(self.txt_position.get().split(',')[1])]
+        self.trace[self.frame_pos_to_change]=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
         
         
         self.track_data['trace']=self.trace
@@ -1792,56 +1794,38 @@ class TrackViewer(tk.Frame):
 
         
     def action_cancel(self):
-        #remove all the widgets related to make changes
+        
+        #remove all the widgets related to changes in trajectory
 
         try: 
-            self.lbframechange.destroy()
+            self.add_position_window.destroy()
         except: 
             pass
         
         try:
-            self.lbpose.destroy()
+            self.delete_position_window.destroy()
         except: 
             pass
         try: 
-            self.txt_position.destroy()  
+            self.correct_position_window.destroy()  
         except: 
             pass    
-        try: 
-            self.txt_frame.destroy()
-        except: 
-            pass
-        
-        try: 
-            self.button_cancel.destroy()  
-        except: 
-            pass    
-        try: 
-            self.buttonOK.destroy()
-        except: 
-            pass
-        try: 
-            self.buttonOKdel.destroy()
-        except: 
-            pass
-        try: 
-            self.buttonOK_add.destroy()
-        except: 
-            pass
 
         
     def delete_position(self):
         
         self.action_cancel()
         
-        self.lbframechange = tk.Label(master=self.viewer, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=int(self.button_length*2), bg='white')
+        self.delete_position_window = tk.Toplevel(root, bg='white')
+        
+        self.lbframechange = tk.Label(master=self.delete_position_window, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=int(self.button_length*2), bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
 
-        self.buttonOKdel= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_delete, width=int(self.button_length/2))
+        self.buttonOKdel= tk.Button(master=self.delete_position_window,text=" apply ", command=self.action_apply_delete, width=int(self.button_length/2))
         self.buttonOKdel.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)  
         
-        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
+        self.button_cancel= tk.Button(master=self.delete_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)     
         
     def action_apply_delete(self):
@@ -1868,30 +1852,33 @@ class TrackViewer(tk.Frame):
         
         self.action_cancel()   
         
-        self.lbframechange = tk.Label(master=self.viewer, text=" Add frame: ", width=self.button_length, bg='white')
+        # open new window
+        self.add_position_window = tk.Toplevel(root, bg='white')
+        
+        self.lbframechange = tk.Label(master=self.add_position_window, text=" Add frame: ", width=self.button_length, bg='white')
         self.lbframechange.grid(row=0, column=10, pady=self.pad_val, padx=self.pad_val)
 
-        self.txt_frame = tk.Entry(self.viewer, width=int(self.button_length/2))
+        self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length/2))
         self.txt_frame.grid(row=0, column=11)                
         
 
-        self.lbpose = tk.Label(master=self.viewer, text=" new coordinates: (x,y) ", width=self.button_length, bg='white')
+        self.lbpose = tk.Label(master=self.add_position_window, text=" new coordinates: (x,y) ", width=self.button_length, bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)  
         
-        self.txt_position = tk.Entry(self.viewer, width=int(self.button_length/2))
+        self.txt_position = tk.Entry(self.add_position_window, width=int(self.button_length/2))
         self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
-        self.buttonOK_add= tk.Button(master=self.viewer,text=" apply ", command=self.action_apply_add, width=int(self.button_length/2))
+        self.buttonOK_add= tk.Button(master=self.add_position_window,text=" apply ", command=self.action_apply_add, width=int(self.button_length/2))
         self.buttonOK_add.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)   
 
-        self.button_cancel= tk.Button(master=self.viewer,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
+        self.button_cancel= tk.Button(master=self.add_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
 
         
     def action_apply_add(self):
         
-        location_val=[int(self.txt_position.get().split(',')[0]), int(self.txt_position.get().split(',')[1])]
+        location_val=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
         frame_val=int(self.txt_frame.get())
         
         if frame_val<self.frames[0]:
