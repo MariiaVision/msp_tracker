@@ -101,7 +101,6 @@ class MainVisual(tk.Frame):
         self.created_tracks_N=0
         self.filtered_tracks_N=0
         
-        self.max_movement_stay=1.0
         self.ap_axis=0
         
         # placing sizes
@@ -915,25 +914,21 @@ class MainVisual(tk.Frame):
                 # check maximum displacement between any two positions in track
                 track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
                
-                # check stop length
-                track_stop=FusionEvent.calculate_stand_length(self, p['trace'], p['frames'], self.max_movement_stay)/self.frame_rate
                 
             else:
                 track_duration=0
                 track_length=0
-                track_stop=0
 
                 # variables to evaluate the trackS
             length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
             duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
-            stop_var=track_stop>=self.filter_stop[0] and track_duration<=self.filter_stop[1]
             
             if self.txt_track_number.get()=='':
                 filterID=True 
             else:                
                 filterID=p['trackID']== int(self.txt_track_number.get())
 
-            if length_var==True and duration_var==True and filterID==True and stop_var==True:
+            if length_var==True and duration_var==True and filterID==True:
                     self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
         
@@ -968,7 +963,7 @@ class MainVisual(tk.Frame):
             self.update_movie_parameters()
             
             TrackViewer(self.new_window, this_track, self.movie, self.membrane_movie, 
-                        self.max_movement_stay, self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name)
+                        self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name)
             
             
         def detele_track_question():
@@ -1568,7 +1563,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the individual track viewer
     '''
-    def __init__(self, master, track_data, movie, membrane_movie, max_movement_stay, img_resolution, frame_rate, ap_axis, axis_name):
+    def __init__(self, master, track_data, movie, membrane_movie, img_resolution, frame_rate, ap_axis, axis_name):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -1605,8 +1600,6 @@ class TrackViewer(tk.Frame):
         #update motion information
         self.motion=self.motion_type_evaluate(self.track_data)
         self.track_data['motion']=self.motion 
-        
-        self.max_movement_stay=max_movement_stay # evaluate stopped vesicle - movement within the threshold
         
         self.pixN_basic=100 # margin size 
         self.vesicle_patch_size=10
