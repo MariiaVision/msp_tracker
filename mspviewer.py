@@ -978,6 +978,7 @@ class MainVisual(tk.Frame):
                 
                 # open new window
                 self.delete_window = tk.Toplevel(root)
+                self.delete_window.title(" Delete the track ")
     
                 self.qdeletetext = tk.Label(master=self.delete_window, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=self.button_length*2)
                 self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
@@ -990,6 +991,7 @@ class MainVisual(tk.Frame):
 
             except:
                 self.delete_window = tk.Toplevel(root)
+                self.delete_window.title(" Delete the track ")
                 self.qdeletetext = tk.Label(master=self.delete_window, text=" Track is not selected! ",  bg='white', font=("Times", 10), width=self.button_length*2)
                 self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
 
@@ -1036,6 +1038,7 @@ class MainVisual(tk.Frame):
             
             # open new window
             self.create_window = tk.Toplevel(root)
+            self.create_window.title(" Duplicate the track")
             
             self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
@@ -1063,6 +1066,7 @@ class MainVisual(tk.Frame):
             
             # open new window
             self.create_window = tk.Toplevel(root)
+            self.create_window.title(" Create new track")
             
             self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
@@ -1523,6 +1527,7 @@ class MainVisual(tk.Frame):
                 
         # open new window
         self.choose_traj_segmentation = tk.Toplevel(root,  bg='white')
+        self.choose_traj_segmentation.title(" ")
         
         #default value -> no segmentation
         self.traj_segmentation_var=0
@@ -1754,14 +1759,15 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
         
         self.correct_position_window = tk.Toplevel(root, bg='white')
+        self.correct_position_window.title(" Correct coordinates ")
 
-        self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), width=int(self.button_length*1.5), bg='white')
+        self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
-        self.lbpose = tk.Label(master=self.correct_position_window, text=" x, y ", width=int(self.button_length/2), bg='white')
+        self.lbpose = tk.Label(master=self.correct_position_window, text=" x, y ", bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
-        self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length/2))
+        self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2))
         self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
@@ -1769,7 +1775,51 @@ class TrackViewer(tk.Frame):
         self.buttonOK.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)   
         
         self.button_cancel= tk.Button(master=self.correct_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
-        self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)          
+        self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
+        
+               # create new window
+        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        
+        def update_position_text(x,y):            
+            try:
+                self.txt_position.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+                print(" coordinates: " , str(x), str(y))
+                
+            except:
+                pass
+            
+        def onclick(event):
+            
+            update_position_text(float(event.ydata), float(event.xdata))
+            
+        fig_img_click=plt.figure()
+        plt.imshow(img, cmap="gray")
+        plt.axis('off')
+
+
+        self.add_coordinates_frame_window = tk.Toplevel( bg='white')
+        self.add_coordinates_frame_window.title(" Click on the particle location")
+        self.canvas_img = FigureCanvasTkAgg(fig_img_click, master=self.add_coordinates_frame_window)
+        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        self.canvas_img.draw()
+        self.canvas_img.mpl_connect('button_press_event', onclick)
+        
+                
+        def new_home( *args, **kwargs):
+            # zoom out
+            plt.xlim(0,self.movie.shape[2])
+            plt.ylim(0,self.movie.shape[1])
+            plt.imshow(img, cmap="gray")
+            self.canvas_img.draw()
+            
+        NavigationToolbar2Tk.home = new_home
+        # toolbar
+        toolbar = NavigationToolbar2Tk(self.canvas_img, self.add_coordinates_frame_window)
+        toolbar.set_message=lambda x:"" # remove message with coordinates
+        toolbar.update() 
         
     def action_apply_change(self):
         
@@ -1810,6 +1860,10 @@ class TrackViewer(tk.Frame):
             self.correct_position_window.destroy()  
         except: 
             pass    
+        try: 
+            self.add_coordinates_frame_window.destroy()
+        except:
+            pass
 
         
     def delete_position(self):
@@ -1817,8 +1871,9 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
         
         self.delete_position_window = tk.Toplevel(root, bg='white')
+        self.delete_position_window.title(" Delete ")
         
-        self.lbframechange = tk.Label(master=self.delete_position_window, text="Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?", width=int(self.button_length*2), bg='white')
+        self.lbframechange = tk.Label(master=self.delete_position_window, text="   Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?   ", bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
 
@@ -1851,22 +1906,25 @@ class TrackViewer(tk.Frame):
     def add_position(self): 
         
         self.action_cancel()   
+
         
         # open new window
-        self.add_position_window = tk.Toplevel(root, bg='white')
+
         
-        self.lbframechange = tk.Label(master=self.add_position_window, text=" Add frame: ", width=self.button_length, bg='white')
+        self.add_position_window = tk.Toplevel( bg='white')
+        self.add_position_window.title(" Create new ")
+        self.lbframechange = tk.Label(master=self.add_position_window, text=" Add frame: ", bg='white')
         self.lbframechange.grid(row=0, column=10, pady=self.pad_val, padx=self.pad_val)
 
-        self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length/2))
+        self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length))
         self.txt_frame.grid(row=0, column=11)                
         
 
-        self.lbpose = tk.Label(master=self.add_position_window, text=" new coordinates: (x,y) ", width=self.button_length, bg='white')
+        self.lbpose = tk.Label(master=self.add_position_window, text=" new coordinates: x, y ", bg='white')
         self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)  
         
-        self.txt_position = tk.Entry(self.add_position_window, width=int(self.button_length/2))
-        self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
+        self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2))
+        self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
         
 
         self.buttonOK_add= tk.Button(master=self.add_position_window,text=" apply ", command=self.action_apply_add, width=int(self.button_length/2))
@@ -1876,25 +1934,71 @@ class TrackViewer(tk.Frame):
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
 
         
+        # create new window
+        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        
+        def update_position_text(x,y):            
+            try:
+                self.txt_position_coordinates.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+                print(" coordinates: " , str(x), str(y))
+                
+            except:
+                pass
+            
+        def onclick(event):
+            
+            update_position_text(float(event.ydata), float(event.xdata))
+            
+        fig_img_click=plt.figure()
+        plt.imshow(img, cmap="gray")
+        plt.axis('off')
+
+
+        self.add_coordinates_frame_window = tk.Toplevel( bg='white')
+        self.add_coordinates_frame_window.title(" Click on the particle location")
+        self.canvas_img = FigureCanvasTkAgg(fig_img_click, master=self.add_coordinates_frame_window)
+        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        self.canvas_img.draw()
+        self.canvas_img.mpl_connect('button_press_event', onclick)
+                
+                
+        def new_home( *args, **kwargs):
+            # zoom out
+            plt.xlim(0,self.movie.shape[2])
+            plt.ylim(0,self.movie.shape[1])
+            plt.imshow(img, cmap="gray")
+            self.canvas_img.draw()
+            
+        NavigationToolbar2Tk.home = new_home
+        # toolbar
+        toolbar = NavigationToolbar2Tk(self.canvas_img, self.add_coordinates_frame_window)
+        toolbar.set_message=lambda x:"" # remove message with coordinates
+        toolbar.update() 
+        
     def action_apply_add(self):
         
-        location_val=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
+        # get location by clicking on the image
+        
+        location_val=[float(self.txt_position_coordinates.get().split(',')[0]), float(self.txt_position_coordinates.get().split(',')[1])]
         frame_val=int(self.txt_frame.get())
         
-        if frame_val<self.frames[0]:
+        # where to insert the postion
+        if frame_val<self.frames[0]: # at the start
             pos=0
         
-        elif frame_val>self.frames[-1]:
+        elif frame_val>self.frames[-1]: # at the end
             pos=len(self.frames)+1
-        else:
+        else: #somewhere in the middle
             diff_array=np.asarray(self.frames)-frame_val
             diff_array_abs=abs(diff_array)
             val=min(abs(diff_array_abs))
             if min(diff_array)>0:
                 pos=diff_array_abs.tolist().index(val)
-            elif min(diff_array)<0:
-                pos=diff_array_abs.tolist().inde, sticky=tk.Ex(val)+1
-                
+            elif min(diff_array)<=0:
+                pos=diff_array_abs.tolist().index(val)+1
 
         self.trace.insert(pos,location_val)
         self.frames.insert(pos,frame_val)
@@ -2026,10 +2130,10 @@ class TrackViewer(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
         canvas.get_tk_widget().grid(row=4, column=1, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        
-        def callback(event):
-            print(event.x,"  " ,event.y)
-        canvas.callbacks.connect('button_press_event', callback)
+#        
+#        def callback(event):
+#            print(event.x,"  " ,event.y)
+#        canvas.callbacks.connect('button_press_event', callback)
 
     def show_parameters(self): 
 
