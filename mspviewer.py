@@ -43,12 +43,15 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 plt.rcParams.update({'figure.max_open_warning': 0})
 
 class MainVisual(tk.Frame):
+    '''
+    Frame for the main msp-viewer window
+    
+    '''
+    
     # choose the files and visualise the tracks on the data
     def __init__(self, master):
         tk.Frame.__init__(self, master)
         self.master = master
-        
-        #colours for plotting tracks
 
         
         #set the window size        
@@ -56,7 +59,7 @@ class MainVisual(tk.Frame):
         self.window_height = int(master.winfo_screenheight()*0.7)  # 0.9 of the monitor height
 
         
-        
+        #colours for plotting tracks        
         self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
             "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
             "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]
@@ -67,8 +70,8 @@ class MainVisual(tk.Frame):
                     (0, 255, 255), (255, 100, 100), (255, 127, 255),
                     (127, 0, 255), (127, 0, 127)]
         
-        self.movie_file=" " # path to the move file
-        self.track_file=" "# path to the file with tracking data (json format)
+        self.movie_file=" " # path to the movie file
+        self.track_file=" "# path to the file with tracking data
         self.movie=np.ones((1,200,200)) # matrix with data
         self.membrane_movie=[]
         self.track_data_original={}
@@ -89,13 +92,13 @@ class MainVisual(tk.Frame):
         self.frame_pos=0
         self.movie_length=1
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.memebrane_switch=0 # 0 - don't show the membrane, 1-show the membrane
+        self.memebrane_switch=0 # 0 - don't show the membrane, 1 -s how the membrane
         self.pad_val=1
-        self.axis_name="A,P"
+        self.axis_name="A,P" # axis names for the orientation plot
         self.img_resolution=100 # resolution of the image, default is 100 nm/pix 
         self.frame_rate=4 # frame rate, default is 4 f/s
         # 
-        self.figsize_value=(4,4) # image sizeS
+        self.figsize_value=(4,4) # figure size
         # 
         self.deleted_tracks_N=0
         self.created_tracks_N=0
@@ -103,7 +106,7 @@ class MainVisual(tk.Frame):
         
         self.ap_axis=0
         
-        # placing sizes
+        # define window  proportions in relation to the monitor size
         self.button_length=np.max((20,int(self.window_width/50)))
         self.pad_val=2
         self.dpi=100
@@ -130,7 +133,7 @@ class MainVisual(tk.Frame):
         self.listframework.grid(row=7, column=5, columnspan=4,rowspan=6,  pady=self.pad_val, padx=self.pad_val)           
 
         
-     # # # # # # menu to choose files and print data # # # # # #
+     # # # # # # menu to choose files  # # # # # #
         
         self.button_mv = tk.Button(text="   Select particle movie   ", command=self.select_vesicle_movie, width=self.button_length)
         self.button_mv.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
@@ -142,7 +145,7 @@ class MainVisual(tk.Frame):
         self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
   
 
-#    # # # # # # filter choice: membrane on/off # # # # # # #   
+     # # # # # #  Radiobutton: membrane on/off # # # # # # #   
         var_membrane = tk.IntVar()
         
         def update_membrane_switch():            
@@ -161,7 +164,7 @@ class MainVisual(tk.Frame):
         self.M3.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
         
-#    # # # # # # filter choice:tracks # # # # # # #   
+#    # # # # # # Radiobuttone:tracks # # # # # # #   
         var = tk.IntVar()
         
         def update_monitor_switch():            
@@ -178,7 +181,7 @@ class MainVisual(tk.Frame):
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
         self.R3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
         
-        # resolution in time and space    
+#    # # # # # #  resolution in time and space   # # # # # # #  
             
         res_lb = tk.Label(master=root, text=" resolution (nm/pix) : ", width=self.button_length, bg='white')
         res_lb.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)
@@ -211,7 +214,7 @@ class MainVisual(tk.Frame):
         self.list_update()        
         
         
-       ### Filtering frame  
+ # # # # # # #   Filtering frame   # # # # # # #  
 
 
         # trackID
@@ -254,10 +257,9 @@ class MainVisual(tk.Frame):
         self.buttonFilter.grid(row=5, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
 
 
-        # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # 
+# # # # # # # # # # # # Plot and save data  # # # # # # 
 
-        # motion map 
-        
+        # motion map         
         button_save=tk.Button(master=self.resultbuttonframe, text="orientation: save map", command=self.plot_motion_map, width=int(self.button_length*1.5))
         button_save.grid(row=13, column=6, pady=self.pad_val, padx=self.pad_val)
 
@@ -275,11 +277,11 @@ class MainVisual(tk.Frame):
         button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save movie", command=self.save_movie, width=int(self.button_length*1.5))
         button_save.grid(row=14, column=7, pady=self.pad_val, padx=self.pad_val)
               
-
+        # save information about all the filtered trajectories
         button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save info to csv", command=self.save_data_csv, width=int(self.button_length*1.5))
         button_save.grid(row=15, column=7, pady=self.pad_val, padx=self.pad_val)  
         
-        # save button
+        # save corrected tracks
         button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save updates", command=self.save_in_file, width=int(self.button_length*1.5))
         button_save.grid(row=16, column=7, pady=self.pad_val, padx=self.pad_val)  
         
@@ -294,9 +296,7 @@ class MainVisual(tk.Frame):
         self.show_tracks() 
         
     
-   #  #  # # # # next and previous buttons
-    
-
+        # next and previous buttons
 
         def show_values(v):
             self.frame_pos=int(v)
@@ -319,7 +319,7 @@ class MainVisual(tk.Frame):
         '''
         
                 
-        # request file name name
+        # request file name
         save_file = tk.filedialog.asksaveasfilename()  
         
         if not save_file:
@@ -543,7 +543,8 @@ class MainVisual(tk.Frame):
     
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
-            #    calculate parameters
+                
+                # calculate parameters
                 point_start=track['trace'][0]
                 point_end=track['trace'][-1]
     
@@ -710,7 +711,7 @@ class MainVisual(tk.Frame):
     
     def save_in_file(self):
         '''
-        save corrected trajecotires to json and csv formats
+        save corrected trajectories to json and csv files
         
         '''
         
@@ -1173,8 +1174,7 @@ class MainVisual(tk.Frame):
         lbl2 = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 12))
         lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
         
-        # show the list of data with scroll bar
-        
+        # show the list of data with scroll bar       
         scrollbar = tk.Scrollbar(master=self.listframework, orient="vertical")
         scrollbar.grid(row=12, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
 
@@ -1198,9 +1198,6 @@ class MainVisual(tk.Frame):
         # duplicate button
         duplicatebutton = tk.Button(master=self.resultbuttonframe, text="DUPLICATE TRACK", command=duplicate_track_question, width=int(self.button_length*0.8),  bg='green')
         duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
-        
-        
-        
 
        # plot the tracks from filtered folder 
         for p in self.track_data_filtered['tracks']:
@@ -1252,8 +1249,9 @@ class MainVisual(tk.Frame):
             self.ax.viewLim.y1=self.movie.shape[1]         
             
             # plot image
-            self.show_tracks()        
-               #  #  # # # # next and previous buttons
+            self.show_tracks()    
+            
+            # next and previous buttons
             def show_values(v):
                 self.frame_pos=int(v)
                 self.show_tracks() 
@@ -1286,6 +1284,10 @@ class MainVisual(tk.Frame):
             
     
     def select_track(self):
+        '''
+        load data with tracks from file
+        
+        '''
         
         global folder_path_output  
         filename = tk.filedialog.askopenfilename()
@@ -1355,10 +1357,11 @@ class MainVisual(tk.Frame):
             
         
     def motion_type_evaluate(self, track_data_original, traj_segm_switch_var=2):
-
         '''
         provide motion type evaluation to select directed movement for speed evaluation
+        
         '''
+        
         if traj_segm_switch_var==0: # no segmentation required
             motion_type=[0] * len(track_data_original['frames'])
             
@@ -1379,6 +1382,11 @@ class MainVisual(tk.Frame):
         return motion_type
     
     def track_to_frame(self):
+        '''
+        recalculate loaded tracks to frame-based list for visualisation
+        
+        '''
+        
         # change data arrangment from tracks to frames
         self.track_data_framed={}
         self.track_data_framed.update({'frames':[]})
@@ -1400,12 +1408,6 @@ class MainVisual(tk.Frame):
                     
             self.track_data_framed['frames'].append(frame_dict) # add the dictionary
 
-
-    def ask_about_traj_segmentation_mode(self):
-        
-
-        print("test")
-        return 0
     
     def save_data_csv(self):
         '''
@@ -1566,7 +1568,7 @@ class MainVisual(tk.Frame):
 
 class TrackViewer(tk.Frame):
     '''
-    class for the individual track viewer
+    class for the window of the individual tracks 
     '''
     def __init__(self, master, track_data, movie, membrane_movie, img_resolution, frame_rate, ap_axis, axis_name):
         tk.Frame.__init__(self, master)
@@ -1629,10 +1631,8 @@ class TrackViewer(tk.Frame):
         self.figsize_value=(int(self.img_width/self.dpi), int(self.img_width/self.dpi*0.75))
         
         
-     # # # lay out of the frame
+     # # #  build layout of the frame
         self.show_list()   
-        
-
         
         # movie control
         self.plot_image()
@@ -1648,7 +1648,7 @@ class TrackViewer(tk.Frame):
         self.show_parameters()
         
 
-   #  #  # # # # next and previous buttons
+        # next and previous buttons
         def show_values(v):
             self.frame_pos=int(v)
             self.plot_image() 
@@ -1707,7 +1707,7 @@ class TrackViewer(tk.Frame):
         self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)    
                 
           
-#    # # # # # # filter choice:membrane on/off # # # # # # #   
+    # # # # # #  Radiobutton : membrane on/off # # # # # # #   
         var_membrane = tk.IntVar()
         
         def update_membrane_switch():            
@@ -1724,7 +1724,8 @@ class TrackViewer(tk.Frame):
         
         self.M3 = tk.Radiobutton(master=self.viewer, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
         self.M3.grid(row=0, column=4, pady=self.pad_val, padx=self.pad_val)
-        
+
+    # # # # # #  Radiobutton : tracks on/off/motion # # # # # # #          
     # plotting switch 
         var = tk.IntVar()
         def update_monitor_plot():            
@@ -1755,6 +1756,10 @@ class TrackViewer(tk.Frame):
 
         
     def change_position(self):
+        '''
+        correct position coordinate values
+        
+        '''
         
         self.action_cancel()
         
@@ -1777,7 +1782,8 @@ class TrackViewer(tk.Frame):
         self.button_cancel= tk.Button(master=self.correct_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
         
-               # create new window
+        
+        # create new window
         img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
         
         def update_position_text(x,y):            
@@ -1822,6 +1828,10 @@ class TrackViewer(tk.Frame):
         toolbar.update() 
         
     def action_apply_change(self):
+        '''
+        apply the provided correction to the given position
+        
+        '''
         
         self.trace[self.frame_pos_to_change]=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
         
@@ -1844,8 +1854,10 @@ class TrackViewer(tk.Frame):
 
         
     def action_cancel(self):
+        '''
+        remove all the widgets related to changes in trajectory
         
-        #remove all the widgets related to changes in trajectory
+        '''
 
         try: 
             self.add_position_window.destroy()
@@ -1867,6 +1879,9 @@ class TrackViewer(tk.Frame):
 
         
     def delete_position(self):
+        '''
+        delete selected position - question window
+        '''
         
         self.action_cancel()
         
@@ -1884,6 +1899,10 @@ class TrackViewer(tk.Frame):
         self.button_cancel.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)     
         
     def action_apply_delete(self):
+        '''
+        delete selected position
+        
+        '''
 
         del self.trace[self.frame_pos_to_change] 
         del self.frames[self.frame_pos_to_change] 
@@ -1904,13 +1923,16 @@ class TrackViewer(tk.Frame):
         self.action_cancel()
         
     def add_position(self): 
+        '''
+        add new position with frame number with coordinates - question window
+        
+        '''
         
         self.action_cancel()   
 
         
         # open new window
-
-        
+       
         self.add_position_window = tk.Toplevel( bg='white')
         self.add_position_window.title(" Create new ")
         self.lbframechange = tk.Label(master=self.add_position_window, text=" Add frame: ", bg='white')
@@ -1979,9 +2001,12 @@ class TrackViewer(tk.Frame):
         toolbar.update() 
         
     def action_apply_add(self):
+        '''
+        create the position with given parameters
         
-        # get location by clicking on the image
+        '''
         
+        # get new location
         location_val=[float(self.txt_position_coordinates.get().split(',')[0]), float(self.txt_position_coordinates.get().split(',')[1])]
         frame_val=int(self.txt_frame.get())
         
@@ -2022,12 +2047,20 @@ class TrackViewer(tk.Frame):
         
 
     def move_to_previous(self):
+        '''
+        one step back
+        
+        '''
         if self.frame_pos!=0:
             self.frame_pos-=1
         self.plot_image()
         self.scale_movie.set(self.frame_pos)
         
     def move_to_next(self):
+        '''
+        one step forward
+        
+        '''
         if self.frame_pos!=self.movie_length:
             self.frame_pos+=1
         self.plot_image() 
@@ -2035,9 +2068,10 @@ class TrackViewer(tk.Frame):
     
     
     def plot_image(self):
+        '''
+        arrange the image viewer
         
-        # plot image
-        
+        '''
 
         fig = plt.figure(figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
         plt.axis('off')
@@ -2130,20 +2164,19 @@ class TrackViewer(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
         canvas.get_tk_widget().grid(row=4, column=1, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-#        
-#        def callback(event):
-#            print(event.x,"  " ,event.y)
-#        canvas.callbacks.connect('button_press_event', callback)
 
     def show_parameters(self): 
+        '''
+        calculate and print trajectory parameters
+        
+        '''
 
-                # show the list of data with scroll bar
+        # show the list of data with scroll bar
                
         listNodes_parameters = tk.Listbox(master=self.viewer, width=50,  font=("Times", 12), selectmode='single')
         listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
-        
-       # plot the track positions
-             # add to the list
+
+       # add to the list
         listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
 
         listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
@@ -2165,6 +2198,10 @@ class TrackViewer(tk.Frame):
 
         
     def show_list(self): 
+        '''
+        arrangement for the position list
+        
+        '''
         
         def tracklist_on_select(even):
             try:
@@ -2203,6 +2240,7 @@ class TrackViewer(tk.Frame):
         trace=self.trace
         frames=self.frames
         patch_size=self.vesicle_patch_size
+        
         def img_segmentation(img_segment, int_size, box_size):
             '''
             the function segments the image based on the thresholding and watershed segmentation
@@ -2285,6 +2323,10 @@ class TrackViewer(tk.Frame):
                      
         
     def plot_displacement(self):
+        '''
+        displacement plot
+        
+        '''
         trajectory=self.trace
         
         #calculate the displacement
@@ -2337,7 +2379,7 @@ class TrackViewer(tk.Frame):
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
-        if self.traj_segm_switch_var==0: # noe segmentation required
+        if self.traj_segm_switch_var==0: # no segmentation required
             motion_type=[0] * len(track_data_original['frames'])
             
         elif  self.traj_segm_switch_var==1: # MSD based segmentation
