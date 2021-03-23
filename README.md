@@ -6,6 +6,7 @@ This repository presents two modules with graphical interface:
 
 The basis of the tracking approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
 
+Please, see manual for the detailed description of the software and its functionality
 
 ### Software installation
 
