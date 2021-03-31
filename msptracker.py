@@ -1891,7 +1891,7 @@ See the Manual for the detailed description of the software.
             for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
                 trace=p['trace']
                 self.axl.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
-                self.axl.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+#                self.axl.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
         
         #set the same "zoom"
