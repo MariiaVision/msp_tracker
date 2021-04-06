@@ -58,7 +58,7 @@ class TrajectorySegment(object):
         # load the model
         
         self.model = unet( input_size = (self.window_length,2))
-        self.model.load_weights('dl_weight/1Dunet_jointdata_val_acc-0.84.hdf5')
+        self.model.load_weights('viewer_lib/1Dunet_jointdata_val_acc-0.84.hdf5')
         
         
     def from_cartesian_to_polar(self, x,y):
