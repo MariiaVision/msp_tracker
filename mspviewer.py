@@ -433,60 +433,65 @@ class MainVisual(tk.Frame):
             print("Files were not selected. The data will not be processed.")
         else:
                     
+            # plot the image
+                       
+            # create the joint orientation list            
+            orientation_all=[]
+            
+            for file_name in load_files:
+                
+                #read from json format 
+                with open(file_name) as json_file:  
+                    orientation_new = json.load(json_file)
+                    
+                orientation_all+=orientation_new['orientation']        
+            
+            # axis name               
+            if self.axis_name_parameter.get()!='':
+                self.axis_name=self.axis_name_parameter.get()
+                
+                
+            axis_name=self.axis_name.split(",")
+            if axis_name[0]:
+                first_name=axis_name[0]
+            else:
+                first_name=" "
+            
+            if axis_name[1]:
+                second_name=axis_name[1]
+            else:
+                second_name=" "
+                
+                
+            # plot and save 
+            orientation_fig=plt.figure(figsize=(8,8))
+            
+            ax_new = plt.subplot(111, projection='polar')
+            
+            bin_size=10
+            a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+    
+            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+               [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+            ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+            ax_new.set_theta_direction(1)
+            ax_new.set_title(" movement orientation \n based on track count ")            
+
+            #set a window
+            self.show_orientation_map_win = tk.Toplevel( bg='white')
+            self.show_orientation_map_win.title(" orientation plot ")
+            self.canvas_img = FigureCanvasTkAgg(orientation_fig, master=self.show_orientation_map_win)
+            self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+            self.canvas_img.draw()        
+        
             # request file name
             save_file = tk.filedialog.asksaveasfilename()         
             
             if not save_file:
                 print("File name was not provided. The data was not saved.")
             else:
-            
-            
-                # create the joint orientation list
-                
-                orientation_all=[]
-                
-                for file_name in load_files:
-                    
-                    #read from json format 
-                    with open(file_name) as json_file:  
-                        orientation_new = json.load(json_file)
-                        
-                    orientation_all+=orientation_new['orientation']        
-                
-                # axis name
-                    
-                if self.axis_name_parameter.get()!='':
-                    self.axis_name=self.axis_name_parameter.get()
-                    
-                    
-                axis_name=self.axis_name.split(",")
-                if axis_name[0]:
-                    first_name=axis_name[0]
-                else:
-                    first_name=" "
-                
-                if axis_name[1]:
-                    second_name=axis_name[1]
-                else:
-                    second_name=" "
-                    
-                    
-                # plot and save 
-                plt.figure(figsize=(8,8))
-                
-                ax_new = plt.subplot(111, projection='polar')
-                
-                bin_size=10
-                a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
-                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
-        
-                plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-                   [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
-                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
-                ax_new.set_theta_direction(1)
-                ax_new.set_title(" movement orientation \n based on track count ")
-    
-        
+           
                 if not(save_file.endswith(".png")):
                     save_file += ".png"        
                 plt.savefig(save_file) 
@@ -499,79 +504,88 @@ class MainVisual(tk.Frame):
         
         '''
         
+        # show the results in a separate window
         
+    #read ap axis
+        if self.ap_parameter.get()!='':
+            self.ap_axis=int(self.ap_parameter.get())
+            
+        if self.axis_name_parameter.get()!='':
+            self.axis_name=self.axis_name_parameter.get()
+  
+        orintation_array=[]
+        
+        orientation_map_figure = plt.figure(figsize=(15,6))
+        plt.axis('off')
+        ax = orientation_map_figure.add_subplot(121)
+        ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
+               
+        
+        # position of axis
+        axis_name=self.axis_name.split(",")
+        if axis_name[0]:
+            first_name=axis_name[0]
+        else:
+            first_name=" "
+        
+        if axis_name[1]:
+            second_name=axis_name[1]
+        else:
+            second_name=" "
+        
+        arrow_a=[30,30]
+        dist=20
+        arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+
+        ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
+        ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
+        ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
+
+        for trackID in range(0, len(self.track_data_filtered['tracks'])):
+            track=self.track_data_filtered['tracks'][trackID]
+            
+            # calculate parameters
+            point_start=track['trace'][0]
+            point_end=track['trace'][-1]
+
+            # calculate orientation
+            y=point_end[1]-point_start[1]
+            x=point_end[0]-point_start[0]
+            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+            
+            orintation_array.append(orintation_move)
+   
+            color='r'
+            plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
+                      fc=color, ec=color, length_includes_head = True)
+        
+        bin_size=10
+        a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
+        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
+        
+        ax = orientation_map_figure.add_subplot(122, projection='polar')
+
+
+        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+           [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+        ax.set_theta_direction(1)
+        ax.set_title(" movement orientation \n based on track count ")
+        
+        #set a window
+        self.show_orientation_map_win = tk.Toplevel( bg='white')
+        self.show_orientation_map_win.title(" orientation plot ")
+        self.canvas_img = FigureCanvasTkAgg(orientation_map_figure, master=self.show_orientation_map_win)
+        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        self.canvas_img.draw()
+                    
         # request file name
         save_file = tk.filedialog.asksaveasfilename() 
         
         if not save_file:
             print("File name was not provided. The data was not saved. ")
         else: 
-            #read ap axis
-            if self.ap_parameter.get()!='':
-                self.ap_axis=int(self.ap_parameter.get())
-                
-            if self.axis_name_parameter.get()!='':
-                self.axis_name=self.axis_name_parameter.get()
-      
-            orintation_array=[]
-            
-            fig = plt.figure(figsize=(15,6))
-            plt.axis('off')
-            ax = fig.add_subplot(121)
-            ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
-                   
-            
-            # position of axis
-            axis_name=self.axis_name.split(",")
-            if axis_name[0]:
-                first_name=axis_name[0]
-            else:
-                first_name=" "
-            
-            if axis_name[1]:
-                second_name=axis_name[1]
-            else:
-                second_name=" "
-            
-            arrow_a=[30,30]
-            dist=20
-            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
-    
-            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-            ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
-            ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
-    
-            for trackID in range(0, len(self.track_data_filtered['tracks'])):
-                track=self.track_data_filtered['tracks'][trackID]
-                
-                # calculate parameters
-                point_start=track['trace'][0]
-                point_end=track['trace'][-1]
-    
-                # calculate orientation
-                y=point_end[1]-point_start[1]
-                x=point_end[0]-point_start[0]
-                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
-                
-                orintation_array.append(orintation_move)
-       
-                color='r'
-                plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
-                          fc=color, ec=color, length_includes_head = True)
-            
-            bin_size=10
-            a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
-            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
-            
-            ax = fig.add_subplot(122, projection='polar')
-    
-    
-            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-               [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
-            ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
-            ax.set_theta_direction(1)
-            ax.set_title(" movement orientation \n based on track count ")
-            
+           
     
             if not(save_file.endswith(".png")):
                 save_file += ".png"        
@@ -2059,8 +2073,7 @@ class TrackViewer(tk.Frame):
             for pos in range(1, len(self.trace)):
                 plt.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
             
-        # on click -> get coordinates
-        
+        # on click -> get coordinates        
         def update_position_text(x,y): 
             # to add
             try:
