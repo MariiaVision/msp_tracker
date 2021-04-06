@@ -221,20 +221,20 @@ class MainVisual(tk.Frame):
         lbl3 = tk.Label(master=self.filterframe, text="Track ID: ", width=int(self.button_length/2), bg='white')
         lbl3.grid(row=2, column=5, pady=self.pad_val, padx=self.pad_val)
         
-        self.txt_track_number = tk.Entry(self.filterframe, width=10)
-        self.txt_track_number.grid(row=2, column=6, pady=self.pad_val, padx=self.pad_val)
+        self.txt_track_number = tk.Entry(self.filterframe, width=int(self.button_length))
+        self.txt_track_number.grid(row=2, column=6, columnspan=3,pady=self.pad_val, padx=self.pad_val)
 
         # duration
         lbl3 = tk.Label(master=self.filterframe, text="Duration (sec): from ", width=self.button_length*2, bg='white')
         lbl3.grid(row=3, column=5, pady=self.pad_val, padx=self.pad_val)
         
-        self.txt_duration_from = tk.Entry(self.filterframe, width=10)
+        self.txt_duration_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_duration_from.grid(row=3, column=6, pady=self.pad_val, padx=self.pad_val)
         
         lbl3 = tk.Label(master=self.filterframe, text="to", bg='white')
         lbl3.grid(row=3, column=7, pady=self.pad_val, padx=self.pad_val)
         
-        self.txt_duration_to = tk.Entry(self.filterframe, width=10)
+        self.txt_duration_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_duration_to.grid(row=3, column=8, pady=self.pad_val, padx=self.pad_val)
 
 
@@ -242,13 +242,13 @@ class MainVisual(tk.Frame):
         lbl3 = tk.Label(master=self.filterframe, text="Max travelled distance (nm): from ", width=int(self.button_length*2), bg='white')
         lbl3.grid(row=4, column=5)
         
-        self.txt_length_from = tk.Entry(self.filterframe, width=10)
+        self.txt_length_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_length_from.grid(row=4, column=6, pady=self.pad_val, padx=self.pad_val)
         
         lbl3 = tk.Label(master=self.filterframe, text="to", bg='white')
         lbl3.grid(row=4, column=7, pady=self.pad_val, padx=self.pad_val)
         
-        self.txt_length_to = tk.Entry(self.filterframe, width=10)
+        self.txt_length_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_length_to.grid(row=4, column=8, pady=self.pad_val, padx=self.pad_val)     
         
         # button to filter
@@ -941,7 +941,9 @@ class MainVisual(tk.Frame):
             if self.txt_track_number.get()=='':
                 filterID=True 
             else:                
-                filterID=p['trackID']== int(self.txt_track_number.get())
+                # get the list of trackIDs
+                track_list_filter=list(map(int,self.txt_track_number.get().split(",")))
+                filterID =  p['trackID'] in track_list_filter
 
             if length_var==True and duration_var==True and filterID==True:
                     self.track_data_filtered['tracks'].append(p)
