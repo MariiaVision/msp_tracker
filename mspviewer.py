@@ -1782,51 +1782,7 @@ class TrackViewer(tk.Frame):
         self.button_cancel= tk.Button(master=self.correct_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
         
-        
-        # create new window
-        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        
-        def update_position_text(x,y):            
-            try:
-                self.txt_position.destroy()
-                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
-                self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2) , textvariable=v)
-                self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
-                print(" coordinates: " , str(x), str(y))
-                
-            except:
-                pass
-            
-        def onclick(event):
-            
-            update_position_text(float(event.ydata), float(event.xdata))
-            
-        fig_img_click=plt.figure()
-        plt.imshow(img, cmap="gray")
-        plt.axis('off')
-
-
-        self.add_coordinates_frame_window = tk.Toplevel( bg='white')
-        self.add_coordinates_frame_window.title(" Click on the particle location")
-        self.canvas_img = FigureCanvasTkAgg(fig_img_click, master=self.add_coordinates_frame_window)
-        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
-        self.canvas_img.draw()
-        self.canvas_img.mpl_connect('button_press_event', onclick)
-        
-                
-        def new_home( *args, **kwargs):
-            # zoom out
-            plt.xlim(0,self.movie.shape[2])
-            plt.ylim(0,self.movie.shape[1])
-            plt.imshow(img, cmap="gray")
-            self.canvas_img.draw()
-            
-        NavigationToolbar2Tk.home = new_home
-        # toolbar
-        toolbar = NavigationToolbar2Tk(self.canvas_img, self.add_coordinates_frame_window)
-        toolbar.set_message=lambda x:"" # remove message with coordinates
-        toolbar.update() 
-        
+       
     def action_apply_change(self):
         '''
         apply the provided correction to the given position
@@ -1955,50 +1911,6 @@ class TrackViewer(tk.Frame):
         self.button_cancel= tk.Button(master=self.add_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
 
-        
-        # create new window
-        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        
-        def update_position_text(x,y):            
-            try:
-                self.txt_position_coordinates.destroy()
-                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
-                self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2) , textvariable=v)
-                self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
-                print(" coordinates: " , str(x), str(y))
-                
-            except:
-                pass
-            
-        def onclick(event):
-            
-            update_position_text(float(event.ydata), float(event.xdata))
-            
-        fig_img_click=plt.figure()
-        plt.imshow(img, cmap="gray")
-        plt.axis('off')
-
-
-        self.add_coordinates_frame_window = tk.Toplevel( bg='white')
-        self.add_coordinates_frame_window.title(" Click on the particle location")
-        self.canvas_img = FigureCanvasTkAgg(fig_img_click, master=self.add_coordinates_frame_window)
-        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
-        self.canvas_img.draw()
-        self.canvas_img.mpl_connect('button_press_event', onclick)
-                
-                
-        def new_home( *args, **kwargs):
-            # zoom out
-            plt.xlim(0,self.movie.shape[2])
-            plt.ylim(0,self.movie.shape[1])
-            plt.imshow(img, cmap="gray")
-            self.canvas_img.draw()
-            
-        NavigationToolbar2Tk.home = new_home
-        # toolbar
-        toolbar = NavigationToolbar2Tk(self.canvas_img, self.add_coordinates_frame_window)
-        toolbar.set_message=lambda x:"" # remove message with coordinates
-        toolbar.update() 
         
     def action_apply_add(self):
         '''
@@ -2147,7 +2059,41 @@ class TrackViewer(tk.Frame):
             for pos in range(1, len(self.trace)):
                 plt.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
             
-
+        # on click -> get coordinates
+        
+        def update_position_text(x,y): 
+            # to add
+            try:
+                self.txt_position_coordinates.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                # add coordinates
+                self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+                
+                # add frame
+                self.txt_frame.destroy()
+                v_frame = tk.StringVar(root, value=str(self.frame_pos))          
+                self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length), textvariable=v_frame)
+                self.txt_frame.grid(row=0, column=11)                 
+#                print(" coordinates: " , str(x), str(y), ";  frame: ", str(self.frame_pos))
+                
+            except:
+                pass
+            
+           # to correct
+            try:
+                self.txt_position.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+#                print(" coordinates: " , str(x), str(y))
+                                
+            except:
+                pass
+            
+        def onclick(event):
+            
+            update_position_text(float(event.ydata), float(event.xdata))
         
         #plot the border of the membrane if chosen
         if self.membrane_switch==2:
@@ -2164,6 +2110,7 @@ class TrackViewer(tk.Frame):
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
         canvas.get_tk_widget().grid(row=4, column=1, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        canvas.mpl_connect('button_press_event', onclick)
 
     def show_parameters(self): 
         '''
