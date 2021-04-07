@@ -88,10 +88,12 @@ class MainVisual(tk.Frame):
         self.filter_duration=[0, 1000]
         self.filter_length=[0, 10000]   
         self.filter_stop=[0, 10000] 
+        self.filter_zoom=0 # option to include tracks only in zoomed area
         
         self.frame_pos=0
         self.movie_length=1
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.monitor_axis=0 # 0 - not to show axis, 1- show axis
         self.memebrane_switch=0 # 0 - don't show the membrane, 1 -s how the membrane
         self.pad_val=1
         self.axis_name="A,P" # axis names for the orientation plot
@@ -181,33 +183,47 @@ class MainVisual(tk.Frame):
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
         self.R3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
         
+#    # # # # # # Radiobuttone:axis # # # # # # #   
+        var_axis = tk.IntVar()
+        
+        def update_monitor_switch():            
+            self.monitor_axis=var_axis.get()
+            self.show_tracks()
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R1 = tk.Radiobutton(root, text="axis off", variable=var_axis, value=0, bg='white', command =update_monitor_switch )
+        self.R1.grid(row=5, column=0,  pady=self.pad_val, padx=self.pad_val)  
+        
+        self.R2 = tk.Radiobutton(root, text=" axis on ", variable=var_axis, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
+        self.R2.grid(row=5, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)     
+        
 #    # # # # # #  resolution in time and space   # # # # # # #  
             
         res_lb = tk.Label(master=root, text=" resolution (nm/pix) : ", width=self.button_length, bg='white')
-        res_lb.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)
+        res_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.img_resolution))
         self.res_parameter = tk.Entry(root, width=10, text=v)
-        self.res_parameter.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.res_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
             
-        lbl3 = tk.Label(master=root, text="frame rate (f/sec) : ", width=self.button_length, bg='white')
-        lbl3.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3 = tk.Label(master=root, text=" frame rate (f/sec) : ", width=self.button_length, bg='white')
+        lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.frame_rate))
         self.frame_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)        
+        self.frame_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)        
         
             
         # AP axis 
         ap_lb = tk.Label(master=root, text=" Axis orientation ", width=self.button_length, bg='white')
-        ap_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
+        ap_lb.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.ap_axis))
         self.ap_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.ap_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.ap_parameter.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
             
         lbl3 = tk.Label(master=root, text="Axis  (A,B): ", width=self.button_length, bg='white')
-        lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3.grid(row=7, column=2, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.axis_name))
         self.axis_name_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.axis_name_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)   
+        self.axis_name_parameter.grid(row=7, column=3, pady=self.pad_val, padx=self.pad_val)   
        
         
         #update the list
@@ -249,12 +265,41 @@ class MainVisual(tk.Frame):
         lbl3.grid(row=4, column=7, pady=self.pad_val, padx=self.pad_val)
         
         self.txt_length_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
-        self.txt_length_to.grid(row=4, column=8, pady=self.pad_val, padx=self.pad_val)     
+        self.txt_length_to.grid(row=4, column=8, pady=self.pad_val, padx=self.pad_val)  
+        
+        # curvilinear moving speed
+        lbl4 = tk.Label(master=self.filterframe, text="Mean curvilinear moving speed : from ", width=int(self.button_length*2), bg='white')
+        lbl4.grid(row=5, column=5)
+        
+        self.txt_speed_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_speed_from.grid(row=5, column=6, pady=self.pad_val, padx=self.pad_val)
+        
+        lbl5 = tk.Label(master=self.filterframe, text="to", bg='white')
+        lbl5.grid(row=5, column=7, pady=self.pad_val, padx=self.pad_val)
+        
+        self.txt_speed_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_speed_to.grid(row=5, column=8, pady=self.pad_val, padx=self.pad_val)
+        
+        # Radio button zoom
+        var_filter_zoom = tk.IntVar()
+        
+        def update_monitor_switch():            
+            self.filter_zoom=var_filter_zoom.get()
+            
+        lbl5 = tk.Label(master=self.filterframe, text=" Trajectories included for zoomed area: ", width=int(self.button_length*2), bg='white')
+        lbl5.grid(row=6, column=5)
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R1 = tk.Radiobutton(master=self.filterframe, text=" at least one point", variable=var_filter_zoom, value=0, bg='white', command =update_monitor_switch )
+        self.R1.grid(row=6, column=6,  pady=self.pad_val, padx=self.pad_val)  
+        
+        self.R2 = tk.Radiobutton(master=self.filterframe, text=" all points ", variable=var_filter_zoom, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
+        self.R2.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)          
         
         # button to filter
         
         self.buttonFilter = tk.Button(master=self.filterframe, text="Filter", command=self.filtering, width=self.button_length)
-        self.buttonFilter.grid(row=5, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=7, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
 
 
 # # # # # # # # # # # # Plot and save data  # # # # # # 
@@ -473,7 +518,7 @@ class MainVisual(tk.Frame):
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
     
             plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-               [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+               [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
             ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
             ax_new.set_theta_direction(1)
             ax_new.set_title(" movement orientation \n based on track count ")            
@@ -522,7 +567,9 @@ class MainVisual(tk.Frame):
                
         
         # position of axis
+
         axis_name=self.axis_name.split(",")
+        
         if axis_name[0]:
             first_name=axis_name[0]
         else:
@@ -532,14 +579,26 @@ class MainVisual(tk.Frame):
             second_name=axis_name[1]
         else:
             second_name=" "
-        
-        arrow_a=[30,30]
-        dist=20
-        arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
 
+        arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
+        dist=int(self.image.shape[1]/10)
+        arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+        
+        # check that the points are not outside the view
+
+        if arrow_b[0]<int(self.image.shape[0]/10):
+            # move the points
+            arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
+            arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
+
+        if arrow_b[1]<int(self.image.shape[1]/10):
+            # move the points
+            arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
+            arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
+            
         ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-        ax.text(arrow_a[1], arrow_a[0]-5,  first_name, color='g', size=12, alpha=0.7)
-        ax.text(arrow_b[1], arrow_b[0]-5,  second_name, color='g', size=12, alpha=0.7)
+        ax.text(arrow_a[1], arrow_a[0]-5,  second_name, color='g', size=12, alpha=0.7)
+        ax.text(arrow_b[1], arrow_b[0]-5,  first_name, color='g', size=12, alpha=0.7)
 
         for trackID in range(0, len(self.track_data_filtered['tracks'])):
             track=self.track_data_filtered['tracks'][trackID]
@@ -567,7 +626,7 @@ class MainVisual(tk.Frame):
 
 
         plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-           [first_name, '30', '60', '90' , '120', '150',second_name,'210', '240', '270', '300', '330'])
+           [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
         ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
         ax.set_theta_direction(1)
         ax.set_title(" movement orientation \n based on track count ")
@@ -841,6 +900,40 @@ class MainVisual(tk.Frame):
             #plot the membrane border on the top
             self.ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
 
+        # plot axis
+        if self.monitor_axis==1:
+            # position of axis
+            axis_name=self.axis_name.split(",")
+            if axis_name[0]:
+                first_name=axis_name[0]
+            else:
+                first_name=" "
+            
+            if axis_name[1]:
+                second_name=axis_name[1]
+            else:
+                second_name=" "
+            
+            arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
+            dist=int(self.image.shape[1]/10)
+            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+            
+            # check that the points are not outside the view
+            print(arrow_a, arrow_b)
+            if arrow_b[0]<int(self.image.shape[0]/10):
+                # move the points
+                arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
+                arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
+
+            if arrow_b[1]<int(self.image.shape[1]/10):
+                # move the points
+                arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
+                arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
+
+            self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
+            self.ax.text(arrow_a[1]-2, arrow_a[0]-2,  second_name, color='r', size=9, alpha=0.5)
+            self.ax.text(arrow_b[1]-2, arrow_b[0]-2,  first_name, color='r', size=9, alpha=0.5)
+            
         #set the same "zoom"        
         self.ax.set_xlim(xlim_old[0],xlim_old[1])
         self.ax.set_ylim(ylim_old[0],ylim_old[1])
@@ -2135,27 +2228,31 @@ class TrackViewer(tk.Frame):
 
         # show the list of data with scroll bar
                
-        listNodes_parameters = tk.Listbox(master=self.viewer, width=50,  font=("Times", 12), selectmode='single')
+        listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*3),  font=("Times", 10), selectmode='single')
         listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
 
        # add to the list
-        listNodes_parameters.insert(tk.END, " Total distance travelled          "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
+        listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
 
-        listNodes_parameters.insert(tk.END, " Net distance travelled            "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
+        listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
 
-        listNodes_parameters.insert(tk.END, " Maximum distance travelled        "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
+        listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
         
-        listNodes_parameters.insert(tk.END, " Total trajectory time             "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
+        listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
 
-        listNodes_parameters.insert(tk.END, " Net orientation                   "+str(self.calculate_direction(self.trace))+ " degrees")
+        listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average   "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+ 
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving    "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving  "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+
+        listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
