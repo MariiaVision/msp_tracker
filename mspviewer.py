@@ -919,7 +919,7 @@ class MainVisual(tk.Frame):
             arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
             
             # check that the points are not outside the view
-            print(arrow_a, arrow_b)
+
             if arrow_b[0]<int(self.image.shape[0]/10):
                 # move the points
                 arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
@@ -1037,8 +1037,30 @@ class MainVisual(tk.Frame):
                 # get the list of trackIDs
                 track_list_filter=list(map(int,self.txt_track_number.get().split(",")))
                 filterID =  p['trackID'] in track_list_filter
+                
+            # check position of the tracks
+            xlim_zoom=self.ax.get_xlim()
+            ylim_zoom=self.ax.get_ylim()
+            
+            # get zoom data
+            zz_x_0=np.asarray(p['trace'])[:,1]>xlim_zoom[0]
+            zz_x_1=np.asarray(p['trace'])[:,1]<xlim_zoom[1]
+            
+            zz_y_0=np.asarray(p['trace'])[:,0]<ylim_zoom[0]
+            zz_y_1=np.asarray(p['trace'])[:,0]>ylim_zoom[1]
+            
+            zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
 
-            if length_var==True and duration_var==True and filterID==True:
+            if self.filter_zoom==0: # any point
+                
+                zoom_filter=np.any(zz==True)
+            else: # all points
+                #check all the points are inside
+                zoom_filter=np.all(zz==True)            
+            
+            # check speed limitation
+
+            if length_var==True and duration_var==True and filterID==True and zoom_filter==True:
                     self.track_data_filtered['tracks'].append(p)
         self.track_to_frame()
         
@@ -1214,7 +1236,6 @@ class MainVisual(tk.Frame):
             
             # read ap axis
             if self.trackID_parameter.get()!='':
-                print(self.trackID_parameter.get())
                 self.new_trackID=int(self.trackID_parameter.get())
                 
             # update counting of the new tracks
