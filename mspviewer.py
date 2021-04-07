@@ -85,10 +85,13 @@ class MainVisual(tk.Frame):
         self.tg.window_length=8
 
         #filter parameters
-        self.filter_duration=[0, 1000]
-        self.filter_length=[0, 10000]   
-        self.filter_stop=[0, 10000] 
+        self.filter_duration=[0, 10000]
+        self.filter_length=[0, 100000]   
+        self.filter_speed=[0, 100000] 
         self.filter_zoom=0 # option to include tracks only in zoomed area
+        
+        self.xlim_zoom=[0,10000]
+        self.ylim_zoom=[10000, 0]
         
         self.frame_pos=0
         self.movie_length=1
@@ -1002,7 +1005,16 @@ class MainVisual(tk.Frame):
             self.filter_length[1]=10000
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
-                   
+
+        if self.txt_speed_from.get()=='':
+            self.filter_speed[0]=0
+        else:
+            self.filter_speed[0]=float(self.txt_speed_from.get())
+
+        if self.txt_speed_to.get()=='':
+            self.filter_speed[1]=10000
+        else:
+            self.filter_speed[1]=float(self.txt_speed_to.get())                     
             
             
         print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration) #, ";   final stop duration: ", self.filter_stop)
@@ -1039,15 +1051,15 @@ class MainVisual(tk.Frame):
                 filterID =  p['trackID'] in track_list_filter
                 
             # check position of the tracks
-            xlim_zoom=self.ax.get_xlim()
-            ylim_zoom=self.ax.get_ylim()
+            self.xlim_zoom=self.ax.get_xlim()
+            self.ylim_zoom=self.ax.get_ylim()
             
             # get zoom data
-            zz_x_0=np.asarray(p['trace'])[:,1]>xlim_zoom[0]
-            zz_x_1=np.asarray(p['trace'])[:,1]<xlim_zoom[1]
+            zz_x_0=np.asarray(p['trace'])[:,1]>self.xlim_zoom[0]
+            zz_x_1=np.asarray(p['trace'])[:,1]<self.xlim_zoom[1]
             
-            zz_y_0=np.asarray(p['trace'])[:,0]<ylim_zoom[0]
-            zz_y_1=np.asarray(p['trace'])[:,0]>ylim_zoom[1]
+            zz_y_0=np.asarray(p['trace'])[:,0]<self.ylim_zoom[0]
+            zz_y_1=np.asarray(p['trace'])[:,0]>self.ylim_zoom[1]
             
             zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
 
@@ -1059,6 +1071,7 @@ class MainVisual(tk.Frame):
                 zoom_filter=np.all(zz==True)            
             
             # check speed limitation
+            
 
             if length_var==True and duration_var==True and filterID==True and zoom_filter==True:
                     self.track_data_filtered['tracks'].append(p)
@@ -1574,11 +1587,18 @@ class MainVisual(tk.Frame):
                 
                 # create the data for saving
                 self.stat_data=[]
-                self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps' ]) 
+                self.stat_data.append(['','', 'settings: ', str(self.img_resolution)+' nm/pix', str(self.frame_rate)+' fps',' ',' ',' ',' ',' ' ]) 
+                self.stat_data.append(['Filters: ','', '', '','','','','','','','','','' ]) 
+                self.stat_data.append(['','', 'TrackID: ', self.txt_track_number.get(),'','','','','','','','','' ]) 
+                self.stat_data.append(['','', ' Duration (sec): ', self.txt_duration_from.get(),' - ',self.txt_duration_to.get(),'','','','','','','' ]) 
+                self.stat_data.append(['','', 'Max travelled distance (nm): ', self.txt_length_from.get(),' - ',self.txt_length_to.get(),'','','','','','','' ]) 
+                self.stat_data.append(['','','Mean curvilinear speed: moving (nm/sec): ', self.txt_speed_from.get(),' - ',self.txt_speed_to.get(),'','','','','','','' ]) 
+                self.stat_data.append(['','','Zoom : ', 'x :',str(self.ylim_zoom),'  y:', str(self.xlim_zoom),'','','','','','' ]) 
+                self.stat_data.append(['','',' ', '','','','','','','','','','' ]) 
                 self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)' ]) 
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)'  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -1596,7 +1616,7 @@ class MainVisual(tk.Frame):
                     y_e=np.asarray(trajectory)[-1,1]
                     
                     displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
-                    #calculate all type of displacements
+                    #calculate all type of displacementsself.ax.get_ylim()
                     # max displacement
                     max_displacement=np.round(np.max(displacement_array),2)
                     
@@ -1628,14 +1648,17 @@ class MainVisual(tk.Frame):
                     average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
                     average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
                                          
-                    moving_mcs=np.round(self.tg.calculate_speed(track, "movement")[0]*self.img_resolution*self.frame_rate,0)
-                    moving_msls=np.round(self.tg.calculate_speed(track, "movement")[1]*self.img_resolution*self.frame_rate,0)
+                    moving_speeds=self.tg.calculate_speed(track, "movement")
+                    moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
+                    moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
+                    moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
+                    moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
                     
                     
                     
                     self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                              max_displacement, time,
-                                             net_direction, average_mcs, average_msls, moving_mcs, moving_msls, ''])
+                                             net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxcs, moving_maxsegcs])
                     
         
                 if not(save_file.endswith(".csv")):
