@@ -517,8 +517,11 @@ See the Manual for the detailed description of the software.
         else:   
         
             # read files 
-            self.memb_movie=skimage.io.imread(filename)
+            self.memb_movie=skimage.io.imread(filename)            
             
+            if self.movie.dtype=='uint16':                
+                self.movie=(self.movie/256).astype('uint8')
+                
             # set parameters
             self.memb_movie_length=self.memb_movie.shape[0]
             self.axm.set_xlim(0,self.memb_movie.shape[2])
@@ -1598,6 +1601,10 @@ See the Manual for the detailed description of the software.
         
             # read files 
             self.movie=skimage.io.imread(self.movie_protein_path)
+            
+            if self.movie.dtype=='uint16':                
+                self.movie=(self.movie/256).astype('uint8')
+                
             self.movie_length=self.movie.shape[0]  
             try:
                 self.lb_movie_d.destroy()
@@ -1653,6 +1660,10 @@ See the Manual for the detailed description of the software.
         
             # read files 
             self.movie=skimage.io.imread(self.movie_protein_path)
+            
+            if self.movie.dtype=='uint16':                
+                self.movie=(self.movie/256).astype('uint8')
+                
             self.movie_length=self.movie.shape[0] 
             
             try:
