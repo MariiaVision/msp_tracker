@@ -32,7 +32,7 @@ import cv2
 import imageio
 import math
 from skimage.feature import peak_local_max
-
+from tqdm import tqdm
 from viewer_lib.fusion_events import FusionEvent 
 
 from viewer_lib.trajectory_segmentation import TrajectorySegment
@@ -980,6 +980,103 @@ class MainVisual(tk.Frame):
         
         '''
         
+        def cancel_window():
+            '''
+            destroy the window
+            
+            '''
+            try:
+                self.choose_traj_segmentation.destroy()
+            except:
+                pass
+                    
+        
+        def run_filtering():       
+            print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   speed: ", self.filter_speed) #, ";   final stop duration: ", self.filter_stop)
+    
+            # filtering 
+            self.track_data_filtered={}
+            self.track_data_filtered.update({'tracks':[]})
+            
+            # check through the tracks
+            for p in tqdm(self.track_data['tracks']):
+                
+                # check length
+                if len(p['trace'])>0:
+                    point_start=p['trace'][0]
+                    # check length
+                    track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
+                    # check maximum displacement between any two positions in track
+                    track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
+                   
+                    
+                else:
+                    track_duration=0
+                    track_length=0
+    
+                    # variables to evaluate the trackS
+                length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
+                duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
+                
+                if self.txt_track_number.get()=='':
+                    filterID=True 
+                else:                
+                    # get the list of trackIDs
+                    track_list_filter=list(map(int,self.txt_track_number.get().split(",")))
+                    filterID =  p['trackID'] in track_list_filter
+                    
+                # check position of the tracks
+                self.xlim_zoom=self.ax.get_xlim()
+                self.ylim_zoom=self.ax.get_ylim()
+                
+                # get zoom data
+                zz_x_0=np.asarray(p['trace'])[:,1]>self.xlim_zoom[0]
+                zz_x_1=np.asarray(p['trace'])[:,1]<self.xlim_zoom[1]
+                
+                zz_y_0=np.asarray(p['trace'])[:,0]<self.ylim_zoom[0]
+                zz_y_1=np.asarray(p['trace'])[:,0]>self.ylim_zoom[1]
+                
+                zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
+    
+                if self.filter_zoom==0: # any point
+                    
+                    zoom_filter=np.any(zz==True)
+                else: # all points
+                    #check all the points are inside
+                    zoom_filter=np.all(zz==True)            
+                
+
+    
+                if length_var==True and duration_var==True and filterID==True and zoom_filter==True:
+                                    # check speed limitation
+                    if movement_1==True or movement_2==True:
+                        # evaluate motion 
+                        p['motion']=self.motion_type_evaluate(p, traj_segm_switch_var=self.traj_segmentation_var)
+                        
+                        #calculate speed
+                        moving_speeds=self.tg.calculate_speed(p, "movement")
+                        curvilinear_speed_move=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
+                    
+                        speed_filter=curvilinear_speed_move>self.filter_speed[0] and curvilinear_speed_move<self.filter_speed[1]
+                    else:
+                        speed_filter=True
+                    
+                    if speed_filter==True:
+                        self.track_data_filtered['tracks'].append(p)
+                        
+                        
+            self.track_to_frame()
+            
+            #update the list
+            self.list_update()
+            
+            #plot the filters
+            lbl2 = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
+            lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+            
+            cancel_window()
+            
+            
                 
         # update movie parameters
         self.update_movie_parameters()
@@ -1006,83 +1103,60 @@ class MainVisual(tk.Frame):
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
 
+        
         if self.txt_speed_from.get()=='':
             self.filter_speed[0]=0
+            movement_1=False
         else:
             self.filter_speed[0]=float(self.txt_speed_from.get())
-
+            movement_1=True
+            
         if self.txt_speed_to.get()=='':
             self.filter_speed[1]=10000
+            movement_2=False
         else:
             self.filter_speed[1]=float(self.txt_speed_to.get())                     
+            movement_2=True
             
-            
-        print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration) #, ";   final stop duration: ", self.filter_stop)
-
-        # filtering 
-        self.track_data_filtered={}
-        self.track_data_filtered.update({'tracks':[]})
         
-        # check through the tracks
-        for p in self.track_data['tracks']:
+        #choose trajectory segmentation type if needed and run filtering        
+        if movement_1==True or movement_2==True:
+                    
+            # open new window
+            self.choose_traj_segmentation = tk.Toplevel(root,  bg='white')
+            self.choose_traj_segmentation.title(" ")
             
-            # check length
-            if len(p['trace'])>0:
-                point_start=p['trace'][0]
-                # check length
-                track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
-                # check maximum displacement between any two positions in track
-                track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
-               
+            #default value -> no segmentation
+            self.traj_segmentation_var=1
+            
+            self.qnewtext = tk.Label(master=self.choose_traj_segmentation, text=" Select trajectory segmentation mode:  " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+            
+            # radiobutton to choose
+            
+            var_traj_segm_switch = tk.IntVar()
+            
+            def update_traj_segm_switch():            
+                self.traj_segmentation_var=var_traj_segm_switch.get()
+                 
+    
+            segmentation_switch_msd = tk.Radiobutton(master=self.choose_traj_segmentation,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+            segmentation_switch_msd.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+            
+            segmentation_switch_unet = tk.Radiobutton(master=self.choose_traj_segmentation,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+            segmentation_switch_unet.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
                 
-            else:
-                track_duration=0
-                track_length=0
-
-                # variables to evaluate the trackS
-            length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
-            duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
+            self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_filtering, width=int(self.button_length/2),  bg='green')
+            self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
-            if self.txt_track_number.get()=='':
-                filterID=True 
-            else:                
-                # get the list of trackIDs
-                track_list_filter=list(map(int,self.txt_track_number.get().split(",")))
-                filterID =  p['trackID'] in track_list_filter
-                
-            # check position of the tracks
-            self.xlim_zoom=self.ax.get_xlim()
-            self.ylim_zoom=self.ax.get_ylim()
-            
-            # get zoom data
-            zz_x_0=np.asarray(p['trace'])[:,1]>self.xlim_zoom[0]
-            zz_x_1=np.asarray(p['trace'])[:,1]<self.xlim_zoom[1]
-            
-            zz_y_0=np.asarray(p['trace'])[:,0]<self.ylim_zoom[0]
-            zz_y_1=np.asarray(p['trace'])[:,0]>self.ylim_zoom[1]
-            
-            zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
-
-            if self.filter_zoom==0: # any point
-                
-                zoom_filter=np.any(zz==True)
-            else: # all points
-                #check all the points are inside
-                zoom_filter=np.all(zz==True)            
-            
-            # check speed limitation
-            
-
-            if length_var==True and duration_var==True and filterID==True and zoom_filter==True:
-                    self.track_data_filtered['tracks'].append(p)
-        self.track_to_frame()
+            self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2),  bg='green')
+            self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        #update the list
-        self.list_update()
+        else:
+            run_filtering()
+            
         
-        #plot the filters
-        lbl2 = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=30, bg='white',  font=("Times", 12))
-        lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
 
     def list_update(self):
         '''
