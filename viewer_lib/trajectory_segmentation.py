@@ -257,13 +257,20 @@ class TrajectorySegment(object):
     def calculate_speed(self, track, mode="average"): # mode: "average"/"movement"
         '''
         calculate speed of vesicle movement
+        
+    output: 
+        curvilinear_speed_mean
+        straightline_speed
+        curvilinear_speed_max
+        curvilinear_speed_segment_max
+        
         '''
         trajectory=track['trace']
         frames=track['frames']
         motion=track['motion']
 
         
-        #Mean curvilinear speed
+        # Mean curvilinear speed
 
         # separated arrays for coordinates
         if len(frames)>1:
@@ -296,9 +303,11 @@ class TrajectorySegment(object):
             
             disp=np.sum(np.asarray(motion[1:])*sqr_disp_back)
             time=np.max((1,np.sum(np.asarray(motion)[1:])))
-           
-        #speed        
-        curvilinear_speed=disp/time    
+        
+        # curvilinear speed        
+        curvilinear_speed_mean=disp/time  
+        curvilinear_speed_max=np.max(np.asarray(motion[1:])*sqr_disp_back)  
+        
         
         # straightline_speed
         if  mode=="average":
@@ -306,55 +315,100 @@ class TrajectorySegment(object):
             straightline_dist=np.sqrt((x_2[0]-x_1[-1])**2+(y_2[0]-y_1[-1])**2)
             straightline_time=(frames[-1]-frames[0])
             straightline_speed=straightline_dist/straightline_time
+            
+            curvilinear_speed_segment_max=0
         else:
             move_switch=0
             start=[0,0]
             end=[0,0]
             distance=0
             frame_n=0
+            # max segment speed
+            frames_seg_n=0
+            dist_seg=0
+            dist_list=[]
+            speed_list=[]
+            
 #            print("\n")
             for pos in range(1, len(motion)):
                 move_pos=motion[pos]
 #                print(pos)
                 if move_pos==1 and move_switch==0 and pos!=(len(motion)-1): # switching to the moving
-                    frame_n=frame_n+1
+                    
+                    #for strightline speed
+                    frame_n+=1
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos-1]
                     
+                    # for max segment speed
+                    frames_seg_n=1
+                    dist_seg=np.sqrt((trajectory[pos][0]-trajectory[pos-1][0])**2+(trajectory[pos][1]-trajectory[pos-1][1])**2)
+                    
+                    
                 elif move_pos==1 and move_switch==0 and pos==(len(motion)-1): # switching to the moving at last frame
  
+                    # for strightline speed
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos-1]
                     end=trajectory[pos]
 #                    print(start, end)
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
+                    # for max segment speed
+                    frames_seg_n=1
+                    dist_seg=np.sqrt((trajectory[pos][0]-trajectory[pos-1][0])**2+(trajectory[pos][1]-trajectory[pos-1][1])**2)
+                    dist_list.append(dist_seg)
+                    speed_list.append(dist_seg/frames_seg_n)
+                    
                 elif move_pos==0 and move_switch==1: #  end of motion
 
+                    # for strightline speed
                     move_switch=0 # switch off moving mode
                     end=trajectory[pos-1] 
 #                    print(start, end)
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
+                    
+                    # for max segment speed
+                    speed_list.append(dist_seg/frames_seg_n)
+                    dist_list.append(dist_seg)
                 
                 elif move_pos==1 and move_switch==1 and pos!=(len(motion)-1): # continue moving
-
-                    frame_n=frame_n+1
+                    
+                    # for strightline speed
+                    frame_n+=1
+                    
+                    # for max segment speed
+                    frames_seg_n+=1
+                    dist_seg+=np.sqrt((trajectory[pos][0]-trajectory[pos-1][0])**2+(trajectory[pos][1]-trajectory[pos-1][1])**2)
                     
                 elif move_pos==1 and move_switch==1 and pos==(len(motion)-1): # end of movement at last frame
 
-                    frame_n=frame_n+1
+                    frame_n+=1
                     end=trajectory[pos]
 #                    print(start, end)
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
+                    # for max segment speed
+                    frames_seg_n+=1
+                    dist_seg+=np.sqrt((trajectory[pos][0]-trajectory[pos-1][0])**2+(trajectory[pos][1]-trajectory[pos-1][1])**2)
+                    speed_list.append(dist_seg/frames_seg_n)
+                    dist_list.append(dist_seg)
+                    
 #                print("motion", move_pos, " Nframes ", frame_n, ", dist: ", distance)
 
-
+        
             frame_n=np.max((1, frame_n))
             straightline_speed=distance/frame_n
+            
+            try:
+                curvilinear_speed_segment_max=np.max(speed_list)
+            except:
+                curvilinear_speed_segment_max=0
+            
+#            print("all: ", curvilinear_speed_mean, straightline_speed, curvilinear_speed_max, curvilinear_speed_segment_max)
 
             
-        return curvilinear_speed, straightline_speed # pix/frame
+        return curvilinear_speed_mean, straightline_speed, curvilinear_speed_max, curvilinear_speed_segment_max # pix/frame
         #
 #        
 #
