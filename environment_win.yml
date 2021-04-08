@@ -6,7 +6,7 @@ dependencies:
   - python==3.7.0
   - pip
   - pip:
-    - opencv-python==4.2.0.32
+    - opencv-python==4.1.0.25
     - trackpy==0.4.2
     - pgmpy==0.1.9
     - tqdm==4.43.0
