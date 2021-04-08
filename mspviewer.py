@@ -1150,7 +1150,7 @@ class MainVisual(tk.Frame):
             self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_filtering, width=int(self.button_length/2),  bg='green')
             self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
-            self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2),  bg='green')
+            self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
             self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
         else:
@@ -1719,8 +1719,9 @@ class MainVisual(tk.Frame):
                             
                     #evaluate motion 
                     track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
-                    average_mcs=np.round(self.tg.calculate_speed(track, "average")[0]*self.img_resolution*self.frame_rate,0)
-                    average_msls=np.round(self.tg.calculate_speed(track, "average")[1]*self.img_resolution*self.frame_rate,0)
+                    average_speeds=self.tg.calculate_speed(track, "average")
+                    average_mcs=np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0)
+                    average_msls=np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0)
                                          
                     moving_speeds=self.tg.calculate_speed(track, "movement")
                     moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
@@ -1785,7 +1786,7 @@ class MainVisual(tk.Frame):
         self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_main_parameters_set, width=int(self.button_length/2),  bg='green')
         self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
-        self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2),  bg='green')
+        self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
         self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
@@ -2346,9 +2347,11 @@ class TrackViewer(tk.Frame):
 
         # show the list of data with scroll bar
                
-        listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*3),  font=("Times", 10), selectmode='single')
+        listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*6),  font=("Times", 10), selectmode='single')
         listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
 
+        average_speeds=self.tg.calculate_speed(self.track_data, "average")
+        moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
        # add to the list
         listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
 
@@ -2360,17 +2363,17 @@ class TrackViewer(tk.Frame):
 
         listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
  
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(self.tg.calculate_speed( self.track_data, "average")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
 
-        listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(self.tg.calculate_speed( self.track_data, "movement")[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
