@@ -359,13 +359,17 @@ class GraphicalModelTracking(object):
             direction1= self.calculate_direction(self.track1['trace']+self.track2['trace'])
             direction2= self.calculate_direction(self.track2['trace'])
             
-        difference=(abs(direction2-direction1))%180
-            
+        
+        difference=(abs(direction2-direction1))
+
+        if difference>180:
+            difference=360-difference
+
         if difference>self.direction_limit_tracklinking:
             val = 0
         else:
             val = 1
-        
+
         return val  
     
     def calculate_speed(self, trace, frames):
