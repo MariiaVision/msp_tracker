@@ -19,7 +19,7 @@ import scipy as sp
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import ttk
-
+import datetime
 # for plotting
 import matplotlib
 matplotlib.use("TkAgg")
@@ -717,6 +717,13 @@ See the Manual for the detailed description of the software.
         else:
             if not(filename.endswith(".txt")):
                 filename += ".txt"
+                
+                if os.path.isfile(filename)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    filename=filename.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+filename.split(".")[-1]
+
+                
             # create data with parameters
             parameters={'W_start':self.segmentation.W_start, 'W':self.segmentation.W , 'step':self.segmentation.step,
             'threshold_membrane':self.threshold_membrane,  'img_threshold_membrane':self.img_threshold_membrane,  'degree_step':self.segmentation.degree_step,
@@ -775,6 +782,12 @@ See the Manual for the detailed description of the software.
             if not(filename.endswith(".tif") or filename.endswith(".tiff")):
                 filename += ".tif" 
             
+                if os.path.isfile(filename)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    filename=filename.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+filename.split(".")[-1]
+
+                
             # run the segmentation         
             for frame in tqdm(range(0, self.memb_movie_length), "membrane segmentation"):
                 img=self.memb_movie[frame,:,:]
@@ -1962,15 +1975,22 @@ See the Manual for the detailed description of the software.
         self.detector.movie=self.movie
         self.final_tracks=self.detector.linking()
         
-        
-        
+
         # save tracks to json file 
         if not(self.result_path.endswith(".txt")):
             self.result_path=self.result_path+ ".txt"
+            
+
+
+        if os.path.isfile(self.result_path)==True:
+            
+            # add date if the file exists already
+            self.result_path=self.result_path.split(".")[0]+"_updated"+"."+self.result_path.split(".")[-1]
+
+        
         with open(self.result_path, 'w') as f:
             json.dump(self.final_tracks, f, ensure_ascii=False)
-            
-            
+
         # save tracks to csv file 
         # prepare csv file
         ############## json ->csv ######################
@@ -1996,7 +2016,13 @@ See the Manual for the detailed description of the software.
                 result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
             else:
                 result_path_csv =self.result_path+ ".csv"
-                
+                    
+
+        if os.path.isfile(self.result_path)==True:
+            # add date if the file exists already
+            self.result_path=self.result_path.split(".")[0]+"_updated"+"."+self.result_path.split(".")[-1]
+
+                        
         with open(result_path_csv, 'w') as csvFile:
             writer = csv.writer(csvFile)
             writer.writerows(tracks_data)

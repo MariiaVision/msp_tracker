@@ -14,7 +14,7 @@ import tkinter as tk
 from tkinter import filedialog
 
 import csv
-
+import datetime
 # for plotting
 import matplotlib
 matplotlib.use("TkAgg")
@@ -38,6 +38,8 @@ from viewer_lib.fusion_events import FusionEvent
 from viewer_lib.trajectory_segmentation import TrajectorySegment
 
 import os
+import os.path
+
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 plt.rcParams.update({'figure.max_open_warning': 0})
@@ -373,8 +375,7 @@ class MainVisual(tk.Frame):
         if not save_file:
             print("File name was not provided. The data was not saved.")
         else:
-            # plot
-            
+
             plt.figure()
             plt.imshow(self.image, cmap="gray")
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
@@ -395,6 +396,16 @@ class MainVisual(tk.Frame):
                 #plot the membrane border on the top
                 plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)         
             
+            
+            # plot
+            if not(save_file.endswith(".png")):
+                save_file += ".png"  
+            
+                if os.path.isfile(save_file)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
             # save the image
             plt.savefig(save_file)
             # close the image
@@ -462,6 +473,12 @@ class MainVisual(tk.Frame):
             
             if not(save_file.endswith(".txt")):
                 save_file += ".txt"  
+                
+                if os.path.isfile(save_file)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
                 
             # save in json format                    
             with open(save_file, 'w') as f:
@@ -539,9 +556,15 @@ class MainVisual(tk.Frame):
             if not save_file:
                 print("File name was not provided. The data was not saved.")
             else:
-           
+                
                 if not(save_file.endswith(".png")):
-                    save_file += ".png"        
+                    save_file += ".png"     
+
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
                 plt.savefig(save_file) 
                 
                 
@@ -647,10 +670,15 @@ class MainVisual(tk.Frame):
         if not save_file:
             print("File name was not provided. The data was not saved. ")
         else: 
-           
-    
+                       # plot
             if not(save_file.endswith(".png")):
                 save_file += ".png"        
+            
+                if os.path.isfile(save_file)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                      
             plt.savefig(save_file) 
             
             
@@ -732,12 +760,24 @@ class MainVisual(tk.Frame):
                 if not(save_file.endswith(".tif") or save_file.endswith(".tiff")):
                     save_file += ".tif"
                     
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
+                    
                 imageio.volwrite(save_file, final_img_set)
             else:
                 # save avi file for large movies
     
                 if not(save_file.endswith(".avi")):
                     save_file += ".avi"
+                    
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
     
                 out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
         
@@ -801,6 +841,12 @@ class MainVisual(tk.Frame):
             # save txt file with json format            
             if not(save_file.endswith(".txt")):
                 save_file += ".txt"  
+
+                if os.path.isfile(save_file)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                
                 
             with open(save_file, 'w') as f:
                 json.dump(self.track_data_filtered, f, ensure_ascii=False) 
@@ -1737,7 +1783,13 @@ class MainVisual(tk.Frame):
                     
         
                 if not(save_file.endswith(".csv")):
-                        save_file += ".csv"
+                    save_file += ".csv"
+                    
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+
         
                 with open(save_file, 'w') as csvFile:
                     writer = csv.writer(csvFile)
