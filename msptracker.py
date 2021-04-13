@@ -408,22 +408,9 @@ See the Manual for the detailed description of the software.
         self.r_end_frame = tk.Entry(self.action_frame, width=self.button_length, text=v)
         self.r_end_frame.grid(row=0, column=3, pady=self.pad_val, padx=self.pad_val)    
 
-        def define_result_path():
-            
-            filename=tk.filedialog.asksaveasfilename(title = "Save tracking results ")
-            # save in parameters
-            if not filename:
-                print("File was not provided")
-            else:
-                self.result_path=filename
-                self.show_parameters()
                 
         def update_info():
             self.show_parameters()
-
-        # button to set 
-        lbl3 = tk.Button(master=self.action_frame, text=" set path for results ", command=define_result_path, width=int(self.button_length*2),bg="#80818a")
-        lbl3.grid(row=4, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
 
         # button to set 
         lbl3 = tk.Button(master=self.action_frame, text=" update info ", command=update_info, width=int(self.button_length*2), bg="#80818a")
@@ -857,23 +844,9 @@ See the Manual for the detailed description of the software.
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - IMPORTANT PATHS: - - - - - ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
         
-        #remove text if was there before
-#        try:
-#            self.original_label.destroy()
-#        except:
-#            pass       
-#        
-#        try:
-#            self.final_tracks_label.destroy()
-#        except:
-#            pass
         self.original_label = tk.Label(master=self.information_frame, text=" Original image sequence:  "+ self.movie_protein_path.split("/")[-1],  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
         self.original_label.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-        self.final_tracks_label = tk.Label(master=self.information_frame, text=" Save final tracks to: "+ self.result_path,  bg='white', wraplength=int(self.window_width*0.4), font=("Helvetica", 8))
-        self.final_tracks_label.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
-        
-        
+               
           # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/20))
         lbl3.grid(row=3, column=0, columnspan=4,pady=self.pad_val, padx=self.pad_val)  
@@ -1962,71 +1935,89 @@ See the Manual for the detailed description of the software.
         running the final tracking 
         '''
         
-        # switch to the detection mode
-        self.detector.detection_choice=0
-        
-        # read start and end frame
-        if self.r_start_frame.get()!='':
-            self.detector.start_frame=int(self.r_start_frame.get())
+        # ask where to save 
+        filename=tk.filedialog.asksaveasfilename(title = "Save tracking results ")
+            # save in parameters
+        if not filename:
+            print("File was not provided")
+        else:
+            self.result_path=filename
+    
+            # switch to the detection mode
+            self.detector.detection_choice=0
             
-        if self.r_end_frame.get()!='':
-            self.detector.end_frame=int(self.r_end_frame.get())
-        
-        self.detector.movie=self.movie
-        self.final_tracks=self.detector.linking()
-        
-
-        # save tracks to json file 
-        if not(self.result_path.endswith(".txt")):
-            self.result_path=self.result_path+ ".txt"
+            # read start and end frame
+            if self.r_start_frame.get()!='':
+                self.detector.start_frame=int(self.r_start_frame.get())
+                
+            if self.r_end_frame.get()!='':
+                self.detector.end_frame=int(self.r_end_frame.get())
             
-
-
-        if os.path.isfile(self.result_path)==True:
+            self.detector.movie=self.movie
+            self.final_tracks=self.detector.linking()
             
-            # add date if the file exists already
-            self.result_path=self.result_path.split(".")[0]+"_updated"+"."+self.result_path.split(".")[-1]
-
-        
-        with open(self.result_path, 'w') as f:
-            json.dump(self.final_tracks, f, ensure_ascii=False)
-
-        # save tracks to csv file 
-        # prepare csv file
-        ############## json ->csv ######################
-            
-        tracks_data=[]
-        
-        tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
-            
-        for trackID_pos in self.final_tracks:
-            trajectory=self.final_tracks[trackID_pos]
-            new_frames=trajectory["frames"]
-            new_trace=trajectory["trace"]
-            trackID=trajectory["trackID"]
-            for pos in range(0, len(new_frames)):
-                point=new_trace[pos]
-                frame=new_frames[pos]
-                tracks_data.append([trackID, point[0], point[1],  frame])
-
-
-        # save to csv 
-        if not(self.result_path.endswith(".csv")):
-            if self.result_path.endswith(".txt"):
-                result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
+    
+            # save tracks to json file 
+            if not(self.result_path.endswith(".txt")):
+                if self.result_path.endswith(".csv"):
+                    result_path =self.result_path.split(".csv")[0]+ ".txt"
+                else:
+                    result_path=self.result_path+ ".txt"
+#                
+#                # check if the file with the same name exists
+#                
+#                if os.path.isfile(result_path)==True:
+#                    # add  (updated) to the end if it exists already
+#                    result_path=result_path.split(".")[0]+"(updated)"+"."+result_path.split(".")[-1]
             else:
-                result_path_csv =self.result_path+ ".csv"
+                result_path=self.result_path
+                            
+                
+    
+            
+            with open(result_path, 'w') as f:
+                json.dump(self.final_tracks, f, ensure_ascii=False)
+    
+            # save tracks to csv file 
+            # prepare csv file
+            ############## json ->csv ######################
+                
+            tracks_data=[]
+            
+            tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
+                
+            for trackID_pos in self.final_tracks:
+                trajectory=self.final_tracks[trackID_pos]
+                new_frames=trajectory["frames"]
+                new_trace=trajectory["trace"]
+                trackID=trajectory["trackID"]
+                for pos in range(0, len(new_frames)):
+                    point=new_trace[pos]
+                    frame=new_frames[pos]
+                    tracks_data.append([trackID, point[0], point[1],  frame])
+    
+    
+            # save to csv 
+            if not(self.result_path.endswith(".csv")):
+                if self.result_path.endswith(".txt"):
+                    result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
                     
-
-        if os.path.isfile(self.result_path)==True:
-            # add date if the file exists already
-            self.result_path=self.result_path.split(".")[0]+"_updated"+"."+self.result_path.split(".")[-1]
-
-                        
-        with open(result_path_csv, 'w') as csvFile:
-            writer = csv.writer(csvFile)
-            writer.writerows(tracks_data)
-            csvFile.close()
+                else:
+                    result_path_csv =self.result_path+ ".csv"
+#                    
+#                # check if the file with the same name exists
+#                if os.path.isfile(result_path_csv)==True:
+#                    
+#                    # add  (updated) to the end if it exists already
+#                    result_path_csv=result_path_csv.split(".")[0]+"(updated)"+"."+result_path_csv.split(".")[-1]
+    
+            else:
+                 result_path_csv =self.result_path
+                
+            with open(result_path_csv, 'w') as csvFile:
+                writer = csv.writer(csvFile)
+                writer.writerows(tracks_data)
+                csvFile.close()
 
         
     
