@@ -504,12 +504,9 @@ See the Manual for the detailed description of the software.
         else:   
         
             # read files 
-            self.memb_movie=skimage.io.imread(filename)     
-                        # read files 
-            try:
-                self.memb_movie=skimage.io.imread(filename)
-            except:
-                self.memb_movie=skimage.external.tifffile(filename)
+            
+            self.memb_movie=skimage.io.imread(filename)
+            
                     
             if self.memb_movie.dtype=='uint16':      
                 print("data type uint16 is converted to uint8")
@@ -1594,11 +1591,8 @@ See the Manual for the detailed description of the software.
             self.movie_protein_path=filename
         
             # read files 
-            try:
-                self.movie=skimage.io.imread(self.movie_protein_path)
-            except:
-                self.movie=skimage.external.tifffile(self.movie_protein_path)
-                    
+            self.movie=skimage.io.imread(self.movie_protein_path)
+            
             if self.movie.dtype=='uint16':      
                 print("data type uint16 is converted to uint8")
                 self.movie=(self.movie - np.min(self.movie))/(np.max(self.movie)- np.min(self.movie))
@@ -1659,10 +1653,7 @@ See the Manual for the detailed description of the software.
             self.movie_protein_path=filename
         
             # read files 
-            try:
-                self.movie=skimage.io.imread(self.movie_protein_path)
-            except:
-                self.movie=skimage.external.tifffile(self.movie_protein_path)
+            self.movie=skimage.io.imread(self.movie_protein_path)
                     
             if self.movie.dtype=='uint16':      
                 print("data type uint16 is converted to uint8")
