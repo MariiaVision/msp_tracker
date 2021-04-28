@@ -30,7 +30,7 @@ plt.rcParams.update({'figure.max_open_warning': 0})
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from tqdm import tqdm
 import skimage
-from skimage import io
+from skimage import io, util
 import json
 import csv
 
@@ -504,10 +504,18 @@ See the Manual for the detailed description of the software.
         else:   
         
             # read files 
-            self.memb_movie=skimage.io.imread(filename)            
+            self.memb_movie=skimage.io.imread(filename)     
+                        # read files 
+            try:
+                self.memb_movie=skimage.io.imread(filename)
+            except:
+                self.memb_movie=skimage.external.tifffile(filename)
+                    
+            if self.memb_movie.dtype=='uint16':      
+                print("data type uint16 is converted to uint8")
+                self.memb_movie=(self.memb_movie - np.min(self.memb_movie))/(np.max(self.memb_movie)- np.min(self.memb_movie))
+                self.memb_movie=skimage.util.img_as_ubyte(self.memb_movie)
             
-            if self.movie.dtype=='uint16':                
-                self.movie=(self.movie/256).astype('uint8')
                 
             # set parameters
             self.memb_movie_length=self.memb_movie.shape[0]
@@ -1586,10 +1594,16 @@ See the Manual for the detailed description of the software.
             self.movie_protein_path=filename
         
             # read files 
-            self.movie=skimage.io.imread(self.movie_protein_path)
-            
-            if self.movie.dtype=='uint16':                
-                self.movie=(self.movie/256).astype('uint8')
+            try:
+                self.movie=skimage.io.imread(self.movie_protein_path)
+            except:
+                self.movie=skimage.external.tifffile(self.movie_protein_path)
+                    
+            if self.movie.dtype=='uint16':      
+                print("data type uint16 is converted to uint8")
+                self.movie=(self.movie - np.min(self.movie))/(np.max(self.movie)- np.min(self.movie))
+                self.movie=skimage.util.img_as_ubyte(self.movie)
+                
                 
             self.movie_length=self.movie.shape[0]  
             try:
@@ -1645,10 +1659,16 @@ See the Manual for the detailed description of the software.
             self.movie_protein_path=filename
         
             # read files 
-            self.movie=skimage.io.imread(self.movie_protein_path)
+            try:
+                self.movie=skimage.io.imread(self.movie_protein_path)
+            except:
+                self.movie=skimage.external.tifffile(self.movie_protein_path)
+                    
+            if self.movie.dtype=='uint16':      
+                print("data type uint16 is converted to uint8")
+                self.movie=(self.movie - np.min(self.movie))/(np.max(self.movie)- np.min(self.movie))
+                self.movie=skimage.util.img_as_ubyte(self.movie)
             
-            if self.movie.dtype=='uint16':                
-                self.movie=(self.movie/256).astype('uint8')
                 
             self.movie_length=self.movie.shape[0] 
             
