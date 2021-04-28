@@ -278,13 +278,17 @@ class Detectors(object):
                 # ROI for the vesicle
                 img=self.img_set[frameN,:,:]
                 img_m=filters.median(img, selem=None, out=None)
+
                 try: 
-                    img_roi_raw= np.copy(img[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
-                    img_roi_processed= np.copy(img_m[lm[0]-int(self.box_size_fit/2): lm[0]+int(self.box_size_fit/2), lm[1]-int(self.box_size_fit/2):lm[1]+int(self.box_size_fit/2)])  
-                                    
+                    
+                    img_roi_raw= np.copy(img[int(lm[0])-int(self.box_size_fit/2): int(lm[0])+int(self.box_size_fit/2), int(lm[1])-int(self.box_size_fit/2):int(lm[1])+int(self.box_size_fit/2)])  
+                    img_roi_processed= np.copy(img_m[int(lm[0])-int(self.box_size_fit/2): int(lm[0])+int(self.box_size_fit/2), int(lm[1])-int(self.box_size_fit/2):int(lm[1])+int(self.box_size_fit/2)])  
+        
                     # sub-pixel localisation
+                    
                     coordinates=[[int(self.box_size_fit/2),int(self.box_size_fit/2)]]   
                     new_coor=tp.refine_com(raw_image=img_roi_raw, image=img_roi_processed, radius=int(self.expected_radius), coords=np.asarray(coordinates), shift_thresh=1)
+
                     x=new_coor['x'][0]
                     y=new_coor['y'][0]
                     
@@ -298,10 +302,12 @@ class Detectors(object):
                     self.detected_vesicles.append(point_new) 
                     
                 except:
+
                     x=lm[0]
                     y=lm[1]
                     point_new=[float(x), float(y)]            
                     self.detected_vesicles.append(point_new) 
+
         else:
             self.detected_vesicles=updated_centers
             
