@@ -1051,11 +1051,11 @@ class MainVisual(tk.Frame):
             self.show_tracks()   
 
         def offclick_zoomin(event):
-            if event.button == 1:
-                self.ax.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
-                self.ax.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+            
+            self.ax.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
+            self.ax.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
                 
-                self.show_tracks() 
+            self.show_tracks() 
             
             
         def onclick_zoomin(event):       
