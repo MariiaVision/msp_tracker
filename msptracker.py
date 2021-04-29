@@ -184,6 +184,7 @@ See the Manual for the detailed description of the software.
         self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
         self.button_length=np.max((10,int(self.window_width/130)))
         self.filename_final_tracking="unnamed_tracking_results.txt"
+        self.plot_range_coordinates=[0,0]
         
         #############################################
 
@@ -575,22 +576,37 @@ See the Manual for the detailed description of the software.
         toolbarFrame = tk.Frame(master=self.viewFrame_membrane)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
-        # update home button
-
-        def new_home( *args, **kwargs):
+        # place buttons
+        
+        def new_home(): # zoom
             # zoom out
         
             self.axm.set_xlim(0,self.memb_movie.shape[2])
             self.axm.set_ylim(0,self.memb_movie.shape[1])
 
+            self.show_frame_membrane()   
 
-            self.show_frame_membrane()
+        def offclick_zoomin(event):
+            if event.button == 1:
+                self.axm.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
+                self.axm.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                
+                self.show_frame_membrane() 
             
-        NavigationToolbar2Tk.home = new_home
+            
+        def onclick_zoomin(event):       
+            self.plot_range_coordinates[0]=float(event.xdata)
+            self.plot_range_coordinates[1]=float(event.ydata)            
+            
+        def zoom_in():
+            self.canvas.mpl_connect('button_press_event', onclick_zoomin)
+            self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
+            
+        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-        self.toolbar.update()
+        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
         
 
@@ -1562,24 +1578,62 @@ See the Manual for the detailed description of the software.
         self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
         
+                
         # toolbar
         toolbarFrame = tk.Frame(master=self.viewFrame_detection)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
-        # update home button
-
-        def new_home( *args, **kwargs):
+        # place buttons
+        
+        def new_home(): # zoom
             # zoom out
+        
             self.axd.set_xlim(0,self.movie.shape[2])
             self.axd.set_ylim(0,self.movie.shape[1])
 
-            self.show_frame_detection()
+            self.show_frame_detection()   
+
+        def offclick_zoomin(event):
+            if event.button == 1:
+                self.axd.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
+                self.axd.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                
+                self.show_frame_detection() 
             
-        NavigationToolbar2Tk.home = new_home
+            
+        def onclick_zoomin(event):       
+            self.plot_range_coordinates[0]=float(event.xdata)
+            self.plot_range_coordinates[1]=float(event.ydata)            
+            
+        def zoom_in():
+            self.canvas.mpl_connect('button_press_event', onclick_zoomin)
+            self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
+            
+        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-        self.toolbar.update()
+        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        
+#        # toolbar
+#        toolbarFrame = tk.Frame(master=self.viewFrame_detection)
+#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+#        
+#        # update home button
+#
+#        def new_home( *args, **kwargs):
+#            # zoom out
+#            self.axd.set_xlim(0,self.movie.shape[2])
+#            self.axd.set_ylim(0,self.movie.shape[1])
+#
+#            self.show_frame_detection()
+#            
+#        NavigationToolbar2Tk.home = new_home
+#        
+#        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
+#        self.toolbar.set_message=lambda x:"" # remove message with coordinates
+#        self.toolbar.update()
       
 #            
     def select_vesicle_movie_linking(self):
@@ -1921,22 +1975,59 @@ See the Manual for the detailed description of the software.
         toolbarFrame = tk.Frame(master=self.viewFrame_linking)
         toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
-        # update home button
-
-        def new_home( *args, **kwargs):
+        # place buttons
+        
+        def new_home(): # zoom
             # zoom out
         
             self.axl.set_xlim(0,self.movie.shape[2])
             self.axl.set_ylim(0,self.movie.shape[1])
 
+            self.show_frame_linking()   
 
-            self.show_frame_linking()
+        def offclick_zoomin(event):
+            if event.button == 1:
+                self.axl.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
+                self.axl.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                
+                self.show_frame_linking() 
             
-        NavigationToolbar2Tk.home = new_home
+            
+        def onclick_zoomin(event):       
+            self.plot_range_coordinates[0]=float(event.xdata)
+            self.plot_range_coordinates[1]=float(event.ydata)            
+            
+        def zoom_in():
+            self.canvas.mpl_connect('button_press_event', onclick_zoomin)
+            self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
+            
+        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-        self.toolbar.update()
+        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
+
+        
+        # toolbar
+#        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
+#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+#        
+#        # update home button
+#
+#        def new_home( *args, **kwargs):
+#            # zoom out
+#        
+#            self.axl.set_xlim(0,self.movie.shape[2])
+#            self.axl.set_ylim(0,self.movie.shape[1])
+#
+#
+#            self.show_frame_linking()
+#            
+#        NavigationToolbar2Tk.home = new_home
+#        
+#        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
+#        self.toolbar.set_message=lambda x:"" # remove message with coordinates
+#        self.toolbar.update()
 
 
  ############# Running the code  ##################
