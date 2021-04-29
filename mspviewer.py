@@ -465,7 +465,16 @@ class MainVisual(tk.Frame):
                 # calculate orientation
                 y=point_end[1]-point_start[1]
                 x=point_end[0]-point_start[0]
-                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+
+                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360                
+#                orintation_move=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
+                if orintation_move>180:
+                    orintation_move=abs(orintation_move-360)
+#                
+#                # calculate orientation
+#                y=point_end[1]-point_start[1]
+#                x=point_end[0]-point_start[0]
+#                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
                 
                 orintation_array.append(orintation_move)    
                 
@@ -540,10 +549,12 @@ class MainVisual(tk.Frame):
     
             plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
                [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
-            ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+            ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
             ax_new.set_theta_direction(1)
             ax_new.set_title(" movement orientation \n based on track count ")            
-
+            
+            ax_new.set_thetamin(0)
+            ax_new.set_thetamax(180)
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
             self.show_orientation_map_win.title(" orientation plot ")
@@ -637,7 +648,17 @@ class MainVisual(tk.Frame):
             # calculate orientation
             y=point_end[1]-point_start[1]
             x=point_end[0]-point_start[0]
+            
             orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+#            orintation_move=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
+#            print("\n", orintation_move)
+#            orintation_move=abs(orintation_move-self.ap_axis)
+
+            if orintation_move>180:
+                orintation_move=abs(orintation_move-360)
+            
+#                
+#            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
             
             orintation_array.append(orintation_move)
    
@@ -654,10 +675,13 @@ class MainVisual(tk.Frame):
 
         plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
            [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
-        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.8', edgecolor='k')
+        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
         ax.set_theta_direction(1)
         ax.set_title(" movement orientation \n based on track count ")
-        
+            
+        ax.set_thetamin(0)
+        ax.set_thetamax(180)        
+    
         #set a window
         self.show_orientation_map_win = tk.Toplevel( bg='white')
         self.show_orientation_map_win.title(" orientation plot ")
@@ -1115,11 +1139,11 @@ class MainVisual(tk.Frame):
                 self.ylim_zoom=self.ax.get_ylim()
                 
                 # get zoom data
-                zz_x_0=np.asarray(p['trace'])[:,1]>self.xlim_zoom[0]
-                zz_x_1=np.asarray(p['trace'])[:,1]<self.xlim_zoom[1]
+                zz_x_0=np.asarray(p['trace'])[:,1]>=self.xlim_zoom[0]
+                zz_x_1=np.asarray(p['trace'])[:,1]<=self.xlim_zoom[1]
                 
-                zz_y_0=np.asarray(p['trace'])[:,0]<self.ylim_zoom[0]
-                zz_y_1=np.asarray(p['trace'])[:,0]>self.ylim_zoom[1]
+                zz_y_0=np.asarray(p['trace'])[:,0]<=self.ylim_zoom[0]
+                zz_y_1=np.asarray(p['trace'])[:,0]>=self.ylim_zoom[1]
                 
                 zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
     
@@ -1796,6 +1820,12 @@ class MainVisual(tk.Frame):
                     y=pointB[1]-pointA[1]
                     x=pointB[0]-pointA[0]
                     net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
+#                    net_direction=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
+                    
+                    # limited to 180 degrees
+#                    if net_direction>180:
+#                        net_direction=abs(net_direction-360)
+                    
                     
                     # frames        
                     time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
@@ -2072,6 +2102,7 @@ class TrackViewer(tk.Frame):
         changeInY = pointB[1] - pointA[1]
         
         return int((math.degrees(math.atan2(changeInY,changeInX))+360-90-self.ap_axis)%360)
+#        return int(abs(math.degrees(math.atan2(changeInX,changeInY))-self.ap_axis)%360)
 
         
     def change_position(self):
@@ -2440,31 +2471,33 @@ class TrackViewer(tk.Frame):
                
         listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*6),  font=("Times", 10), selectmode='single')
         listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
-
-        average_speeds=self.tg.calculate_speed(self.track_data, "average")
-        moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
-       # add to the list
-        listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
-
-        listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
-
-        listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
         
-        listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
-
-        listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
-
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
- 
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
-
-        listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
-
-        listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
-
-        listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
-
-        listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+        if len(self.track_data['frames'])>1:
+        
+            average_speeds=self.tg.calculate_speed(self.track_data, "average")
+            moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
+           # add to the list
+            listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
+    
+            listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
+    
+            listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
+            
+            listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
+    
+            listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
+    
+            listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+     
+            listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+    
+            listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+    
+            listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+    
+            listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+    
+            listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
@@ -2575,76 +2608,80 @@ class TrackViewer(tk.Frame):
                 intensity_array_2.append(0)
         
         # plotting
-        fig1 = plt.figure(figsize=self.figsize_value)
-        plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-b", label="segmented vesicle")
-
-        plt.ylabel("intensity", fontsize='small')
-        plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-k", label="without segmentation")
-        if check_border==0:
-            plt.title('Vesicle intensity per frame', fontsize='small')
-        else:
-            plt.title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
-        plt.legend(fontsize='small')   
-        plt.ylim(top = 1.1, bottom = 0)            
-        
-        # DrawingArea
-        canvas1 = FigureCanvasTkAgg(fig1, master=self.viewer)
-        canvas1.draw()
-        canvas1.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)  
-                     
-        
+        try :
+            fig1 = plt.figure(figsize=self.figsize_value)
+            plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-b", label="segmented vesicle")
+    
+            plt.ylabel("intensity", fontsize='small')
+            plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-k", label="without segmentation")
+            if check_border==0:
+                plt.title('Vesicle intensity per frame', fontsize='small')
+            else:
+                plt.title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
+            plt.legend(fontsize='small')   
+            plt.ylim(top = 1.1, bottom = 0)            
+            
+            # DrawingArea
+            canvas1 = FigureCanvasTkAgg(fig1, master=self.viewer)
+            canvas1.draw()
+            canvas1.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)  
+                         
+        except:
+            pass
     def plot_displacement(self):
         '''
         displacement plot
         
         '''
         trajectory=self.trace
-        
-        #calculate the displacement
-        x=np.asarray(trajectory)[:,0]    
-        y=np.asarray(trajectory)[:,1]
-        x_0=np.asarray(trajectory)[0,0]
-        y_0=np.asarray(trajectory)[0,1]
-        
-        x_e=np.asarray(trajectory)[-1,0]
-        y_e=np.asarray(trajectory)[-1,1]
-        
-        self.displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)
-        #calculate all type of displacements
-        # max displacement
-        self.max_displacement=np.round(np.max(self.displacement_array),2)
-        
-        # displacement from start to the end
-        self.net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)
-        
-        # total displacement
-        x_from=np.asarray(trajectory)[0:-1,0] 
-        y_from=np.asarray(trajectory)[0:-1,1] 
-        x_to=np.asarray(trajectory)[1:,0] 
-        y_to=np.asarray(trajectory)[1:,1] 
-        
-        self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
-        
-        fig = plt.figure(figsize=self.figsize_value)
-        
-        disaplcement=self.displacement_array*self.img_resolution
-        
-        # plot dosplacement colour
-        for i in range(1, len(self.motion)):
-            if self.motion[i]==0:
-                colourV='r'
-            else:
-                colourV='g'
-            plt.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
+        try:
+            #calculate the displacement
+            x=np.asarray(trajectory)[:,0]    
+            y=np.asarray(trajectory)[:,1]
+            x_0=np.asarray(trajectory)[0,0]
+            y_0=np.asarray(trajectory)[0,1]
             
-        plt.ylabel('Displacement (nm)', fontsize='small')
-
-        plt.title('Displacement per frame', fontsize='small')
-        
-        # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
+            x_e=np.asarray(trajectory)[-1,0]
+            y_e=np.asarray(trajectory)[-1,1]
+            
+            self.displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)
+            #calculate all type of displacements
+            # max displacement
+            self.max_displacement=np.round(np.max(self.displacement_array),2)
+            
+            # displacement from start to the end
+            self.net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)
+            
+            # total displacement
+            x_from=np.asarray(trajectory)[0:-1,0] 
+            y_from=np.asarray(trajectory)[0:-1,1] 
+            x_to=np.asarray(trajectory)[1:,0] 
+            y_to=np.asarray(trajectory)[1:,1] 
+            
+            self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
+            
+            fig = plt.figure(figsize=self.figsize_value)
+            
+            disaplcement=self.displacement_array*self.img_resolution
+            
+            # plot dosplacement colour
+            for i in range(1, len(self.motion)):
+                if self.motion[i]==0:
+                    colourV='r'
+                else:
+                    colourV='g'
+                plt.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
+                
+            plt.ylabel('Displacement (nm)', fontsize='small')
+    
+            plt.title('Displacement per frame', fontsize='small')
+            
+            # DrawingArea
+            canvas = FigureCanvasTkAgg(fig, master=self.viewer)
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
+        except:
+            pass
 
     def motion_type_evaluate(self, track_data_original):
         '''
