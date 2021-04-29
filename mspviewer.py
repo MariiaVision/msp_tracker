@@ -601,8 +601,27 @@ class MainVisual(tk.Frame):
         orientation_map_figure = plt.figure(figsize=(15,6))
         plt.axis('off')
         ax = orientation_map_figure.add_subplot(121)
-        ax.imshow(self.movie[1,:,:]/np.max(self.movie[1,:,:])+self.membrane_movie[1,:,:]/np.max(self.membrane_movie[1,:,:])*0.6, cmap='bone') 
-               
+        
+        if self.memebrane_switch==0:
+            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+        elif self.memebrane_switch==1: 
+            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/np.max(self.membrane_movie[self.frame_pos,:,:])*0.4, cmap='bone') 
+        else:
+            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+            
+            #skelitonisation of the membrane mask
+            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+            
+            # create an individual cmap with red colour
+            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+            cmap_new._init() # create the _lut array, with rgba values
+            alphas = np.linspace(0, 0.8, cmap_new.N+3)
+            cmap_new._lut[:,-1] = alphas
+            
+            #plot the membrane border on the top
+            ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
+
+            
         
         # position of axis
 
@@ -650,15 +669,9 @@ class MainVisual(tk.Frame):
             x=point_end[0]-point_start[0]
             
             orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
-#            orintation_move=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
-#            print("\n", orintation_move)
-#            orintation_move=abs(orintation_move-self.ap_axis)
 
             if orintation_move>180:
                 orintation_move=abs(orintation_move-360)
-            
-#                
-#            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
             
             orintation_array.append(orintation_move)
    
