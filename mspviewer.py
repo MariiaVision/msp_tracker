@@ -261,7 +261,7 @@ class MainVisual(tk.Frame):
 
 
         # Length       
-        lbl3 = tk.Label(master=self.filterframe, text="Max travelled distance (nm): from ", width=int(self.button_length*2), bg='white')
+        lbl3 = tk.Label(master=self.filterframe, text="Net travelled distance (nm): from ", width=int(self.button_length*2), bg='white')
         lbl3.grid(row=4, column=5)
         
         self.txt_length_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
@@ -1124,13 +1124,21 @@ class MainVisual(tk.Frame):
             for p in tqdm(self.track_data['tracks']):
                 
                 # check length
-                if len(p['trace'])>0:
+                if len(p['trace'])>1:
                     point_start=p['trace'][0]
                     # check length
                     track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
                     # check maximum displacement between any two positions in track
-                    track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
-                   
+#                    track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
+                    
+                    #check net distance
+                    x_0=np.asarray(p['trace'])[0,0]
+                    y_0=np.asarray(p['trace'])[0,1]
+                    
+                    x_e=np.asarray(p['trace'])[-1,0]
+                    y_e=np.asarray(p['trace'])[-1,1]
+                    track_length=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+
                     
                 else:
                     track_duration=0
