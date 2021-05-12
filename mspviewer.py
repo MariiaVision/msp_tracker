@@ -1969,6 +1969,8 @@ class TrackViewer(tk.Frame):
         self.frame_rate=frame_rate # movie frame rate
         self.ap_axis=ap_axis
         self.axis_name=axis_name
+        self.img_range=[[0,0],[0,0]] # range of image ccordinates used for plotting [[x_min, x_max],[y_min, y_max]]
+        
         
         # segmentation 
         self.traj_segm_switch_var=0 # calculate and show motion type
@@ -2376,16 +2378,19 @@ class TrackViewer(tk.Frame):
         
         
         
+        
         # for y
         if left_point_y>=0 and right_point_y<img.shape[1]:
             y_min=left_point_y
             y_max=right_point_y
         elif left_point_y<0 and right_point_y<img.shape[1]:
             y_min=0
-            y_max=np.min([y_min+self.pixN_basic, (img.shape[1]-1)])  
+#            y_max=np.min([y_min+2*self.pixN_basic, (img.shape[1]-1)])  
+            y_max=right_point_y
         elif left_point_y>=0 and right_point_y>=img.shape[1]:
             y_max=img.shape[1]-1
-            y_min=np.max([0, y_max-self.pixN_basic])
+#            y_min=np.max([0, y_max-2*self.pixN_basic])
+            y_min=left_point_y
         else:
             y_min=0
             y_max=img.shape[1]-1
@@ -2397,14 +2402,21 @@ class TrackViewer(tk.Frame):
             x_max=bottom_point_x
         elif top_point_x<0 and bottom_point_x<img.shape[0]:
             x_min=0
-            x_max=np.min([x_min+self.pixN_basic, (img.shape[0]-1)])  
+#            x_max=np.min([x_min+2*self.pixN_basic, (img.shape[0]-1)])  
+            x_max=bottom_point_x
         elif top_point_x>=0 and bottom_point_x>=img.shape[0]:
             x_max=img.shape[0]-1
-            x_min=np.max([0, x_max-self.pixN_basic])
+#            x_min=np.max([0, x_max-2*self.pixN_basic])
+            x_min=top_point_x
         else:
             x_min=0
             x_max=img.shape[0]-1       
             
+        # update the range for click action
+        self.img_range=[[x_min, x_max], [y_min, y_max]]
+        
+        
+        # extract the region
         region=img[x_min:x_max, y_min:y_max]
         
         blue_c=np.linspace(0., 1., len(self.trace))
@@ -2462,8 +2474,9 @@ class TrackViewer(tk.Frame):
                 pass
             
         def onclick(event):
-            
-            update_position_text(float(event.ydata), float(event.xdata))
+#            print("\n", self.img_range)
+#            print("onclick", float(event.ydata), float(event.xdata), " -> ",  float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
+            update_position_text(float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
         
         #plot the border of the membrane if chosen
         if self.membrane_switch==2:
