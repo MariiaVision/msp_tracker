@@ -269,7 +269,13 @@ class Detectors(object):
         #normalised frame
         frame_img_classify=self.img_set[frameN,:,:]
         
-        updated_centers=self.classify_vesicle(local_max, frame_img_classify, new_model, segment_size=self.box_size)    
+        if self.detection_threshold==0:
+            
+            updated_centers=local_max
+        else:
+            
+            updated_centers=self.classify_vesicle(local_max, frame_img_classify, new_model, segment_size=self.box_size)    
+        
         
         if self.gaussian_fit==True:
 
