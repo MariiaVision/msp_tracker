@@ -1669,6 +1669,10 @@ class MainVisual(tk.Frame):
                                 else: # update the existing track
                                     track["trace"].append(point)
                                     track["frames"].append(frame)
+                                    
+                        #save the last track
+                        if bool(track)==True :
+                            json_tracks["tracks"].append(track)                        
                     except:
                         pass
                     self.track_data_original=json_tracks
