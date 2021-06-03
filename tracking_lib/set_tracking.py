@@ -294,7 +294,7 @@ class TrackingSetUp(object):
 
         if self.detection_choice==0: # first detection and then linking
             data={}
-            for frameN in range(self.start_frame, np.min((self.end_frame, self.movie.shape[0]))):
+            for frameN in range(self.start_frame, np.min((self.end_frame+1, self.movie.shape[0]))):
                 print("frame ", frameN)
                 #detection
                 vesicles=detector.detect(frameN, cnn_model)
@@ -317,7 +317,7 @@ class TrackingSetUp(object):
                 
             
             # create tracklets
-            for frameN in range(self.start_frame,self.end_frame):
+            for frameN in range(self.start_frame, np.min((self.end_frame+1, self.movie.shape[0]))):
                 print("frame ", frameN)
                 try:
                     vesicles=detections[str(frameN)]
@@ -378,7 +378,8 @@ class TrackingSetUp(object):
         
         # set tracklets
         tracklink.rearrange_track_to_frame_start_end(data, self.movie)
-            
+        
+        
         #connect tracklets       
         tracklink.connect_tracklet_time()
         

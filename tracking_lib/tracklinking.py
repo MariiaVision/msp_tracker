@@ -430,24 +430,62 @@ class GraphicalModelTracking(object):
             
             #join trace 
             trace=trace+tracklet['trace']
-            
-            # add missing frames
-            pos=0
-            new_frames=[]
-            new_trace=[]
-            for frame_pos in range(frames[0], frames[-1]+1):
-                frame=frames[pos]
-                
-                if frame_pos==frame:
-                    new_frames.append(frame_pos)
-                    new_trace.append(trace[pos])
-                    pos=pos+1
-                else:
-                    new_frames.append(frame_pos)
-                    new_trace.append(trace[pos])             
 
-        # create  a new Track 
+        # check if any frames missing and fix it
         
+        #list of frames orfer
+        skipped_frames_list=(np.asarray(frames[1:])-np.asarray(frames[:-1])).tolist()
+
+        
+        #  lists of frames and coordinates
+        new_frames=[]
+        new_trace=[]
+        
+        
+       
+        
+        for pos in range(0, len(skipped_frames_list)):
+
+            skipped_frame=skipped_frames_list[pos]
+            frame=frames[pos]
+            coordinates=trace[pos]
+            if skipped_frame==1: # no gap
+                new_frames.append(frame)
+                new_trace.append(coordinates) 
+                
+            else:  
+                #last frame from the gap
+                new_frames.append(frame)
+                new_trace.append(coordinates) 
+                
+                # add missing gap frames
+
+                point0=trace[pos]
+                point1=trace[pos+1]
+                distance=np.linalg.norm(np.asarray(point0)-np.asarray(point1))
+                orientation=self.calculate_direction([point0, point1])
+
+        
+                dist_step=distance/skipped_frame
+                x=point0[0]
+                y=point0[1]
+                
+                for missed_frame in range(1,skipped_frame):
+                    
+                    frame_update=frame+missed_frame
+                    x+=dist_step*math.cos(math.radians(orientation))
+                    y+=dist_step*math.sin(math.radians(orientation))
+                    new_frames.append(frame_update)
+                    new_trace.append([x,y]) 
+                    
+#    if len(frames)>1:
+        # add the last frame
+        new_frames.append(frames[-1])
+        new_trace.append(trace[-1])
+                                
+                           
+        # create  a new Track 
+
         new_track.update({'trackID': self.track_pos, 'frames': new_frames, 'trace': new_trace}) 
         self.tracks_before_filter.update({self.track_pos:new_track}) 
         
@@ -482,6 +520,15 @@ class GraphicalModelTracking(object):
             if len(track_list_end)!=0:
                 self.track_data_framed_end.update({n_frame:track_list_end})
                 
+                
+                
+                
+                
+        ########################################
+        
+        
+        #########################################
+                
     def train_model(self, data):       
         ''' train the BN '''
         self.bgm_tracklet.fit(data)
@@ -505,7 +552,7 @@ class GraphicalModelTracking(object):
         in the order of their temproal positioning
         '''
         checked_connections=[] # list of reviewed connections       
-        possible_connections=[] # list of connection is a high connectivity score
+        possible_connections=[] # list of connection with high connectivity scores
         
         #iterate over each frame with ending tracks
         print("scanning frames for possble connections ...")
@@ -608,7 +655,8 @@ class GraphicalModelTracking(object):
         # iterate over small batches of tracklets
         
         N_tracklets=10000 # number of tracklets per batch
-
+        
+        print("len(possible_connections) : ", len(possible_connections))
         # if there possible connections
         if len(possible_connections)!=0: 
             Nsteps=int(len(possible_connections)/N_tracklets)+1
@@ -692,9 +740,9 @@ class GraphicalModelTracking(object):
                                     
 
             connected_tracklets.sort()
-            
                            
             connected_tracklets=np.asarray(connected_tracklets)[:,0:-1].tolist()
+
 
 
             # find connections
