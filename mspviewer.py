@@ -424,7 +424,7 @@ class MainVisual(tk.Frame):
             self.img_resolution=int(self.res_parameter.get())
         
         if self.frame_parameter.get()!='':
-            self.frame_rate=int(self.frame_parameter.get())
+            self.frame_rate=float(self.frame_parameter.get())
         
         #read ap axis
         if self.ap_parameter.get()!='':
