@@ -306,8 +306,10 @@ class TrajectorySegment(object):
         
         # curvilinear speed        
         curvilinear_speed_mean=disp/time  
-        curvilinear_speed_max=np.max(np.asarray(motion[1:])*sqr_disp_back)  
-        
+        try:
+            curvilinear_speed_max=np.max(np.asarray(motion[1:])*sqr_disp_back)  
+        except:
+            curvilinear_speed_max=0
         
         # straightline_speed
         if  mode=="average":
