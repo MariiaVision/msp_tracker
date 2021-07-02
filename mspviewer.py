@@ -1646,15 +1646,17 @@ class MainVisual(tk.Frame):
             
             if self.track_file.endswith(".csv"):# read csv 
                 # read file
-    
+                
                 json_tracks={"tracks":[]}
                 trackID_new=-1
                 track={}
                 with open(self.track_file, newline='') as f:
                     reader = csv.reader(f)
-                    try:
-                        for row in reader:
-                            if row[0]!="TrackID":
+
+                    for row in reader:
+
+                        if row:  # if the row is not empty
+                            if row[0]!="TrackID" and row[0]:
                                 trackID=int(row[0])
                                 point=[float(row[1]), float(row[2])]
                                 frame=int(row[3])
@@ -1670,11 +1672,11 @@ class MainVisual(tk.Frame):
                                     track["trace"].append(point)
                                     track["frames"].append(frame)
                                     
-                        #save the last track
-                        if bool(track)==True :
-                            json_tracks["tracks"].append(track)                        
-                    except:
-                        pass
+                                    
+                    #save the last track
+                    if bool(track)==True :
+                        json_tracks["tracks"].append(track)                        
+
                     self.track_data_original=json_tracks
     
                 
