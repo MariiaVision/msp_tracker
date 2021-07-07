@@ -1052,8 +1052,8 @@ class MainVisual(tk.Frame):
 
         def offclick_zoomin(event):
             
-            self.ax.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
-            self.ax.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+            self.ax.set_xlim(np.min((self.plot_range_coordinates[0],float(event.xdata))),np.max((self.plot_range_coordinates[0],float(event.xdata))))
+            self.ax.set_ylim(np.min((self.plot_range_coordinates[1],float(event.ydata))), np.max((self.plot_range_coordinates[1],float(event.ydata))))
                 
             self.show_tracks() 
             
@@ -2750,7 +2750,7 @@ class TrackViewer(tk.Frame):
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSP-viewer 0.1")
+        parent.title("MSP-viewer 0.2")
         parent.configure(background='white')
         
         self.main = MainVisual(parent)
