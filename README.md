@@ -14,7 +14,7 @@ Please, see manual for the detailed description of the software and its function
 1. Install conda:  https://docs.anaconda.com/anaconda/install/mac-os/
 2. Open the folder which contains the software in finder.
 3. In finder, right click on code folder and select `New Terminal at Folder`
-4. In the terminal type `conda env create -f environment.yml` and press enter. It should install all the required packages
+4. In the terminal type `conda env create -f environment_mac.yml` and press enter. It should install all the required packages
 
 #### Windows
 1. Install Anaconda: https://docs.anaconda.com/anaconda/install/windows/
@@ -24,12 +24,12 @@ Please, see manual for the detailed description of the software and its function
 #### Linux
 1. Install conda: https://docs.anaconda.com/anaconda/install/linux/
 2. In the terminal open the directory with the software
-3. In the terminal type `conda env create -f environment.yml` and press enter. It should install all the required packages
+3. In the terminal type `conda env create -f environment_linux.yml` and press enter. It should install all the required packages
 
 ### Usage 
 
 #### MSP-tracker
-1. In necessary update the environment: `conda env update --file environment.yml`
+1. In necessary update the environment: `conda env update --file environment_win.yml`
 2. In a terminal (Anaconda prompt for Windows) navigate to the software folder, activate the environment: `conda activate msp'
 3. To run the software: `python msptracker.py`:
   - load the image sequence
