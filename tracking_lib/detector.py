@@ -1,6 +1,6 @@
 #########################################################
 #
-# particle detection
+# particle detection 0.2
 #        
 #########################################################
 
@@ -41,7 +41,9 @@ class Detectors(object):
         self.k_max=20 # end of  the iteration
         self.k_min=1 # start of the iteration
         self.sigma_min=0.1 # min sigma for LOG
-        self.sigma_max=3. # max sigma for LOG     
+        self.sigma_max=3. # max sigma for LOG    
+        self.intensity_min=0 # min relevant intensity
+        self.intensity_max=1 # max relevant intensity
         
         #thresholding
         self.min_distance=4 # minimum distance between two max after MSSEF
@@ -83,7 +85,10 @@ class Detectors(object):
         self.k_max=settings['k_max'] # end of  the iteration
         self.k_min=settings['k_min'] # start of the iteration
         self.sigma_min=settings['sigma_min'] # min sigma for LOG
-        self.sigma_max=settings['sigma_max']# max sigma for LOG     
+        self.sigma_max=settings['sigma_max']# max sigma for LOG   
+        self.intensity_min=settings['intensity_min'] # min relevant intensity
+        self.intensity_max=settings['intensity_max'] # max relevant intensity     
+        
         
         #thresholding
         self.min_distance=settings['min_distance'] # minimum distance between two max after MSSEF
@@ -195,22 +200,59 @@ class Detectors(object):
         
         if len(centers)>0:
             for lm in centers:
-        
+                
+                #roi coordinates
                 x_st=int(lm[0]-segment_size/2)
                 x_end=x_st+segment_size
                 y_st=int(lm[1]-segment_size/2)
                 y_end=y_st+segment_size
-                img_segment= np.copy(img[x_st: x_end, y_st:y_end])
+                
+                # coordinates for roi stack
+                x_st_im=0
+                x_end_im=segment_size
+                y_st_im=0
+                y_end_im=segment_size
+                
+                img_roi=np.zeros((segment_size,segment_size))
+                                              
+                # check if the ROI fit
+                
+                # too close to left or top boarder
+                if x_st<0: 
+                    x_st_im=abs(x_st)
+                    x_st=0
+
+                if y_st<0: 
+                    y_st_im=abs(y_st)
+                    y_st=0
+                    
+                # too close to right or bottom
+                if x_end > img.shape[0]:
+                    x_end_im=segment_size - (x_end-img.shape[0])
+                    x_end= img.shape[0]
+                    
+                if y_end > img.shape[1]:
+                    y_end_im=segment_size - (y_end-img.shape[1])
+                    y_end= img.shape[1]
+                
+                #create roi
+                img_roi[x_st_im: x_end_im, y_st_im:y_end_im]= np.copy(img[x_st: x_end, y_st:y_end])   
+                
+                #mirror the image 
+                img_segment=img_roi[::-1,::-1]
+                #overlap with original
+                img_segment[x_st_im: x_end_im, y_st_im:y_end_im]= np.copy(img[x_st: x_end, y_st:y_end])
                 
                 #preprocess the segment
-                img_segment_set[i,:,:]=(img_segment-np.min(img_segment))/(np.max(img_segment)-np.min(img_segment))
+                img_segment_set[i,:,:]=(img_segment-np.min(img_segment))/(np.max(img_segment)-np.min(img_segment))                
                 i=i+1
             x_data=img_segment_set.reshape((len(centers), img_segment.shape[0],img_segment.shape[1], 1))
             score_set = new_model.predict(x_data) 
-            
+
             for pos in range(0, len(centers)):
+                
                 if score_set[pos][1]>self.detection_threshold:
-        
+                    
                     updated_centers.append([float(centers[pos][0]), float(centers[pos][1])])
 
         return updated_centers
@@ -220,6 +262,12 @@ class Detectors(object):
         """
         Main function for the particle detection
         """
+        # calculate max and min intensity
+        intensity_set_max=np.max(self.img_set)
+        intensity_set_min=np.min(self.img_set)
+        intensity_range=intensity_set_max-intensity_set_min
+        
+        
         #background substraction 
         img= self.substract_bg_single(self.img_set, frameN) 
         
@@ -246,26 +294,21 @@ class Detectors(object):
             img_label=np.asarray(mask_label*new_img)
 
             local_peaks=peak_local_max(img_label, threshold_rel=self.threshold_rel,  min_distance=int(self.min_distance))
-
-            #remove detections which are too close to each other
-            check_centres=[[-10,-10]]
-            local_peaks_updated=[]
-            for pos in range(0, len(local_peaks)):
-                
-                res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(local_peaks[pos]))**2, axis=1))
-                if all(res_distance>self.min_distance):
-                    
-                    check_centres.append(local_peaks[pos])
-                    local_peaks_updated.append(local_peaks[pos])
                                     
-            for point in local_peaks_updated:
-                check_pos_var= (point[1]-self.box_size/2)>0 and  (gray.shape[1]-point[1]-self.box_size/2)>0 and (point[0]-self.box_size/2)>0 and  (gray.shape[0]-point[0]-self.box_size/2)>0
-                if check_pos_var==True: # remove spots close to the boarder
+            for point in local_peaks:
+                
+                # check intensity 
+                try:
+                    point_avg_intensity=np.mean(self.img_set[frameN, point[0]-1:point[0]+2, point[1]-1:point[1]+2])
+                except:
+                    point_avg_intensity=self.img_set[frameN, point[0]-1:point[0]+2, point[1]-1:point[1]+2]
+
+
+                if point_avg_intensity>=intensity_set_min+self.intensity_min*intensity_range and point_avg_intensity<=intensity_set_min+self.intensity_max*intensity_range:
                     point_new=[point[0], point[1]]
                     local_max.append(point_new) 
                     self.detected_candidates.append(point_new)   
     
-    # # # # segmentation using watershed new_img
         #normalised frame
         frame_img_classify=self.img_set[frameN,:,:]
         
