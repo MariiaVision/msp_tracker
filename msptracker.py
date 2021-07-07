@@ -1,7 +1,7 @@
 
 #########################################################
 #
-#  MSP-tracker GUI 
+#  MSP-tracker GUI v 0.2
 #        
 #########################################################
 
@@ -41,7 +41,7 @@ from msld import MultiscaleLineDetection
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSP-tracker 0.1")
+        parent.title("MSP-tracker 0.2")
         parent.configure(background='white')
         
         #set the window size        
@@ -588,8 +588,9 @@ See the Manual for the detailed description of the software.
 
         def offclick_zoomin(event):
             if event.button == 1:
-                self.axm.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
-                self.axm.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                
+                self.axm.set_xlim(np.min((self.plot_range_coordinates[0],float(event.xdata))),np.max((self.plot_range_coordinates[0],float(event.xdata))))
+                self.axm.set_ylim(np.min((self.plot_range_coordinates[1],float(event.ydata))), np.max((self.plot_range_coordinates[1],float(event.ydata))))
                 
                 self.show_frame_membrane() 
             
@@ -870,28 +871,32 @@ See the Manual for the detailed description of the software.
                
           # empty space
         lbl3 = tk.Label(master=self.information_frame, text=" ",  bg='white', height=int(self.button_length/20))
-        lbl3.grid(row=3, column=0, columnspan=4,pady=self.pad_val, padx=self.pad_val)  
+        lbl3.grid(row=2, column=0, columnspan=4,pady=self.pad_val, padx=self.pad_val)  
         
         
         lbl3 = tk.Label(master=self.information_frame, text=" - - - - - PARAMETERS - - - - - ",  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=4, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
+        lbl3.grid(row=3, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
         
         
         lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES DETECTION ",  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val) 
         
     # substract_bg_step background substraction step 
 
         lbl3 = tk.Label(master=self.information_frame, text=" Background subtraction based on  "+ str(self.detector.substract_bg_step)+" frames",  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        lbl3.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
         
     # threshold coef
 
         lbl3 = tk.Label(master=self.information_frame, text=" Threshold coefficient  "+ str(self.detector.c),  bg='white', font=("Helvetica", 8))
-        lbl3.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
+        lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W) 
 
     # sigma
         lbl3 = tk.Label(master=self.information_frame, text=" Sigma from  "+ str(self.detector.sigma_min)+" to "+str(self.detector.sigma_max),  bg='white', font=("Helvetica", 8))
+        lbl3.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        
+    # intensity
+        lbl3 = tk.Label(master=self.information_frame, text=" Intensity from  "+ str(self.detector.intensity_min)+" to "+str(self.detector.intensity_max),  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
         
@@ -1288,76 +1293,89 @@ See the Manual for the detailed description of the software.
         self.d_sigma_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
         self.d_sigma_max.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
+    # intensity
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Intensity : from  ",  bg='white')
+        lbl3.grid(row=4, column=0)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.intensity_min))
+        self.d_intensity_min = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_intensity_min.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+         
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" to ", bg='white')
+        lbl3.grid(row=4, column=2, pady=self.pad_val, padx=self.pad_val)
+        v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.intensity_max))
+        self.d_intensity_max = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
+        self.d_intensity_max.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
+        
         
     # self.threshold_rel min pix value in relation to the image
     
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Relevant peak height ",  bg='white')
-        lbl3.grid(row=4, column=0) 
+        lbl3.grid(row=5, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.threshold_rel))
         self.d_threshold_rel = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_threshold_rel.grid(row=4, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_threshold_rel.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
 
     # button to show MSSEF
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Show MSSEF ", command=self.show_mssef, width=self.button_length)
-        lbl3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)   
 
 
             
           # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/20))
-        lbl3.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)        
+        lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val)        
                 
         
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
-        lbl3.grid(row=6, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=9, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
 
     # min_distance min distance minimum distance between two max after MSSEF
 
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Minimum distance between detections  ",  bg='white')
-        lbl3.grid(row=7, column=0) 
+        lbl3.grid(row=10, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.min_distance))
         self.d_min_distance = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_min_distance.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_min_distance.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
         
     #self.box_size=16 # bounding box size for detection
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region of Interest size ",  bg='white')
-        lbl3.grid(row=8, column=0) 
+        lbl3.grid(row=11, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size))
         self.d_box_size = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_box_size.grid(row=8, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_box_size.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
 
 
     # detection_threshold threshold for the CNN based classification
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Threshold coefficient ",  bg='white')
-        lbl3.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.detection_threshold))
         self.d_detection_threshold = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_detection_threshold.grid(row=9, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_detection_threshold.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # gaussian_fit 
         def clickgaussian_fit():
             self.detector.gaussian_fit=self.gaussianValue.get()
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Subpixel localisation (True/False) ",  bg='white')
-        lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val) 
         self.gaussianValue=tk.BooleanVar()
         self.gaussianValue.set(True)
         self.d_gaussian_fit = tk.Checkbutton(self.parametersFrame_detection, text='', var=self.gaussianValue, command=clickgaussian_fit)
-        self.d_gaussian_fit.grid(row=10, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_gaussian_fit.grid(row=13, column=1, pady=self.pad_val, padx=self.pad_val)
 
     #self.box_size_fit 
 
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Region for subpix localisation ",  bg='white')
-        lbl3.grid(row=11, column=0) 
+        lbl3.grid(row=14, column=0) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.box_size_fit))
         self.d_box_size_fit = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_box_size_fit.grid(row=11, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_box_size_fit.grid(row=14, column=1, pady=self.pad_val, padx=self.pad_val)
         
     # expected_radius
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" Expected particle radius ",  bg='white')
-        lbl3.grid(row=12, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=15, column=0, pady=self.pad_val, padx=self.pad_val) 
         v=tk.StringVar(self.parametersFrame_detection, value=str(self.detector.expected_radius))
         self.d_expected_radius = tk.Entry(self.parametersFrame_detection, width=self.button_length, text=v)
-        self.d_expected_radius.grid(row=12, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.d_expected_radius.grid(row=15, column=1, pady=self.pad_val, padx=self.pad_val)
     
     # cnn_model cnn model
         try:
@@ -1365,22 +1383,22 @@ See the Manual for the detailed description of the software.
         except:
             pass
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Load CNN model ", command=self.load_cnn_model, width=self.button_length*2)
-        lbl3.grid(row=13, column=0, pady=self.pad_val, padx=self.pad_val)  
+        lbl3.grid(row=16, column=0, pady=self.pad_val, padx=self.pad_val)  
         self.lbl_model = tk.Label(master=self.parametersFrame_detection, text=self.detector.cnn_model_path.split("/")[-1],  bg='white')
-        self.lbl_model.grid(row=13, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        self.lbl_model.grid(row=16, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
     
   # # # # # #  # #
 
          # empty space
         lbl3 = tk.Label(master=self.parametersFrame_detection, text=" ",  bg='white', height=int(self.button_length/20))
-        lbl3.grid(row=14, column=0, pady=self.pad_val, padx=self.pad_val) 
+        lbl3.grid(row=17, column=0, pady=self.pad_val, padx=self.pad_val) 
          # buttons   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Run test ", command=self.run_test_detection, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=15, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=18, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Save to file ", command=self.save_to_file_detection, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=16, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=19, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
         lbl3 = tk.Button(master=self.parametersFrame_detection, text=" Read from file ", command=self.read_from_file_detection, width=self.button_length*2, bg="#80818a")
-        lbl3.grid(row=17, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
+        lbl3.grid(row=20, column=0,  columnspan=4,pady=self.pad_val, padx=self.pad_val)   
     
 
     def show_mssef(self):
@@ -1447,8 +1465,16 @@ See the Manual for the detailed description of the software.
         if self.d_sigma_max.get()!='':
             self.detector.sigma_max=float(self.d_sigma_max.get())
             
+        if self.d_intensity_min.get()!='':
+            self.detector.intensity_min=float(self.d_intensity_min.get())
+            
+        if self.d_intensity_max.get()!='':
+            self.detector.intensity_max=float(self.d_intensity_max.get())
+            
         if self.d_min_distance.get()!='':
             self.detector.min_distance=float(self.d_min_distance.get())
+            
+            
             
         if self.d_threshold_rel.get()!='':
             self.detector.threshold_rel=float(self.d_threshold_rel.get())
@@ -1485,6 +1511,8 @@ See the Manual for the detailed description of the software.
         print(" c", self.detector.c)
         print(" sigma_min", self.detector.sigma_min)
         print(" sigma_max", self.detector.sigma_max)
+        print(" intensity_min", self.detector.intensity_min)
+        print(" intensitymax", self.detector.intensity_max)        
         print(" min_distance", self.detector.min_distance)
         print(" threshold_rel", self.detector.threshold_rel)
         print(" box_size", self.detector.box_size)
@@ -1595,8 +1623,8 @@ See the Manual for the detailed description of the software.
 
         def offclick_zoomin(event):
             if event.button == 1:
-                self.axd.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
-                self.axd.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                self.axd.set_xlim(np.min((self.plot_range_coordinates[0],float(event.xdata))),np.max((self.plot_range_coordinates[0],float(event.xdata))))
+                self.axd.set_ylim(np.min((self.plot_range_coordinates[1],float(event.ydata))), np.max((self.plot_range_coordinates[1],float(event.ydata))))
                 
                 self.show_frame_detection() 
             
@@ -1987,8 +2015,8 @@ See the Manual for the detailed description of the software.
 
         def offclick_zoomin(event):
             if event.button == 1:
-                self.axl.set_xlim(self.plot_range_coordinates[0],float(event.xdata))
-                self.axl.set_ylim(self.plot_range_coordinates[1],float(event.ydata))
+                self.axl.set_xlim(np.min((self.plot_range_coordinates[0],float(event.xdata))),np.max((self.plot_range_coordinates[0],float(event.xdata))))
+                self.axl.set_ylim(np.min((self.plot_range_coordinates[1],float(event.ydata))), np.max((self.plot_range_coordinates[1],float(event.ydata))))
                 
                 self.show_frame_linking() 
             
