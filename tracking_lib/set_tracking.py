@@ -1,6 +1,6 @@
 #########################################################
 #
-# set parameters for the tracking and run it
+# set parameters for the tracking and run it v 0.2
 #        
 #########################################################
 
@@ -60,7 +60,9 @@ class TrackingSetUp(object):
         self.k_max=5 #  MSSEF: end of  the iteration
         self.k_min=1 # MSSEF:  start of the iteration
         self.sigma_min=1 # MSSEF:  min sigma for LOG
-        self.sigma_max=2#  MSSEF: max sigma for LOG     
+        self.sigma_max=2#  MSSEF: max sigma for LOG    
+        self.intensity_min=0 # intensity: minimum relevant intensity value
+        self.intensity_max=1# intensity: maximum relevant intensity value 
         
         #thresholding
         self.min_distance=3 # minimum distance between two max after MSSEF
@@ -131,7 +133,9 @@ class TrackingSetUp(object):
         detector.k_max=self.k_max # end of  the iteration
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
-        detector.sigma_max=self.sigma_max# max sigma for LOG     
+        detector.sigma_max=self.sigma_max# max sigma for LOG  
+        detector.intensity_min=self.intensity_min # min relevant intensity
+        detector.intensity_max=self.intensity_max# max relevant intensity    
         #thresholding
         detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
@@ -173,6 +177,8 @@ class TrackingSetUp(object):
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
         detector.sigma_max=self.sigma_max# max sigma for LOG     
+        detector.intensity_min=self.intensity_min # min relevant intensity
+        detector.intensity_max=self.intensity_max# max relevant intensity 
         #thresholding
         detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
@@ -203,11 +209,11 @@ class TrackingSetUp(object):
         '''
         
         parameters={'c':self.c, 'k_max':self.k_max , 'k_min':self.k_min,
-                    'sigma_min':self.sigma_min,  'sigma_max':self.sigma_max,  'min_distance':self.min_distance,
+                    'sigma_min':self.sigma_min,  'sigma_max':self.sigma_max,   'intensity_min':self.intensity_min,  'intensity_max':self.intensity_max, 'min_distance':self.min_distance,
                     'threshold_rel':self.threshold_rel,'box_size':self.box_size, 'box_size_fit':self.box_size_fit, 'detection_threshold':self.detection_threshold, 
                     'substract_bg_step':self.substract_bg_step, 'gaussian_fit': self.gaussian_fit, 'expected_radius':self.expected_radius, 'cnn_model_path':self.cnn_model_path}
         data={'parameters':parameters}
-        
+
         # save the parameters       
         with open(self.detection_parameter_path, 'w') as f:
             json.dump(data, f, ensure_ascii=False) 
@@ -231,7 +237,15 @@ class TrackingSetUp(object):
         self.k_max=settings['k_max'] # end of  the iteration
         self.k_min=settings['k_min'] # start of the iteration
         self.sigma_min=settings['sigma_min'] # min sigma for LOG
-        self.sigma_max=settings['sigma_max']# max sigma for LOG     
+        self.sigma_max=settings['sigma_max']# max sigma for LOG  
+        
+        # read intensity range if available
+        try:
+            self.intensity_min=settings['intensity_min'] # min relevant intensity
+            self.intensity_max=settings['intensity_max'] # max relevant intensity  
+        except:
+            pass
+  
         
         #thresholding
         self.min_distance=settings['min_distance'] # minimum distance between two max after MSSEF
@@ -267,7 +281,11 @@ class TrackingSetUp(object):
         detector.k_max=self.k_max # end of  the iteration
         detector.k_min=self.k_min # start of the iteration
         detector.sigma_min=self.sigma_min # min sigma for LOG
-        detector.sigma_max=self.sigma_max# max sigma for LOG     
+        detector.sigma_max=self.sigma_max# max sigma for LOG           
+        detector.intensity_min=self.intensity_min # min relevant intensity
+        detector.intensity_max=self.intensity_max# max relevant intensity
+
+
         #thresholding
         detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
         detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
