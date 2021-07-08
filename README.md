@@ -1,10 +1,12 @@
 # MSP-package
-This repository presents two modules with graphical interface: 
-1) MSP-tracker: particle tracker  (set parameters, check the results, run on complete movie) with extra module of membrane segmentation
-2) MSP-viewer: track viewer to visualise the tracks, provide statistics, also it allows to modify/delete/add new tracks if necessary.
+The multiscale paricle (MSP) package provides users with tools for particle tracking, trajectories review and characterisation.
+This repository contains two modules with graphical-user interface: 
+1) MSP-tracker: particle tracker  with extra module of membrane segmentation
+2) MSP-viewer: track viewer to visualise the tracks, correct trajectories if required and provide statisticsy.
 
 
 The basis of the tracking approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
+
 
 Please, see manual for the detailed description of the software and its functionality
 
@@ -29,7 +31,7 @@ Please, see manual for the detailed description of the software and its function
 ### Usage 
 
 #### MSP-tracker
-1. In necessary update the environment: `conda env update --file environment_win.yml`
+1. In necessary update the environment: `conda env update --file environment_file_name.yml`
 2. In a terminal (Anaconda prompt for Windows) navigate to the software folder, activate the environment: `conda activate msp'
 3. To run the software: `python msptracker.py`:
   - load the image sequence
@@ -74,10 +76,10 @@ To create the txt file, you can use ImageJ multi-point tool and with ctrl+M copy
 
 
 #### Trackviewer
-1. If necessary update the environment: `conda env update --file environment.yml`
+1. If necessary update the environment: `conda env update --file environment_file_name.yml`
 2. In a terminal, activate the environment: `conda activate msp`
 3. To run the software: `python mspviewer.py`:
   - load protein movie
-  - select the tracks (.txt file, json format or csv file)
+  - select the tracks (.txt file (json format) or csv file)
   - optional: select membrane movie
 
