@@ -269,7 +269,11 @@ class Detectors(object):
         
         
         #background substraction 
-        img= self.substract_bg_single(self.img_set, frameN) 
+        
+        if self.substract_bg_step==0:
+            img=self.img_set[frameN,:,:]
+        else:                
+            img= self.substract_bg_single(self.img_set, frameN) 
         
         # enhance image
         gray = self.img_enhancement(img)
