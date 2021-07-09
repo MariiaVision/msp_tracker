@@ -188,7 +188,7 @@ class TrackingSetUp(object):
         detector.img_set=self.movie
         #CNN based classification        
         detector.detection_threshold=self.detection_threshold
-         
+
         detector.substract_bg_step =self.substract_bg_step   
         
         #######################################################################

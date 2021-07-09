@@ -120,19 +120,22 @@ class Detectors(object):
         '''
         substract image and in-situ background
         '''
-        start_i = pos-self.substract_bg_step # start frame
-        if start_i<0:
-            start_i=0
-        end_i = start_i+2*self.substract_bg_step # end frame
-        if end_i>=img_set.shape[0]:
-            end_i=img_set.shape[0]
-            start_i=end_i-2*self.substract_bg_step
-
-        insitu=np.min(img_set[start_i:end_i], axis=0) # insitu calculation    
-        
-        # removing background by substraction
-        img_3ch=np.copy(img_set[pos])
-        img_new= img_3ch-insitu  #calculate some percent of the insitu
+        if self.substract_bg_step==0: # the background subtraction is off
+            img_new=img_set[pos,:,:]
+        else:
+            start_i = pos-int(self.substract_bg_step/2) # start frame
+            if start_i<0:
+                start_i=0
+            end_i = start_i+self.substract_bg_step # end frame
+            if end_i>=img_set.shape[0]:
+                end_i=img_set.shape[0]
+                start_i=end_i-self.substract_bg_step
+    
+            insitu=np.min(img_set[start_i:end_i], axis=0) # insitu calculation    
+            
+            # removing background by substraction
+            img_3ch=np.copy(img_set[pos])
+            img_new= img_3ch-insitu  #calculate some percent of the insitu
             
         return img_new
 
