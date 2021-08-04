@@ -333,7 +333,7 @@ class MainVisual(tk.Frame):
         button_save.grid(row=15, column=7, pady=self.pad_val, padx=self.pad_val)  
         
         # save corrected tracks
-        button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save updates", command=self.save_in_file, width=int(self.button_length*1.5))
+        button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save changes", command=self.save_in_file, width=int(self.button_length*1.5))
         button_save.grid(row=16, column=7, pady=self.pad_val, padx=self.pad_val)  
         
       # # # # # # movie  # # # # # # 
@@ -877,8 +877,11 @@ class MainVisual(tk.Frame):
             
         else: 
             # save txt file with json format            
-            if not(save_file.endswith(".txt")):
-                save_file += ".txt"  
+            if not(save_file.endswith(".txt")):                
+                if save_file.endswith(".csv"):
+                    save_file =save_file.split(".csv")[0]+ ".txt"
+                else:
+                    save_file += ".txt"  
 
                 if os.path.isfile(save_file)==True:
                     # add date if the file exists already
