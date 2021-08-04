@@ -100,6 +100,7 @@ class MainVisual(tk.Frame):
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.monitor_axis=0 # 0 - not to show axis, 1- show axis
         self.memebrane_switch=0 # 0 - don't show the membrane, 1 -s how the membrane
+        self.mode_orientation_diagram=0 # mode of the orientation diagram: 0 - based on number of tracks, 1 - based on the distance, 2-combined (normalised distance)
         self.pad_val=1
         self.axis_name="A,P" # axis names for the orientation plot
         self.img_resolution=100 # resolution of the image, default is 100 nm/pix 
@@ -455,6 +456,7 @@ class MainVisual(tk.Frame):
       
             #calculate orientation for each trajectory
             orintation_array=[]
+            distance_array=[]
             
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
@@ -467,16 +469,16 @@ class MainVisual(tk.Frame):
                 x=point_end[0]-point_start[0]
 
                 orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360                
-#                orintation_move=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
+                
                 if orintation_move>180:
                     orintation_move=abs(orintation_move-360)
-#                
-#                # calculate orientation
-#                y=point_end[1]-point_start[1]
-#                x=point_end[0]-point_start[0]
-#                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+                    
+                # calculate distance
+                net_displacement=np.round(np.sqrt((x)**2+(y)**2),2)*self.img_resolution
                 
-                orintation_array.append(orintation_move)    
+                
+                orintation_array.append(orintation_move) 
+                distance_array.append(net_displacement) 
                 
             # save the array into the file
     
@@ -492,7 +494,7 @@ class MainVisual(tk.Frame):
                 
             # save in json format                    
             with open(save_file, 'w') as f:
-                json.dump({'orientation':orintation_array}, f, ensure_ascii=False) 
+                json.dump({'orientation':orintation_array, 'distance': distance_array}, f, ensure_ascii=False) 
         
     def plot_multiple_motion_map(self):
         '''
@@ -500,18 +502,26 @@ class MainVisual(tk.Frame):
         
         '''
         
-        # load multiple files
-        load_files = tk.filedialog.askopenfilenames(title='Choose all files together')
-        print(load_files)
-         
-        if not load_files:
-            print("Files were not selected. The data will not be processed.")
-        else:
+        def cancel_window():
+            '''
+            destroy the window
+            
+            '''
+            try:
+                self.choose_diagram_settings.destroy()
+            except:
+                pass
                     
-            # plot the image
+            
+        def run_main_code():
+            '''
+            the main code run after OK button
+            '''
+                        # plot the image
                        
             # create the joint orientation list            
             orientation_all=[]
+            distance_all=[]
             
             for file_name in load_files:
                 
@@ -519,7 +529,8 @@ class MainVisual(tk.Frame):
                 with open(file_name) as json_file:  
                     orientation_new = json.load(json_file)
                     
-                orientation_all+=orientation_new['orientation']        
+                orientation_all+=orientation_new['orientation']       
+                distance_all+=orientation_new['distance'] 
             
             # axis name               
             if self.axis_name_parameter.get()!='':
@@ -538,20 +549,36 @@ class MainVisual(tk.Frame):
                 second_name=" "
                 
                 
+            #define weights:
+            
+            
+            if self.mode_orientation_diagram==0: # track based
+                distance_array=[1]*len(distance_all)
+            elif self.mode_orientation_diagram==1: # distance based 
+                distance_array=distance_all
+                distance_array=[x / 1000 for x in distance_array]
+            else: # combined
+                distance_array=distance_all/np.max(distance_all) 
+            
             # plot and save 
             orientation_fig=plt.figure(figsize=(8,8))
             
             ax_new = plt.subplot(111, projection='polar')
             
             bin_size=10
-            a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+            a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
     
             plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
                [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
             ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
             ax_new.set_theta_direction(1)
-            ax_new.set_title(" movement orientation \n based on track count ")            
+            if self.mode_orientation_diagram==0: # track based
+                ax_new.set_title(" trajectory orientation \n based on track count ")
+            elif self.mode_orientation_diagram==1: # distance based
+                ax_new.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
+            else: # combined
+                ax_new.set_title(" trajectory orientation \n based on track count and net distance travelled")           
             
             ax_new.set_thetamin(0)
             ax_new.set_thetamax(180)
@@ -579,147 +606,286 @@ class MainVisual(tk.Frame):
                 
                 plt.savefig(save_file) 
                 
+            # close the widnow with question
+            cancel_window()                
+
                 
+
+            
+            # load multiple files
+        load_files = tk.filedialog.askopenfilenames(title='Choose all files together')
+        print(load_files)
+         
+        if not load_files:
+            print("Files were not selected. The data will not be processed.")
+        else:
+                        
+                    
+            # ask for the orientation diagram mode
+            # open new window
+            self.choose_diagram_settings = tk.Toplevel(root,  bg='white')
+            self.choose_diagram_settings.title(" ")
+        
+            
+            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Plot orientation diagram based on  " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+            
+            # radiobutton to choose
+            
+            var_diagram_switch = tk.IntVar()
+            
+            def update_switch():            
+                self.mode_orientation_diagram=var_diagram_switch.get()
+                
+         
+            segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" track count ",variable=var_diagram_switch, value=0, bg='white', command =update_switch )
+            segmentation_switch_off.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+    
+            segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
+            segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+            
+            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+            segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+                
+            self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
+            self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
+            self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+  
+                                    
+
         
     def plot_motion_map(self):
         '''
         plot motion map with given AP
         
-        '''
-        
-        # show the results in a separate window
-        
-    #read ap axis
-        if self.ap_parameter.get()!='':
-            self.ap_axis=int(self.ap_parameter.get())
+        '''       
+        def cancel_window():
+            '''
+            destroy the window
             
-        if self.axis_name_parameter.get()!='':
-            self.axis_name=self.axis_name_parameter.get()
-  
-        orintation_array=[]
-        
-        orientation_map_figure = plt.figure(figsize=(15,6))
-        plt.axis('off')
-        ax = orientation_map_figure.add_subplot(121)
-        
-        if self.memebrane_switch==0:
-            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
-        elif self.memebrane_switch==1: 
-            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/np.max(self.membrane_movie[self.frame_pos,:,:])*0.4, cmap='bone') 
-        else:
-            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
-            
-            #skelitonisation of the membrane mask
-            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
-            
-            # create an individual cmap with red colour
-            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-            cmap_new._init() # create the _lut array, with rgba values
-            alphas = np.linspace(0, 0.8, cmap_new.N+3)
-            cmap_new._lut[:,-1] = alphas
-            
-            #plot the membrane border on the top
-            ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
-
-            
-        
-        # position of axis
-
-        axis_name=self.axis_name.split(",")
-        
-        if axis_name[0]:
-            first_name=axis_name[0]
-        else:
-            first_name=" "
-        
-        if axis_name[1]:
-            second_name=axis_name[1]
-        else:
-            second_name=" "
-
-        arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
-        dist=int(self.image.shape[1]/10)
-        arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
-        
-        # check that the points are not outside the view
-
-        if arrow_b[0]<int(self.image.shape[0]/10):
-            # move the points
-            arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
-            arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
-
-        if arrow_b[1]<int(self.image.shape[1]/10):
-            # move the points
-            arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
-            arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
-            
-        ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-        ax.text(arrow_a[1], arrow_a[0]-5,  second_name, color='g', size=12, alpha=0.7)
-        ax.text(arrow_b[1], arrow_b[0]-5,  first_name, color='g', size=12, alpha=0.7)
-
-        for trackID in range(0, len(self.track_data_filtered['tracks'])):
-            track=self.track_data_filtered['tracks'][trackID]
-            
-            # calculate parameters
-            point_start=track['trace'][0]
-            point_end=track['trace'][-1]
-
-            # calculate orientation
-            y=point_end[1]-point_start[1]
-            x=point_end[0]-point_start[0]
-            
-            orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
-
-            if orintation_move>180:
-                orintation_move=abs(orintation_move-360)
-            
-            orintation_array.append(orintation_move)
-   
-            color='r'
-            plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
-                      fc=color, ec=color, length_includes_head = True)
-        
-        bin_size=10
-        a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
-        centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
-        
-        ax = orientation_map_figure.add_subplot(122, projection='polar')
-
-
-        plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-           [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
-        ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
-        ax.set_theta_direction(1)
-        ax.set_title(" movement orientation \n based on track count ")
-            
-        ax.set_thetamin(0)
-        ax.set_thetamax(180)        
-    
-        #set a window
-        self.show_orientation_map_win = tk.Toplevel( bg='white')
-        self.show_orientation_map_win.title(" orientation plot ")
-        self.canvas_img = FigureCanvasTkAgg(orientation_map_figure, master=self.show_orientation_map_win)
-        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
-        self.canvas_img.draw()
+            '''
+            try:
+                self.choose_diagram_settings.destroy()
+            except:
+                pass
                     
-        # request file name
-        save_file = tk.filedialog.asksaveasfilename() 
         
-        if not save_file:
-            print("File name was not provided. The data was not saved. ")
-        else: 
-                       # plot
-            if not(save_file.endswith(".png")):
-                save_file += ".png"        
+        def run_main_code():
+            '''
+            the main code run after OK button
             
-                if os.path.isfile(save_file)==True:
-                    # add date if the file exists already
-                    now = datetime.datetime.now()
-                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
-                      
-            plt.savefig(save_file) 
+                '''
+        #read ap axis
+            if self.ap_parameter.get()!='':
+                self.ap_axis=int(self.ap_parameter.get())
+                
+            if self.axis_name_parameter.get()!='':
+                self.axis_name=self.axis_name_parameter.get()
+      
+            orintation_array=[]
+            distance_array=[]
             
+            orientation_map_figure = plt.figure(figsize=(15,6))
+            plt.axis('off')
+            ax = orientation_map_figure.add_subplot(121)
             
+            if self.memebrane_switch==0:
+                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+            elif self.memebrane_switch==1: 
+                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/np.max(self.membrane_movie[self.frame_pos,:,:])*0.4, cmap='bone') 
+            else:
+                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+                
+                #skelitonisation of the membrane mask
+                skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
+                
+                # create an individual cmap with red colour
+                cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
+                cmap_new._init() # create the _lut array, with rgba values
+                alphas = np.linspace(0, 0.8, cmap_new.N+3)
+                cmap_new._lut[:,-1] = alphas
+                
+                #plot the membrane border on the top
+                ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)                
+            
+            # position of axis
+    
+            axis_name=self.axis_name.split(",")
+            
+            if axis_name[0]:
+                first_name=axis_name[0]
+            else:
+                first_name=" "
+            
+            if axis_name[1]:
+                second_name=axis_name[1]
+            else:
+                second_name=" "
+    
+            arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
+            dist=int(self.image.shape[1]/10)
+            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+            
+            # check that the points are not outside the view
+    
+            if arrow_b[0]<int(self.image.shape[0]/10):
+                # move the points
+                arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
+                arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
+    
+            if arrow_b[1]<int(self.image.shape[1]/10):
+                # move the points
+                arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
+                arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
+                
+            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
+            ax.text(arrow_a[1], arrow_a[0]-5,  second_name, color='g', size=12, alpha=0.7)
+            ax.text(arrow_b[1], arrow_b[0]-5,  first_name, color='g', size=12, alpha=0.7)
+    
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                track=self.track_data_filtered['tracks'][trackID]
+                
+                # calculate parameters
+                point_start=track['trace'][0]
+                point_end=track['trace'][-1]
+    
+                # calculate orientation
+                y=point_end[1]-point_start[1]
+                x=point_end[0]-point_start[0]
+                
+                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
+                
+                # define weights
+                
+                if self.mode_orientation_diagram==0: # track based
+                    net_displacement=1
+                else: # distance based or combined
+                     net_displacement=np.round(np.sqrt((x)**2+(y)**2),2)*self.img_resolution
+    
+    
+                if orintation_move>180:
+                    orintation_move=abs(orintation_move-360)
+                
+                orintation_array.append(orintation_move)
+                distance_array.append(net_displacement)
+       
+                color='r'
+                plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
+                          fc=color, ec=color, length_includes_head = True)
+            
+            # move to micrometers for histogram
+            distance_array=[x / 1000 for x in distance_array]
+            
+            if self.mode_orientation_diagram==2: # combined mode -> normalise the distances
+                distance_array=distance_array/np.max(distance_array)
+                
+                
+            bin_size=10
+            
+            a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
+            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
+            
+    #        ########
+    #        print("---\n", orintation_array)
+    #        print(distance_array)
+    #        
+    #        print("\n",a)
+    #        print(b)
+    #        
+    #        #########
+            
+            ax = orientation_map_figure.add_subplot(122, projection='polar')
+    
+    
+            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
+               [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
+            ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+            ax.set_theta_direction(1)
+            if self.mode_orientation_diagram==0: # track based
+                ax.set_title(" trajectory orientation \n based on track count ")
+            elif self.mode_orientation_diagram==1: # distance based
+                ax.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
+            else: # combined
+                ax.set_title(" trajectory orientation \n based on track count and net distance travelled")
+                
+                
+            ax.set_thetamin(0)
+            ax.set_thetamax(180)        
+        
+            #set a window
+            self.show_orientation_map_win = tk.Toplevel( bg='white')
+            self.show_orientation_map_win.title(" orientation plot ")
+            self.canvas_img = FigureCanvasTkAgg(orientation_map_figure, master=self.show_orientation_map_win)
+            self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+            self.canvas_img.draw()
+                        
+            # request file name
+            save_file = tk.filedialog.asksaveasfilename() 
+            
+            if not save_file:
+                print("File name was not provided. The data was not saved. ")
+            else: 
+                           # plot
+                if not(save_file.endswith(".png")):
+                    save_file += ".png"        
+                
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                          
+                plt.savefig(save_file) 
+                
+            # close the widnow with question
+            cancel_window()
+                
+                
+                        
+        ###  show the results in a separate window  ###
+                
+        # ask for the orientation diagram mode
+        # open new window
+        self.choose_diagram_settings = tk.Toplevel(root,  bg='white')
+        self.choose_diagram_settings.title(" ")
+    
+        
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Plot orientation diagram based on  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        
+        # radiobutton to choose
+        
+        var_diagram_switch = tk.IntVar()
+        
+        def update_switch():            
+            self.mode_orientation_diagram=var_diagram_switch.get()
+            
+     
+        segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" track count ",variable=var_diagram_switch, value=0, bg='white', command =update_switch )
+        segmentation_switch_off.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
+        segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+        
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+        segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+            
+        self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
+        self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+  
+                
+        
+############################################################
+        
+
         
     def save_movie(self):
         '''
