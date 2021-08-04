@@ -622,6 +622,9 @@ class MainVisual(tk.Frame):
                         
                     
             # ask for the orientation diagram mode
+            
+            #default value of diagram mode=0
+            self.mode_orientation_diagram=0
             # open new window
             self.choose_diagram_settings = tk.Toplevel(root,  bg='white')
             self.choose_diagram_settings.title(" ")
@@ -777,8 +780,10 @@ class MainVisual(tk.Frame):
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
                           fc=color, ec=color, length_includes_head = True)
             
+            if self.mode_orientation_diagram==1: # combined mode -> normalise the distances
+               
             # move to micrometers for histogram
-            distance_array=[x / 1000 for x in distance_array]
+                distance_array=[x / 1000 for x in distance_array]
             
             if self.mode_orientation_diagram==2: # combined mode -> normalise the distances
                 distance_array=distance_array/np.max(distance_array)
@@ -848,6 +853,11 @@ class MainVisual(tk.Frame):
         ###  show the results in a separate window  ###
                 
         # ask for the orientation diagram mode
+        
+            
+        #default value of diagram mode=0
+        self.mode_orientation_diagram=0
+        
         # open new window
         self.choose_diagram_settings = tk.Toplevel(root,  bg='white')
         self.choose_diagram_settings.title(" ")
