@@ -88,7 +88,8 @@ class MainVisual(tk.Frame):
 
         #filter parameters
         self.filter_duration=[0, 10000]
-        self.filter_length=[0, 100000]   
+        self.filter_length=[0, 100000] 
+        self.filter_length_total=[0, 100000] 
         self.filter_speed=[0, 100000] 
         self.filter_zoom=0 # option to include tracks only in zoomed area
         
@@ -273,19 +274,32 @@ class MainVisual(tk.Frame):
         
         self.txt_length_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_length_to.grid(row=4, column=8, pady=self.pad_val, padx=self.pad_val)  
+               
+        
+        lbl3 = tk.Label(master=self.filterframe, text="Total travelled distance (nm): from ", width=int(self.button_length*2), bg='white')
+        lbl3.grid(row=5, column=5)
+        
+        self.txt_length_from_total = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_length_from_total.grid(row=5, column=6, pady=self.pad_val, padx=self.pad_val)
+        
+        lbl3 = tk.Label(master=self.filterframe, text="to", bg='white')
+        lbl3.grid(row=5, column=7, pady=self.pad_val, padx=self.pad_val)
+        
+        self.txt_length_to_total = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_length_to_total.grid(row=5, column=8, pady=self.pad_val, padx=self.pad_val)  
         
         # curvilinear moving speed
         lbl4 = tk.Label(master=self.filterframe, text="Mean curvilinear moving speed : from ", width=int(self.button_length*2), bg='white')
-        lbl4.grid(row=5, column=5)
+        lbl4.grid(row=6, column=5)
         
         self.txt_speed_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
-        self.txt_speed_from.grid(row=5, column=6, pady=self.pad_val, padx=self.pad_val)
+        self.txt_speed_from.grid(row=6, column=6, pady=self.pad_val, padx=self.pad_val)
         
         lbl5 = tk.Label(master=self.filterframe, text="to", bg='white')
-        lbl5.grid(row=5, column=7, pady=self.pad_val, padx=self.pad_val)
+        lbl5.grid(row=6, column=7, pady=self.pad_val, padx=self.pad_val)
         
         self.txt_speed_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
-        self.txt_speed_to.grid(row=5, column=8, pady=self.pad_val, padx=self.pad_val)
+        self.txt_speed_to.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)
         
         # Radio button zoom
         var_filter_zoom = tk.IntVar()
@@ -294,19 +308,19 @@ class MainVisual(tk.Frame):
             self.filter_zoom=var_filter_zoom.get()
             
         lbl5 = tk.Label(master=self.filterframe, text=" Trajectories included for zoomed area: ", width=int(self.button_length*2), bg='white')
-        lbl5.grid(row=6, column=5)
+        lbl5.grid(row=7, column=5)
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.filterframe, text=" at least one point", variable=var_filter_zoom, value=0, bg='white', command =update_monitor_switch )
-        self.R1.grid(row=6, column=6,  pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=7, column=6,  pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(master=self.filterframe, text=" all points ", variable=var_filter_zoom, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
-        self.R2.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)          
+        self.R2.grid(row=7, column=8, pady=self.pad_val, padx=self.pad_val)          
         
         # button to filter
         
         self.buttonFilter = tk.Button(master=self.filterframe, text="Filter", command=self.filtering, width=self.button_length)
-        self.buttonFilter.grid(row=7, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=8, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
 
 
 # # # # # # # # # # # # Plot and save data  # # # # # # 
@@ -1293,7 +1307,7 @@ class MainVisual(tk.Frame):
                     
         
         def run_filtering():       
-            print("filtering for length: ", self.filter_length, ";   duration: ", self.filter_duration, ";   speed: ", self.filter_speed) #, ";   final stop duration: ", self.filter_stop)
+            print("filtering for net length: ", self.filter_length, "filtering for total length: ", self.filter_length_total, ";   duration: ", self.filter_duration, ";   speed: ", self.filter_speed) #, ";   final stop duration: ", self.filter_stop)
     
             # filtering 
             self.track_data_filtered={}
@@ -1307,24 +1321,34 @@ class MainVisual(tk.Frame):
                     point_start=p['trace'][0]
                     # check length
                     track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
-                    # check maximum displacement between any two positions in track
-#                    track_length=np.max(np.sqrt((point_start[0]-np.asarray(p['trace'])[:,0])**2+(point_start[1]-np.asarray(p['trace'])[:,1])**2))*self.img_resolution
-                    
-                    #check net distance
+                   
+                    #check net and total distance
                     x_0=np.asarray(p['trace'])[0,0]
                     y_0=np.asarray(p['trace'])[0,1]
                     
                     x_e=np.asarray(p['trace'])[-1,0]
                     y_e=np.asarray(p['trace'])[-1,1]
+                    
+                    #net displacement
                     track_length=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+                    
+                    #total displacement
+                    x_from=np.asarray(p['trace'])[0:-1,0] 
+                    y_from=np.asarray(p['trace'])[0:-1,1] 
+                    x_to=np.asarray(p['trace'])[1:,0] 
+                    y_to=np.asarray(p['trace'])[1:,1] 
+                    
+                    track_length_total=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
 
                     
                 else:
                     track_duration=0
                     track_length=0
+                    track_length_total=0
     
                     # variables to evaluate the trackS
                 length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
+                length_total_var=track_length_total>=self.filter_length_total[0] and track_length_total<=self.filter_length_total[1]
                 duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
                 
                 if self.txt_track_number.get()=='':
@@ -1356,7 +1380,7 @@ class MainVisual(tk.Frame):
                 
 
     
-                if length_var==True and duration_var==True and filterID==True and zoom_filter==True:
+                if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True:
                                     # check speed limitation
                     if movement_1==True or movement_2==True:
                         # evaluate motion 
@@ -1412,6 +1436,16 @@ class MainVisual(tk.Frame):
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
 
+
+        if self.txt_length_from_total.get()=='':
+            self.filter_length_total[0]=0
+        else:
+            self.filter_length_total[0]=float(self.txt_length_from_total.get())
+
+        if self.txt_length_to_total.get()=='':
+            self.filter_length_total[1]=10000
+        else:
+            self.filter_length_total[1]=float(self.txt_length_to_total.get())  
         
         if self.txt_speed_from.get()=='':
             self.filter_speed[0]=0
@@ -1980,7 +2014,8 @@ class MainVisual(tk.Frame):
                 self.stat_data.append(['Filters: ','', '', '','','','','','','','','','' ]) 
                 self.stat_data.append(['','', 'TrackID: ', self.txt_track_number.get(),'','','','','','','','','' ]) 
                 self.stat_data.append(['','', ' Duration (sec): ', self.txt_duration_from.get(),' - ',self.txt_duration_to.get(),'','','','','','','' ]) 
-                self.stat_data.append(['','', 'Max travelled distance (nm): ', self.txt_length_from.get(),' - ',self.txt_length_to.get(),'','','','','','','' ]) 
+                self.stat_data.append(['','', 'Net travelled distance (nm): ', self.txt_length_from.get(),' - ',self.txt_length_to.get(),'','','','','','','' ]) 
+                self.stat_data.append(['','', 'Total travelled distance (nm): ', self.txt_length_from_total.get(),' - ',self.txt_length_to_total.get(),'','','','','','','' ]) 
                 self.stat_data.append(['','','Mean curvilinear speed: moving (nm/sec): ', self.txt_speed_from.get(),' - ',self.txt_speed_to.get(),'','','','','','','' ]) 
                 self.stat_data.append(['','','Zoom : ', 'x :',str(self.ylim_zoom),'  y:', str(self.xlim_zoom),'','','','','','' ]) 
                 self.stat_data.append(['','',' ', '','','','','','','','','','' ]) 
@@ -2018,20 +2053,15 @@ class MainVisual(tk.Frame):
                     x_to=np.asarray(trajectory)[1:,0] 
                     y_to=np.asarray(trajectory)[1:,1] 
                     
-                    #orientation
                     total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
+                    
+                    #orientation
                     pointB=trajectory[-1]                        
                     pointA=trajectory[0]    
                     
                     y=pointB[1]-pointA[1]
                     x=pointB[0]-pointA[0]
-                    net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
-#                    net_direction=abs(math.degrees(math.atan2(x,y))-self.ap_axis)%360
-                    
-                    # limited to 180 degrees
-#                    if net_direction>180:
-#                        net_direction=abs(net_direction-360)
-                    
+                    net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)           
                     
                     # frames        
                     time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
