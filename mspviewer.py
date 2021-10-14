@@ -1240,7 +1240,7 @@ class MainVisual(tk.Frame):
         
             self.ax.set_xlim(0,self.movie.shape[2])
             self.ax.set_ylim(0,self.movie.shape[1])
-
+            
             self.show_tracks()   
 
         def offclick_zoomin(event):
@@ -1265,31 +1265,9 @@ class MainVisual(tk.Frame):
         button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
-                
-#        # toolbar
-#        toolbarFrame = tk.Frame(master=root)
-#        toolbarFrame.grid(row=15, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-#        
-#        # update home button
-#
-#        def new_home( *args, **kwargs):
-#            
-#            # zoom out            
-#            self.ax.set_xlim(0,self.movie.shape[2])
-#            self.ax.set_ylim(0,self.movie.shape[1])
-#
-#
-#            self.show_tracks()
-#            
-#        NavigationToolbar2Tk.home = new_home
-#
-#        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-#        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-#        self.toolbar.update()
-#        
-#        
+                       
 
-    def filtering(self):
+    def filtering(self, position_based=True):
         '''
         filtering tracks
         
@@ -1379,7 +1357,11 @@ class MainVisual(tk.Frame):
                     zoom_filter=np.all(zz==True)            
                 
 
-    
+                # Force zoom to be always True if Zoom filtering is not needed
+                if position_based==False:
+                    zoom_filter=True
+                    
+                    
                 if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True:
                                     # check speed limitation
                     if movement_1==True or movement_2==True:
@@ -1524,8 +1506,11 @@ class MainVisual(tk.Frame):
             # update movie and ap-axis parameters
             self.update_movie_parameters()
             
+      
+            view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
+
             TrackViewer(self.new_window, this_track, self.movie, self.membrane_movie, 
-                        self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name)
+                        self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
             
             
         def detele_track_question():
@@ -1714,7 +1699,7 @@ class MainVisual(tk.Frame):
             print("new track ", self.new_trackID, "is created")
             
             #visualise without the track
-            self.filtering()
+            self.filtering(position_based=False)
             self.track_to_frame()
             
             #update the list
@@ -2155,12 +2140,13 @@ class TrackViewer(tk.Frame):
     '''
     class for the window of the individual tracks 
     '''
-    def __init__(self, master, track_data, movie, membrane_movie, img_resolution, frame_rate, ap_axis, axis_name):
+    def __init__(self, master, track_data, movie, membrane_movie, img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
         
         self.viewer = master
+        self.frame_zoom=frame_zoom
         
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # of the monitor width
@@ -2586,10 +2572,20 @@ class TrackViewer(tk.Frame):
 
 
         #calculate window position        
-        left_point_y=int(np.min(np.asarray(self.trace)[:,1])-self.pixN_basic)
-        right_point_y=int(np.max(np.asarray(self.trace)[:,1])+self.pixN_basic)
-        top_point_x=int(np.min(np.asarray(self.trace)[:,0])-self.pixN_basic)
-        bottom_point_x=int(np.max(np.asarray(self.trace)[:,0])+self.pixN_basic)
+        
+        if np.asarray(self.trace)[0,0]==0 and np.asarray(self.trace)[0,1]==0:
+            # new track -> show a zoomed in main window frame_zoom
+
+            left_point_y=int(self.frame_zoom[0][0])
+            right_point_y=int(self.frame_zoom[0][1])
+            top_point_x=int(self.frame_zoom[1][1])
+            bottom_point_x=int(self.frame_zoom[1][0])
+            
+        else:
+            left_point_y=int(np.min(np.asarray(self.trace)[:,1])-self.pixN_basic)
+            right_point_y=int(np.max(np.asarray(self.trace)[:,1])+self.pixN_basic)
+            top_point_x=int(np.min(np.asarray(self.trace)[:,0])-self.pixN_basic)
+            bottom_point_x=int(np.max(np.asarray(self.trace)[:,0])+self.pixN_basic)
         
         
         
@@ -2629,7 +2625,6 @@ class TrackViewer(tk.Frame):
             
         # update the range for click action
         self.img_range=[[x_min, x_max], [y_min, y_max]]
-        
         
         # extract the region
         region=img[x_min:x_max, y_min:y_max]
@@ -2859,10 +2854,10 @@ class TrackViewer(tk.Frame):
         # plotting
         try :
             fig1 = plt.figure(figsize=self.figsize_value)
-            plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/(np.max(intensity_array_1)-np.min(intensity_array_1)), "-b", label="segmented vesicle")
+            plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
     
             plt.ylabel("intensity", fontsize='small')
-            plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/(np.max(intensity_array_2)-np.min(intensity_array_2)), "-k", label="without segmentation")
+            plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
                 plt.title('Vesicle intensity per frame', fontsize='small')
             else:
