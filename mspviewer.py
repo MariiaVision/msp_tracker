@@ -81,6 +81,7 @@ class MainVisual(tk.Frame):
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
         self.track_data_framed={}  # tracking data arranged by frames  
         self.stat_data=[] # stat data to save csv file
+        self.new_trackID=1 # default value or new track ID
         
         # segmentation 
         self.tg = TrajectorySegment()     
@@ -396,11 +397,13 @@ class MainVisual(tk.Frame):
             plt.imshow(self.image, cmap="gray")
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
-                trace=track['trace']
-                plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
-                if self.monitor_switch==0:
-                    plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
-            
+                
+                if len(track['trace'])>0:
+                    trace=track['trace']
+                    plt.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(trackID)%len(self.color_list_plot)])     
+                    if self.monitor_switch==0:
+                        plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
+                
             if self.memebrane_switch==2:
                 #extract skeleton
                 skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
@@ -807,15 +810,6 @@ class MainVisual(tk.Frame):
             
             a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
-            
-    #        ########
-    #        print("---\n", orintation_array)
-    #        print(distance_array)
-    #        
-    #        print("\n",a)
-    #        print(b)
-    #        
-    #        #########
             
             ax = orientation_map_figure.add_subplot(122, projection='polar')
     
@@ -1296,7 +1290,7 @@ class MainVisual(tk.Frame):
                 
                 # check length
                 if len(p['trace'])>1:
-                    point_start=p['trace'][0]
+                    
                     # check length
                     track_duration=(p['frames'][-1]-p['frames'][0]+1)/self.frame_rate
                    
@@ -1341,20 +1335,23 @@ class MainVisual(tk.Frame):
                 self.ylim_zoom=self.ax.get_ylim()
                 
                 # get zoom data
-                zz_x_0=np.asarray(p['trace'])[:,1]>=self.xlim_zoom[0]
-                zz_x_1=np.asarray(p['trace'])[:,1]<=self.xlim_zoom[1]
-                
-                zz_y_0=np.asarray(p['trace'])[:,0]<=self.ylim_zoom[0]
-                zz_y_1=np.asarray(p['trace'])[:,0]>=self.ylim_zoom[1]
-                
-                zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
-    
-                if self.filter_zoom==0: # any point
+                if len(p['trace'])>0:
+                    zz_x_0=np.asarray(p['trace'])[:,1]>=self.xlim_zoom[0]
+                    zz_x_1=np.asarray(p['trace'])[:,1]<=self.xlim_zoom[1]
                     
-                    zoom_filter=np.any(zz==True)
-                else: # all points
-                    #check all the points are inside
-                    zoom_filter=np.all(zz==True)            
+                    zz_y_0=np.asarray(p['trace'])[:,0]<=self.ylim_zoom[0]
+                    zz_y_1=np.asarray(p['trace'])[:,0]>=self.ylim_zoom[1]
+                    
+                    zz=zz_x_0*zz_x_1*zz_y_0*zz_y_1
+
+                    if self.filter_zoom==0: # any point
+                        
+                        zoom_filter=np.any(zz==True)
+                    else: # all points
+                        #check all the points are inside
+                        zoom_filter=np.all(zz==True)    
+                else:
+                    zoom_filter=True
                 
 
                 # Force zoom to be always True if Zoom filtering is not needed
@@ -1581,14 +1578,19 @@ class MainVisual(tk.Frame):
             # close windows if open
             cancel_action()
             
-            self.new_trackID=1000
-            
             # open new window
             self.create_window = tk.Toplevel(root)
             self.create_window.title(" Duplicate the track")
             
             self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+                        
+            #define new trackID:
+            for p in tqdm(self.track_data['tracks']):
+                
+                self.new_trackID=np.max((self.new_trackID, p['trackID']))
+            self.new_trackID+=1
+            
             v = tk.StringVar(root, value=str(self.new_trackID))
             self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
             self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
@@ -1609,7 +1611,6 @@ class MainVisual(tk.Frame):
             # close windows if open
             cancel_action()
             
-            self.new_trackID=1000
             
             # open new window
             self.create_window = tk.Toplevel(root)
@@ -1617,6 +1618,14 @@ class MainVisual(tk.Frame):
             
             self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            
+                        
+            #define new trackID:
+            for p in tqdm(self.track_data['tracks']):
+                
+                self.new_trackID=np.max((self.new_trackID, p['trackID']))
+            self.new_trackID+=1
+            
             v = tk.StringVar(root, value=str(self.new_trackID))
             self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
             self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
@@ -1692,14 +1701,14 @@ class MainVisual(tk.Frame):
                 
             self.created_tracks_N+=1
             
-            p={"trackID":self. new_trackID, "trace":[[0,0]], "frames":[0]}
+            p={"trackID":self. new_trackID, "trace":[], "frames":[]}
             
             self.track_data['tracks'].append(p)
             
             print("new track ", self.new_trackID, "is created")
             
             #visualise without the track
-            self.filtering(position_based=False)
+            self.filtering()
             self.track_to_frame()
             
             #update the list
@@ -2015,62 +2024,64 @@ class MainVisual(tk.Frame):
                     print(" track ", trackID+1)
                     track=self.track_data_filtered['tracks'][trackID]
                     trajectory=track['trace']
-                    
-                    x=np.asarray(trajectory)[:,0]    
-                    y=np.asarray(trajectory)[:,1]
-                    x_0=np.asarray(trajectory)[0,0]
-                    y_0=np.asarray(trajectory)[0,1]
-                    
-                    x_e=np.asarray(trajectory)[-1,0]
-                    y_e=np.asarray(trajectory)[-1,1]
-                    
-                    displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
-                    #calculate all type of displacementsself.ax.get_ylim()
-                    # max displacement
-                    max_displacement=np.round(np.max(displacement_array),2)
-                    
-                    # displacement from start to the end
-                    net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
-                    
-                    # total displacement
-                    x_from=np.asarray(trajectory)[0:-1,0] 
-                    y_from=np.asarray(trajectory)[0:-1,1] 
-                    x_to=np.asarray(trajectory)[1:,0] 
-                    y_to=np.asarray(trajectory)[1:,1] 
-                    
-                    total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
-                    
-                    #orientation
-                    pointB=trajectory[-1]                        
-                    pointA=trajectory[0]    
-                    
-                    y=pointB[1]-pointA[1]
-                    x=pointB[0]-pointA[0]
-                    net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)           
-                    
-                    # frames        
-                    time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
-                    
-                    # speed 
-                            
-                    #evaluate motion 
-                    track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
-                    average_speeds=self.tg.calculate_speed(track, "average")
-                    average_mcs=np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0)
-                    average_msls=np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0)
-                                         
-                    moving_speeds=self.tg.calculate_speed(track, "movement")
-                    moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
-                    moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
-                    moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
-                    moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
-                    
-                    
-                    
-                    self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
-                                             max_displacement, time,
-                                             net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxcs, moving_maxsegcs])
-                    
+                    if len(track['trace'])>0:
+                        x=np.asarray(trajectory)[:,0]    
+                        y=np.asarray(trajectory)[:,1]
+                        x_0=np.asarray(trajectory)[0,0]
+                        y_0=np.asarray(trajectory)[0,1]
+                        
+                        x_e=np.asarray(trajectory)[-1,0]
+                        y_e=np.asarray(trajectory)[-1,1]
+                        
+                        displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
+                        #calculate all type of displacementsself.ax.get_ylim()
+                        # max displacement
+                        max_displacement=np.round(np.max(displacement_array),2)
+                        
+                        # displacement from start to the end
+                        net_displacement=np.round(np.sqrt((x_e-x_0)**2+(y_e-y_0)**2),2)*self.img_resolution
+                        
+                        # total displacement
+                        x_from=np.asarray(trajectory)[0:-1,0] 
+                        y_from=np.asarray(trajectory)[0:-1,1] 
+                        x_to=np.asarray(trajectory)[1:,0] 
+                        y_to=np.asarray(trajectory)[1:,1] 
+                        
+                        total_displacement=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
+                        
+                        #orientation
+                        pointB=trajectory[-1]                        
+                        pointA=trajectory[0]    
+                        
+                        y=pointB[1]-pointA[1]
+                        x=pointB[0]-pointA[0]
+                        net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)           
+                        
+                        # frames        
+                        time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
+                        
+                        # speed 
+                                
+                        #evaluate motion 
+                        track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
+                        average_speeds=self.tg.calculate_speed(track, "average")
+                        average_mcs=np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0)
+                        average_msls=np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0)
+                                             
+                        moving_speeds=self.tg.calculate_speed(track, "movement")
+                        moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
+                        moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
+                        moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
+                        moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
+                        
+                        
+                        
+                        self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
+                                                 max_displacement, time,
+                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxcs, moving_maxsegcs])
+                    else:
+                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None])
+                        
         
                 if not(save_file.endswith(".csv")):
                     save_file += ".csv"
@@ -2161,8 +2172,11 @@ class TrackViewer(tk.Frame):
         self.motion=track_data['motion']
         self.trace=track_data['trace']
         self.id=track_data['trackID']
-        self.frame_pos=track_data['frames'][0]
-
+        if len(track_data['frames'])>0:
+            self.frame_pos=track_data['frames'][0]
+        else:
+            self.frame_pos=0
+    
         self.frame_pos_to_change=0 # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
@@ -2497,15 +2511,20 @@ class TrackViewer(tk.Frame):
         frame_val=int(self.txt_frame.get())
         
         # where to insert the postion
-        if frame_val<self.frames[0]: # at the start
+        if len(self.frames)==0:
+            pos=0
+            
+        elif frame_val<self.frames[0]: # at the start
             pos=0
         
         elif frame_val>self.frames[-1]: # at the end
             pos=len(self.frames)+1
+            
         else: #somewhere in the middle
             diff_array=np.asarray(self.frames)-frame_val
             diff_array_abs=abs(diff_array)
             val=min(abs(diff_array_abs))
+            
             if min(diff_array)>0:
                 pos=diff_array_abs.tolist().index(val)
             elif min(diff_array)<=0:
@@ -2573,7 +2592,7 @@ class TrackViewer(tk.Frame):
 
         #calculate window position        
         
-        if np.asarray(self.trace)[0,0]==0 and np.asarray(self.trace)[0,1]==0:
+        if len(self.trace)==0:
             # new track -> show a zoomed in main window frame_zoom
 
             left_point_y=int(self.frame_zoom[0][0])
@@ -2633,24 +2652,24 @@ class TrackViewer(tk.Frame):
         red_c=1-np.linspace(0., 1., len(self.trace))
     
         self.im = plt.imshow(region, cmap="gray")
-        
-        if self.plot_switch==0: # print full trajectory
-            for pos in range(0, len(self.trace)-1):
-                plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
-        
-            plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
-            plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+        if len(self.trace)>0:
+            if self.plot_switch==0: # print full trajectory
+                for pos in range(0, len(self.trace)-1):
+                    plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
             
-            plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
-            
-            plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
-            
-        elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
-            #define colour
-            red_c= (abs(np.array(self.motion)-1)).tolist()
-            green_c= self.motion
-            for pos in range(1, len(self.trace)):
-                plt.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
+                plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
+                plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+                
+                plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
+                
+                plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
+                
+            elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
+                #define colour
+                red_c= (abs(np.array(self.motion)-1)).tolist()
+                green_c= self.motion
+                for pos in range(1, len(self.trace)):
+                    plt.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
             
         # on click -> get coordinates        
         def update_position_text(x,y): 
