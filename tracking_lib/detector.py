@@ -316,15 +316,43 @@ class Detectors(object):
                     local_max.append(point_new) 
                     self.detected_candidates.append(point_new)   
     
+        
+        
+        #remove detections which are too close to each other
+
+        checked_detection=[]
+        compared_spots=[-1]
+        for pos in range(0, len(self.detected_candidates)):
+
+            if (pos in compared_spots) == False: 
+                res_distance=np.sqrt(np.sum((np.asarray(self.detected_candidates)-np.asarray(self.detected_candidates[pos]))**2, axis=1))
+
+                near_by_spots=list(np.where(res_distance<self.min_distance)[0])
+
+                if len(near_by_spots)>1: # there is an overlap
+                    spots=list(np.asarray(self.detected_candidates)[near_by_spots])
+
+                    centre=[(max(np.asarray(spots)[:,0])+min(np.asarray(spots)[:,0]))/2, (max(np.asarray(spots)[:,1])+min(np.asarray(spots)[:,1]))/2]
+
+                    checked_detection.append(centre)
+
+                    compared_spots=compared_spots+near_by_spots
+                    
+                else: # no overlap
+                    checked_detection.append(self.detected_candidates[pos])
+                    compared_spots=compared_spots+near_by_spots
+                
+        self.detected_candidates=checked_detection  
+        
         #normalised frame
         frame_img_classify=self.img_set[frameN,:,:]
         
         if self.detection_threshold==0:
             
-            updated_centers=local_max
+            updated_centers=self.detected_candidates
         else:
             
-            updated_centers=self.classify_vesicle(local_max, frame_img_classify, new_model, segment_size=self.box_size)    
+            updated_centers=self.classify_vesicle(self.detected_candidates, frame_img_classify, new_model, segment_size=self.box_size)    
         
         
         if self.gaussian_fit==True:
@@ -367,19 +395,7 @@ class Detectors(object):
         else:
             self.detected_vesicles=updated_centers
             
-        #remove detections which are too close to each other
-        
-        check_centres=[[-10,-10]]
-        checked_detection=[]
-        for pos in range(0, len(self.detected_vesicles)):
-            
-            res_distance=np.sqrt(np.sum((np.asarray(check_centres)-np.asarray(self.detected_vesicles[pos]))**2, axis=1))
-            if all(res_distance>self.min_distance):
-                
-                check_centres.append(self.detected_vesicles[pos])
-                checked_detection.append(self.detected_vesicles[pos])
-        
-        self.detected_vesicles=checked_detection    
+  
         print("candidates: ", len(self.detected_candidates), ";   detections ", len(self.detected_vesicles), "\n ")
 
         return self.detected_vesicles
