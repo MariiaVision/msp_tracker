@@ -1736,6 +1736,9 @@ See the Manual for the detailed description of the software.
         
             # read files 
             self.movie=skimage.io.imread(self.movie_protein_path)
+            
+            if len(self.movie.shape)==2: # single slice image
+                self.movie=np.reshape(self.movie,(1, self.movie.shape[0], self.movie.shape[1]))
                     
             if self.movie.dtype=='uint16':      
                 print("data type uint16 is converted to uint8")
