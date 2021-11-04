@@ -1073,8 +1073,14 @@ class MainVisual(tk.Frame):
                     save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
                 
                 
+            # create dictionary with settings
+            save_dict=self.track_data_filtered.copy()
+            self.update_movie_parameters()
+            param_dict={"viewer_set":{"resolution (nm/pix)": self.img_resolution, "frame rate (f/sec)":self.frame_rate, "axis orientation": self.ap_axis, "axis": self.axis_name}}
+            save_dict.update(param_dict)
+
             with open(save_file, 'w') as f:
-                json.dump(self.track_data_filtered, f, ensure_ascii=False) 
+                json.dump(save_dict, f, ensure_ascii=False) 
                 
             print("tracks are saved in json format to  ", save_file)                
                           
@@ -1896,7 +1902,7 @@ class MainVisual(tk.Frame):
                     
                     
                 # to save from dictionary to dict-list format:
-                if 'tracks' not in self.track_data_original.keys():
+                if 'tracks' not in self.track_data_original.keys(): # format exported from the tracker
                     
                     
                     self.track_data={'tracks':[]}
@@ -1907,7 +1913,41 @@ class MainVisual(tk.Frame):
                         
                     self.track_data_original=self.track_data
                     
-                
+                else:  # format exported from the viewer, can include viewer settings
+                    
+                    try: # try to read viewer settings
+                        print("file contains viewer settings, they will be updated")
+                        read_parameters = self.track_data_original["viewer_set"]
+                        print(read_parameters)
+                        
+                        # img resolution
+                        self.img_resolution=read_parameters["resolution (nm/pix)"]
+                        v = tk.StringVar(root, value=str(self.img_resolution))
+                        self.res_parameter = tk.Entry(root, width=10, text=v)
+                        self.res_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)      
+                        
+                        # frame rate
+                        self.frame_rate=read_parameters["frame rate (f/sec)"]
+                        v = tk.StringVar(root, value=str(self.frame_rate))
+                        self.frame_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
+                        self.frame_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)  
+
+                        # axis orientation
+                        self.ap_axis=read_parameters["axis orientation"]
+                        v = tk.StringVar(root, value=str(self.ap_axis))
+                        self.ap_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
+                        self.ap_parameter.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
+                        
+                        # axis names
+                        self.axis_name=read_parameters["axis"]        
+                        v = tk.StringVar(root, value=str(self.axis_name))
+                        self.axis_name_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
+                        self.axis_name_parameter.grid(row=7, column=3, pady=self.pad_val, padx=self.pad_val)  
+           
+                        
+                    except:
+                        pass
+                            
             #continue as it was before
             self.track_data=copy.deepcopy(self.track_data_original)
             self.track_data_filtered=self.track_data 
