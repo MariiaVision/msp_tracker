@@ -88,14 +88,14 @@ class MainVisual(tk.Frame):
         self.tg.window_length=8
 
         #filter parameters
-        self.filter_duration=[0, 10000]
-        self.filter_length=[0, 100000] 
-        self.filter_length_total=[0, 100000] 
-        self.filter_speed=[0, 100000] 
+        self.filter_duration=[0, 10000000]
+        self.filter_length=[0, 100000000] 
+        self.filter_length_total=[0, 100000000] 
+        self.filter_speed=[0, 100000000] 
         self.filter_zoom=0 # option to include tracks only in zoomed area
         
-        self.xlim_zoom=[0,10000]
-        self.ylim_zoom=[10000, 0]
+        self.xlim_zoom=[0,10000000]
+        self.ylim_zoom=[10000000, 0]
         
         self.frame_pos=0
         self.movie_length=1
