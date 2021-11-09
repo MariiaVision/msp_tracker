@@ -1407,7 +1407,7 @@ class MainVisual(tk.Frame):
             self.filter_duration[0]=float(self.txt_duration_from.get())
 
         if self.txt_duration_to.get()=='':
-            self.filter_duration[1]=1000
+            self.filter_duration[1]=1000000
         else:
             self.filter_duration[1]=float(self.txt_duration_to.get())                        
 
@@ -1417,7 +1417,7 @@ class MainVisual(tk.Frame):
             self.filter_length[0]=float(self.txt_length_from.get())
 
         if self.txt_length_to.get()=='':
-            self.filter_length[1]=10000
+            self.filter_length[1]=10000000
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
 
@@ -1428,7 +1428,7 @@ class MainVisual(tk.Frame):
             self.filter_length_total[0]=float(self.txt_length_from_total.get())
 
         if self.txt_length_to_total.get()=='':
-            self.filter_length_total[1]=10000
+            self.filter_length_total[1]=10000000
         else:
             self.filter_length_total[1]=float(self.txt_length_to_total.get())  
         
@@ -1440,7 +1440,7 @@ class MainVisual(tk.Frame):
             movement_1=True
             
         if self.txt_speed_to.get()=='':
-            self.filter_speed[1]=10000
+            self.filter_speed[1]=10000000
             movement_2=False
         else:
             self.filter_speed[1]=float(self.txt_speed_to.get())                     
