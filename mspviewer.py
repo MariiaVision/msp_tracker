@@ -1856,6 +1856,9 @@ class MainVisual(tk.Frame):
         else:  
             self.track_file=filename
             
+            # reset counts of deleted tracks
+            self.deleted_tracks_N=0
+            
             
             if self.track_file.endswith(".csv"):# read csv 
                 # read file
