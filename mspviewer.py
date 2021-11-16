@@ -2220,7 +2220,7 @@ class TrackViewer(tk.Frame):
         else:
             self.frame_pos=0
     
-        self.frame_pos_to_change=0 # frame which can be changed
+        self.frame_pos_to_change=() # frame which can be changed
         self.movie_length=self.movie.shape[0] # movie length
         self.plot_switch=0 # switch between plotting/not plotting tracks
         self.img_resolution=img_resolution # resolution of the movie
@@ -2383,7 +2383,7 @@ class TrackViewer(tk.Frame):
         changeInY = pointB[1] - pointA[1]
         
         return int((math.degrees(math.atan2(changeInY,changeInX))+360-90-self.ap_axis)%360)
-#        return int(abs(math.degrees(math.atan2(changeInX,changeInY))-self.ap_axis)%360)
+#        return int(abs(math.degrees(math.atan2(changeInX,changeInY))-self.ap_axis)%360) 
 
         
     def change_position(self):
@@ -2397,7 +2397,7 @@ class TrackViewer(tk.Frame):
         self.correct_position_window = tk.Toplevel(root, bg='white')
         self.correct_position_window.title(" Correct coordinates ")
 
-        self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change]), bg='white')
+        self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change[0]]), bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
         self.lbpose = tk.Label(master=self.correct_position_window, text=" x, y ", bg='white')
@@ -2420,7 +2420,7 @@ class TrackViewer(tk.Frame):
         
         '''
         
-        self.trace[self.frame_pos_to_change]=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
+        self.trace[self.frame_pos_to_change[0]]=[float(self.txt_position.get().split(',')[0]), float(self.txt_position.get().split(',')[1])]
         
         
         self.track_data['trace']=self.trace
@@ -2437,6 +2437,8 @@ class TrackViewer(tk.Frame):
         self.intensity_calculation()
         self.show_parameters()
         self.action_cancel()
+        
+        self.frame_pos_to_change=()
         
 
         
@@ -2475,7 +2477,7 @@ class TrackViewer(tk.Frame):
         self.delete_position_window = tk.Toplevel(root, bg='white')
         self.delete_position_window.title(" Delete ")
         
-        self.lbframechange = tk.Label(master=self.delete_position_window, text="   Do you want to delete frame "+str(self.frames[self.frame_pos_to_change])+" ?   ", bg='white')
+        self.lbframechange = tk.Label(master=self.delete_position_window, text="   Do you want to delete frame "+str([self.frames[x] for x in self.frame_pos_to_change])+" ?   ", bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
 
@@ -2490,9 +2492,10 @@ class TrackViewer(tk.Frame):
         delete selected position
         
         '''
-
-        del self.trace[self.frame_pos_to_change] 
-        del self.frames[self.frame_pos_to_change] 
+        frame_pos_to_change_sorted=sorted(self.frame_pos_to_change, reverse=True)
+        for frame_pos_del in frame_pos_to_change_sorted:
+            del self.trace[frame_pos_del] 
+            del self.frames[frame_pos_del] 
         
         self.track_data['trace']=self.trace
         self.track_data['frames']=self.frames
@@ -2508,6 +2511,7 @@ class TrackViewer(tk.Frame):
         self.intensity_calculation()
         self.show_parameters()
         self.action_cancel()
+        self.frame_pos_to_change=()
         
     def add_position(self): 
         '''
@@ -2813,9 +2817,16 @@ class TrackViewer(tk.Frame):
         
         '''
         
+        try:
+            #destroy existing list
+            self.listNodes.destroy()
+        except:
+            pass
+            
         def tracklist_on_select(even):
             try:
-                self.frame_pos_to_change=listNodes.curselection()[0]
+                
+                self.frame_pos_to_change=self.listNodes.curselection()
             except:
                 pass
 
@@ -2826,16 +2837,17 @@ class TrackViewer(tk.Frame):
         scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
         scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
         
-        listNodes = tk.Listbox(master=self.viewer, width=int(self.button_length*3), font=("Times", 10), selectmode='single')
-        listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
-        listNodes.config(yscrollcommand=scrollbar.set)
-        listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
-        scrollbar.config(command=listNodes.yview)
+        self.listNodes = tk.Listbox(master=self.viewer, width=int(self.button_length*3), font=("Times", 10), selectmode='multiple')
+        self.listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
+        self.listNodes.config(yscrollcommand=scrollbar.set)
+        self.listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
+        scrollbar.config(command=self.listNodes.yview)
+        
         
        # plot the track positions
         for i in range(0, len(self.frames)):
              # add to the list
-            listNodes.insert(tk.END, str(self.frames[i])+":  "+str(np.round(self.trace[i], 4)))     
+            self.listNodes.insert(tk.END, str(self.frames[i])+":  "+str(np.round(self.trace[i], 4)))     
 
 
 
