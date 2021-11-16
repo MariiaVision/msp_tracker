@@ -88,14 +88,14 @@ class MainVisual(tk.Frame):
         self.tg.window_length=8
 
         #filter parameters
-        self.filter_duration=[0, 10000000]
-        self.filter_length=[0, 100000000] 
-        self.filter_length_total=[0, 100000000] 
-        self.filter_speed=[0, 100000000] 
+        self.filter_duration=[0, float('Inf')]
+        self.filter_length=[0, float('Inf')] 
+        self.filter_length_total=[0, float('Inf')] 
+        self.filter_speed=[0, float('Inf')] 
         self.filter_zoom=0 # option to include tracks only in zoomed area
         
-        self.xlim_zoom=[0,10000000]
-        self.ylim_zoom=[10000000, 0]
+        self.xlim_zoom=[0,float('Inf')]
+        self.ylim_zoom=[float('Inf'), 0]
         
         self.frame_pos=0
         self.movie_length=1
@@ -1407,7 +1407,7 @@ class MainVisual(tk.Frame):
             self.filter_duration[0]=float(self.txt_duration_from.get())
 
         if self.txt_duration_to.get()=='':
-            self.filter_duration[1]=1000000
+            self.filter_duration[1]=float('Inf')
         else:
             self.filter_duration[1]=float(self.txt_duration_to.get())                        
 
@@ -1417,7 +1417,7 @@ class MainVisual(tk.Frame):
             self.filter_length[0]=float(self.txt_length_from.get())
 
         if self.txt_length_to.get()=='':
-            self.filter_length[1]=10000000
+            self.filter_length[1]=float('Inf')
         else:
             self.filter_length[1]=float(self.txt_length_to.get())  
 
@@ -1428,7 +1428,7 @@ class MainVisual(tk.Frame):
             self.filter_length_total[0]=float(self.txt_length_from_total.get())
 
         if self.txt_length_to_total.get()=='':
-            self.filter_length_total[1]=10000000
+            self.filter_length_total[1]=float('Inf')
         else:
             self.filter_length_total[1]=float(self.txt_length_to_total.get())  
         
@@ -1440,7 +1440,7 @@ class MainVisual(tk.Frame):
             movement_1=True
             
         if self.txt_speed_to.get()=='':
-            self.filter_speed[1]=10000000
+            self.filter_speed[1]=float('Inf')
             movement_2=False
         else:
             self.filter_speed[1]=float(self.txt_speed_to.get())                     
@@ -1529,6 +1529,7 @@ class MainVisual(tk.Frame):
                 # open new window
                 self.delete_window = tk.Toplevel(root)
                 self.delete_window.title(" Delete the track ")
+                self.delete_window.geometry("+20+20")
     
                 self.qdeletetext = tk.Label(master=self.delete_window, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=self.button_length*2)
                 self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
@@ -1542,6 +1543,7 @@ class MainVisual(tk.Frame):
             except:
                 self.delete_window = tk.Toplevel(root)
                 self.delete_window.title(" Delete the track ")
+                self.delete_window.geometry("+20+20")
                 self.qdeletetext = tk.Label(master=self.delete_window, text=" Track is not selected! ",  bg='white', font=("Times", 10), width=self.button_length*2)
                 self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
 
@@ -1621,6 +1623,7 @@ class MainVisual(tk.Frame):
             # open new window
             self.create_window = tk.Toplevel(root)
             self.create_window.title(" Create new track")
+            self.create_window.geometry("+20+20")
             
             self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
             self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
@@ -2396,6 +2399,7 @@ class TrackViewer(tk.Frame):
         
         self.correct_position_window = tk.Toplevel(root, bg='white')
         self.correct_position_window.title(" Correct coordinates ")
+        self.correct_position_window.geometry("+20+20")
 
         self.lbframechange = tk.Label(master=self.correct_position_window, text="Make changes in frame: "+str(self.frames[self.frame_pos_to_change[0]]), bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
@@ -2476,6 +2480,8 @@ class TrackViewer(tk.Frame):
         
         self.delete_position_window = tk.Toplevel(root, bg='white')
         self.delete_position_window.title(" Delete ")
+        self.delete_position_window.geometry("+20+20")
+        
         
         self.lbframechange = tk.Label(master=self.delete_position_window, text="   Do you want to delete frame "+str([self.frames[x] for x in self.frame_pos_to_change])+" ?   ", bg='white')
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
@@ -2526,6 +2532,8 @@ class TrackViewer(tk.Frame):
        
         self.add_position_window = tk.Toplevel( bg='white')
         self.add_position_window.title(" Create new ")
+        self.add_position_window.geometry("+20+20")
+        
         self.lbframechange = tk.Label(master=self.add_position_window, text=" Add frame: ", bg='white')
         self.lbframechange.grid(row=0, column=10, pady=self.pad_val, padx=self.pad_val)
 
