@@ -320,8 +320,12 @@ class MainVisual(tk.Frame):
         
         # button to filter
         
-        self.buttonFilter = tk.Button(master=self.filterframe, text="Filter", command=self.filtering, width=self.button_length)
-        self.buttonFilter.grid(row=8, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter = tk.Button(master=self.filterframe, text=" Filter ", command=self.filtering, width=self.button_length)
+        self.buttonFilter.grid(row=8, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.buttonFilter = tk.Button(master=self.filterframe, text=" Update ", command=self.filtering, width=self.button_length)
+        self.buttonFilter.grid(row=9, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+ 
 
 
 # # # # # # # # # # # # Plot and save data  # # # # # # 
@@ -936,10 +940,11 @@ class MainVisual(tk.Frame):
 
             saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
             saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
-    
-            if saved_movie.shape[1]<700 and saved_movie.shape[2]<700: # hard threshold to create tiff stack or video sequence
-                # save tiff file
-                final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3))
+            
+            
+            try: 
+                 # save tiff file
+                final_img_set=np.zeros((saved_movie.shape[0],saved_movie.shape[1],saved_movie.shape[2], 3), dtype=np.uint8)
     
                 for frameN in range(0, saved_movie.shape[0]):
               
@@ -947,13 +952,13 @@ class MainVisual(tk.Frame):
                     frame_img=saved_movie[frameN,:,:]
                     membrane_img=saved_membrane[frameN,:,:]
                     # make a colour image frame
-                    orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
+                    orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3), dtype=np.uint8)
             
                     img=frame_img/np.max(frame_img)+membrane_img*0.2
                     orig_frame [:,:,0] = img/np.max(img)*256
                     orig_frame [:,:,1] = img/np.max(img)*256
                     orig_frame [:,:,2] = img/np.max(img)*256
-                    
+
                     for p in plot_info:
                         trace=p['trace']
                         trackID=p['trackID']
@@ -972,9 +977,9 @@ class MainVisual(tk.Frame):
                                          self.color_list[clr], 1)
                                 
                     # Display the resulting tracking frame
-                    cv2.imshow('Tracking', orig_frame)
+                    cv2.imshow(' Processing ... ', orig_frame)
                     final_img_set[frameN,:,:,:]=orig_frame
-    
+
                 #save the file
                 final_img_set=final_img_set/np.max(final_img_set)*255
                 final_img_set=final_img_set.astype('uint8')
@@ -989,62 +994,16 @@ class MainVisual(tk.Frame):
                 
                     
                 imageio.volwrite(save_file, final_img_set)
-            else:
-                # save avi file for large movies
-    
-                if not(save_file.endswith(".avi")):
-                    save_file += ".avi"
-                    
-                    if os.path.isfile(save_file)==True:
-                        # add date if the file exists already
-                        now = datetime.datetime.now()
-                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
                 
-    
-                out = cv2.VideoWriter(save_file, cv2.VideoWriter_fourcc(*'mp4v'), 4.0, (self.movie.shape[1], self.movie.shape[2]))
-        
-                for frameN in range(0, saved_movie.shape[0]):
-              
-                    plot_info=self.track_data_framed['frames'][frameN]['tracks']
-                    frame_img=saved_movie[frameN,:,:]
-                    membrane_img=saved_movie[frameN,:,:]
-                    
-                    # create a colour image frame
-                    orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3))
+                cv2.destroyAllWindows()
+                
+                print("movie location: ", save_file)
             
-                    img=frame_img/np.max(frame_img)+membrane_img*0.2
-                    orig_frame [:,:,0] = img/np.max(img)*256
-                    orig_frame [:,:,1] = img/np.max(img)*256
-                    orig_frame [:,:,2] = img/np.max(img)*256
-                    
-                    for p in plot_info:
-                        trace=p['trace']
-                        trackID=p['trackID']
-                        
-                        clr = trackID % len(self.color_list)
-                        if (len(trace) > 1):
-                            for j in range(len(trace)-1):
-                                # Draw trace line
-                                point1=trace[j]
-                                point2=trace[j+1]
-                                x1 = int(point1[1])
-                                y1 = int(point1[0])
-                                x2 = int(point2[1])
-                                y2 = int(point2[0])                        
-                                cv2.line(orig_frame, (int(x1), int(y1)), (int(x2), int(y2)),
-                                         self.color_list[clr], 1)
-                                
-                    # Display the resulting tracking frame
-                    cv2.imshow('Tracking', orig_frame)
-                    # write the flipped frame
-                    out.write(np.uint8(orig_frame))
-        
-                    
-                out.release()
-    
-            cv2.destroyAllWindows()
+            except: 
+
+                print("Something went wrong! The movie will not be saved! Try saving smaller region. ")
             
-            print("movie location: ", save_file)
+            
             
     
     def save_in_file(self):
@@ -2255,6 +2214,8 @@ class TrackViewer(tk.Frame):
         
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
+        
+        
         
         # placing sizes
         self.button_length=np.max((10,int(self.window_width/70)))
