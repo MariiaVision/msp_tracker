@@ -2542,7 +2542,7 @@ class TrackViewer(tk.Frame):
         
 
         self.lbpose = tk.Label(master=self.add_position_window, text=" new coordinates: x, y ", bg='white')
-        self.lbpose.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)  
+        self.lbpose.grid(row=1, columnspan=2, column=10, pady=self.pad_val, padx=self.pad_val)  
         
         self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2))
         self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
@@ -2551,8 +2551,11 @@ class TrackViewer(tk.Frame):
         self.buttonOK_add= tk.Button(master=self.add_position_window,text=" apply ", command=self.action_apply_add, width=int(self.button_length/2))
         self.buttonOK_add.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)   
 
+        self.button_cancel= tk.Button(master=self.add_position_window,text=" apply+add ", command=self.action_apply_add_extra, width=int(self.button_length/2))
+        self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val) 
+        
         self.button_cancel= tk.Button(master=self.add_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
-        self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val)     
+        self.button_cancel.grid(row=2, column=12, pady=self.pad_val, padx=self.pad_val)     
 
         
     def action_apply_add(self):
@@ -2603,8 +2606,65 @@ class TrackViewer(tk.Frame):
         self.show_parameters()
         # remove the widgets
         self.action_cancel()
+        
+
 
         
+    def action_apply_add_extra(self):
+        '''
+        create the position with given parameters and start a new add function
+        
+        '''
+        
+        # get new location
+        location_val=[float(self.txt_position_coordinates.get().split(',')[0]), float(self.txt_position_coordinates.get().split(',')[1])]
+        frame_val=int(self.txt_frame.get())
+        
+        # where to insert the postion
+        if len(self.frames)==0:
+            pos=0
+            
+        elif frame_val<self.frames[0]: # at the start
+            pos=0
+        
+        elif frame_val>self.frames[-1]: # at the end
+            pos=len(self.frames)+1
+            
+        else: #somewhere in the middle
+            diff_array=np.asarray(self.frames)-frame_val
+            diff_array_abs=abs(diff_array)
+            val=min(abs(diff_array_abs))
+            
+            if min(diff_array)>0:
+                pos=diff_array_abs.tolist().index(val)
+            elif min(diff_array)<=0:
+                pos=diff_array_abs.tolist().index(val)+1
+
+        self.trace.insert(pos,location_val)
+        self.frames.insert(pos,frame_val)
+        self.track_data['trace']=self.trace
+        self.track_data['frames']=self.frames
+        
+        self.motion=self.motion_type_evaluate(self.track_data)
+        self.track_data['motion']=self.motion
+        
+        
+        self.frame_pos=frame_val+1
+
+        # update visualisation
+        self.show_list()     
+        
+        self.plot_image()
+        self.scale_movie.set(self.frame_pos)
+        self.plot_displacement()
+        self.intensity_calculation()
+        self.show_parameters()
+#        # remove the widgets
+#        self.action_cancel()
+        
+        
+        # open new add pos
+        self.add_position()
 
     def move_to_previous(self):
         '''
