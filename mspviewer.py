@@ -39,6 +39,7 @@ from viewer_lib.trajectory_segmentation import TrajectorySegment
 
 import os
 import os.path
+import copy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -1637,7 +1638,7 @@ class MainVisual(tk.Frame):
             for p in self.track_data['tracks']:
                 
                 if p['trackID']==duplicate_trackID:
-                    duplicated_track=p
+                    duplicated_track=copy.deepcopy(p)
                 
             
             new_track={"trackID":self.new_trackID, "trace":duplicated_track['trace'], "frames":duplicated_track['frames']}
