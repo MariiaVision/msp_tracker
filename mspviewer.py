@@ -1487,7 +1487,7 @@ class MainVisual(tk.Frame):
             try:
                 
                 # open new window
-                self.delete_window = tk.Toplevel(root)
+                self.delete_window = tk.Toplevel(root ,  bg='white')
                 self.delete_window.title(" Delete the track ")
                 self.delete_window.geometry("+20+20")
     
@@ -1501,7 +1501,7 @@ class MainVisual(tk.Frame):
                 self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
 
             except:
-                self.delete_window = tk.Toplevel(root)
+                self.delete_window = tk.Toplevel(root ,  bg='white')
                 self.delete_window.title(" Delete the track ")
                 self.delete_window.geometry("+20+20")
                 self.qdeletetext = tk.Label(master=self.delete_window, text=" Track is not selected! ",  bg='white', font=("Times", 10), width=self.button_length*2)
@@ -1520,7 +1520,6 @@ class MainVisual(tk.Frame):
             for p in self.track_data['tracks']:
                 
                 if p['trackID']==delete_trackID:
-                    print("found")
                     self.track_data['tracks'].remove(p)
                     
                 pos+=1
@@ -1536,10 +1535,104 @@ class MainVisual(tk.Frame):
             
             #close the window
             cancel_action()
+            
+            
+        def  merge_track_question():
+            '''
+            function for the "merge tracks" button
+            '''
+            # close windows if open
+            cancel_action()
+            
+            # open new window
+            self.create_window = tk.Toplevel(root ,  bg='white')
+            self.create_window.title(" Merge the tracks")
+            
+            self.qnewtext = tk.Label(master=self.create_window, text=" Provide ID of the tracks to merge below (use ',' for separation): " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.merge_ids_text = tk.Entry(self.create_window, width=int(self.button_length*2))
+            self.merge_ids_text.grid(row=1, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val)              
+            
+            #define new trackID:
+            for p in tqdm(self.track_data['tracks']):
+                
+                self.new_trackID=np.max((self.new_trackID, p['trackID']))
+            self.new_trackID+=1
+            
+            qnewtext1 = tk.Label(master=self.create_window, text=" ID of the new merged track: " ,  bg='white', font=("Times", 10))
+            qnewtext1.grid(row=2, column=0, pady=self.pad_val, padx=self.pad_val) 
+            
+            v = tk.StringVar(root, value=str(self.new_trackID))
+            self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
+            self.trackID_parameter.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)
+
+            self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=merge_track, width=int(self.button_length/2),  bg='green')
+            self.newbutton.grid(row=3, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
+            self.deletbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            
+        def merge_track():
+            '''
+            merge tracks
+            '''
+            if self.merge_ids_text.get()!='':
+                try:
+                    merge_ids=[int(idpos) for idpos in self.merge_ids_text.get().split(",")]
+                except:
+                     print("Some of the provided tracks are not exist!")   
+            else:
+                merge_ids=[]
+                
+            # convert IDs to positions in list
+            list_of_ids=[self.track_data_filtered['tracks'][pos]["trackID"] for pos in range(0, len(self.track_data_filtered['tracks']))]
+            
+            try:
+                pos_in_list=[np.where(np.asarray(list_of_ids)==pos)[0][0] for pos in merge_ids]
+            except:
+                print("Some of the provided tracks are not exist or filtered out!")
+                pos_in_list=[]
+
+            
+            # define the tracks order 
+            
+            first_frames=[self.track_data_filtered['tracks'][pos]['frames'][0] for pos in pos_in_list]
+
+            merging_order=np.argsort(first_frames)
+            
+            # merge the tracks
+            
+            frames=[]
+            trace=[]
+            
+            for k in merging_order:
+                i=pos_in_list[k]
+                track=self.track_data_filtered['tracks'][i]
+                frames=frames+track["frames"]
+                trace=trace+track["trace"]
+                            
+            if len(frames)!=0:
+                
+                new_track={"trackID":self.new_trackID, "trace":trace, "frames":frames}
+                
+                self.track_data['tracks'].append(new_track)
+                
+                #visualise without the track
+                self.filtering()
+                self.track_to_frame()
+                
+                #update the list
+                self.list_update()
+                
+                # close the windows
+                cancel_action()     
+                    
+                print("Tracks ", merge_ids, " are mergerd, the new track ID is ", self.new_trackID)
 
         def duplicate_track_question():
             '''
-            function for the duplicate track button
+            function for the "duplicate track" button
             
             '''
             
@@ -1547,7 +1640,7 @@ class MainVisual(tk.Frame):
             cancel_action()
             
             # open new window
-            self.create_window = tk.Toplevel(root)
+            self.create_window = tk.Toplevel(root ,  bg='white')
             self.create_window.title(" Duplicate the track")
             
             self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
@@ -1581,7 +1674,7 @@ class MainVisual(tk.Frame):
             
             
             # open new window
-            self.create_window = tk.Toplevel(root)
+            self.create_window = tk.Toplevel(root ,  bg='white')
             self.create_window.title(" Create new track")
             self.create_window.geometry("+20+20")
             
@@ -1721,6 +1814,10 @@ class MainVisual(tk.Frame):
         # duplicate button
         duplicatebutton = tk.Button(master=self.resultbuttonframe, text="DUPLICATE TRACK", command=duplicate_track_question, width=int(self.button_length*0.8),  bg='green')
         duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        # duplicate button
+        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="MERGE TRACK", command=merge_track_question, width=int(self.button_length*0.8),  bg='green')
+        duplicatebutton.grid(row=16, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
        # plot the tracks from filtered folder 
         for p in self.track_data_filtered['tracks']:
