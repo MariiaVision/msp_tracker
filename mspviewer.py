@@ -2513,7 +2513,7 @@ class TrackViewer(tk.Frame):
         self.buttonOK_add= tk.Button(master=self.add_position_window,text=" apply ", command=self.action_apply_add, width=int(self.button_length/2))
         self.buttonOK_add.grid(row=2, column=10, pady=self.pad_val, padx=self.pad_val)   
 
-        self.button_cancel= tk.Button(master=self.add_position_window,text=" apply+add ", command=self.action_apply_add_extra, width=int(self.button_length/2))
+        self.button_cancel= tk.Button(master=self.add_position_window,text=" apply & add ", command=self.action_apply_add_extra)
         self.button_cancel.grid(row=2, column=11, pady=self.pad_val, padx=self.pad_val) 
         
         self.button_cancel= tk.Button(master=self.add_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
@@ -2541,15 +2541,14 @@ class TrackViewer(tk.Frame):
             pos=len(self.frames)+1
             
         else: #somewhere in the middle
-            diff_array=np.asarray(self.frames)-frame_val
-            diff_array_abs=abs(diff_array)
-            val=min(abs(diff_array_abs))
             
-            if min(diff_array)>0:
-                pos=diff_array_abs.tolist().index(val)
-            elif min(diff_array)<=0:
-                pos=diff_array_abs.tolist().index(val)+1
-
+            diff_array=frame_val-np.asarray(self.frames)
+            
+            # find closest temporal position 
+            val=np.argmin(diff_array[diff_array>=0])
+            pos=val+1
+            
+            
         self.trace.insert(pos,location_val)
         self.frames.insert(pos,frame_val)
         self.track_data['trace']=self.trace
@@ -2583,6 +2582,7 @@ class TrackViewer(tk.Frame):
         frame_val=int(self.txt_frame.get())
         
         # where to insert the postion
+        
         if len(self.frames)==0:
             pos=0
             
@@ -2593,14 +2593,12 @@ class TrackViewer(tk.Frame):
             pos=len(self.frames)+1
             
         else: #somewhere in the middle
-            diff_array=np.asarray(self.frames)-frame_val
-            diff_array_abs=abs(diff_array)
-            val=min(abs(diff_array_abs))
             
-            if min(diff_array)>0:
-                pos=diff_array_abs.tolist().index(val)
-            elif min(diff_array)<=0:
-                pos=diff_array_abs.tolist().index(val)+1
+            diff_array=frame_val-np.asarray(self.frames)
+            
+            # find closest temporal position 
+            val=np.argmin(diff_array[diff_array>=0])
+            pos=val+1
 
         self.trace.insert(pos,location_val)
         self.frames.insert(pos,frame_val)
