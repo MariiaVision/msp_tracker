@@ -2875,8 +2875,16 @@ class TrackViewer(tk.Frame):
        # plot the track positions
         for i in range(0, len(self.frames)):
              # add to the list
-            self.listNodes.insert(tk.END, str(self.frames[i])+":  "+str(np.round(self.trace[i], 4)))     
-
+            self.listNodes.insert(tk.END, str(self.frames[i])+":  "+str(np.round(self.trace[i], 4,)))    
+            
+            # colour gaps
+            try: 
+                prev_frame=self.frames[i-1]
+            except:
+                prev_frame=0
+                    
+            if self.frames[i]-prev_frame!=1 and i!=0:
+                self.listNodes.itemconfig(tk.END, {'fg': 'red'})
 
 
 
