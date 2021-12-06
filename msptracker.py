@@ -214,6 +214,15 @@ See the Manual for the detailed description of the software.
         self.axd.axis('off')
         self.figd.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
+        # DrawingArea
+        self.canvas_detection = FigureCanvasTkAgg(self.figd, master=self.viewFrame_detection)
+        self.canvas_detection.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        
+                
+        # toolbar
+        self.toolbarFrame_detection = tk.Frame(master=self.viewFrame_detection)
+        self.toolbarFrame_detection.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        
         self.show_frame_detection() 
 
    #   next and previous buttons
@@ -346,9 +355,20 @@ See the Manual for the detailed description of the software.
         self.figl, self.axl = plt.subplots(1,1, figsize=self.figsize_value, dpi=self.dpi)
         self.axl.axis('off')
         self.figl.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+
+        
+        # DrawingArea
+        self.canvas_linking = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
+        self.canvas_linking.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+
+        
+        # toolbar
+        self.toolbarFrame_linking = tk.Frame(master=self.viewFrame_linking)
+        self.toolbarFrame_linking.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
         self.show_frame_linking() 
-    
+        
+        
        #   next and previous buttons
         def show_values_linking(v):
             self.frame_pos=int(v)
@@ -1169,15 +1189,10 @@ See the Manual for the detailed description of the software.
             self.axd.invert_yaxis()  
         
         # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.figd, master=self.viewFrame_detection)
-        self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-        self.canvas.draw()
+        
+        self.canvas_detection.draw()
         
                 
-        # toolbar
-        toolbarFrame = tk.Frame(master=self.viewFrame_detection)
-        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-        
         # place buttons
         
         def new_home(): # zoom
@@ -1204,10 +1219,10 @@ See the Manual for the detailed description of the software.
             self.canvas.mpl_connect('button_press_event', onclick_zoomin)
             self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
             
-        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin = tk.Button(master=self.toolbarFrame_detection, text=" zoom in ", command=zoom_in)
         button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout = tk.Button(master=self.toolbarFrame_detection, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
         
@@ -1563,15 +1578,15 @@ See the Manual for the detailed description of the software.
         if ylim_old[0]<ylim_old[1]:
             self.axl.invert_yaxis()
             
-        
-        # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
-        self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-        self.canvas.draw()
-        
-        # toolbar
-        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
-        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+#        
+#        # DrawingArea
+#        self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
+#        self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
+        self.canvas_linking.draw()
+#        
+#        # toolbar
+#        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
+#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
         # place buttons
         
@@ -1599,10 +1614,10 @@ See the Manual for the detailed description of the software.
             self.canvas.mpl_connect('button_press_event', onclick_zoomin)
             self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
             
-        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin = tk.Button(master=self.toolbarFrame_linking, text=" zoom in ", command=zoom_in)
         button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout = tk.Button(master=self.toolbarFrame_linking, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
         
