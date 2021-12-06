@@ -341,6 +341,16 @@ class MainVisual(tk.Frame):
         
         self.fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
         
+        
+        # DrawingArea
+        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
+        self.canvas.get_tk_widget().grid(row=12, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        self.canvas.draw()
+        
+        # toolbar
+        self.toolbarFrame = tk.Frame(master=root)
+        self.toolbarFrame.grid(row=15, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        
         self.show_tracks() 
         
     
@@ -1057,6 +1067,7 @@ class MainVisual(tk.Frame):
         
         self.ax.clear() # clean the plot 
         self.ax.imshow(self.image, cmap="gray")
+        
         self.ax.axis('off')
 
         if  self.track_data_framed:
@@ -1111,17 +1122,7 @@ class MainVisual(tk.Frame):
         if ylim_old[0]<ylim_old[1]:
             self.ax.invert_yaxis()
         
-        
-        
-        # DrawingArea
-        self.canvas = FigureCanvasTkAgg(self.fig, master=root)
-        self.canvas.get_tk_widget().grid(row=12, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
         self.canvas.draw()
-        
-        # toolbar
-        toolbarFrame = tk.Frame(master=root)
-        toolbarFrame.grid(row=15, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-        
         # place buttons
         
         def new_home(): # zoom
@@ -1148,10 +1149,10 @@ class MainVisual(tk.Frame):
             self.canvas.mpl_connect('button_press_event', onclick_zoomin)
             self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
             
-        button_zoomin = tk.Button(master=toolbarFrame, text=" zoom in ", command=zoom_in)
+        button_zoomin = tk.Button(master=self.toolbarFrame, text=" zoom in ", command=zoom_in)
         button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        button_zoomout = tk.Button(master=toolbarFrame, text=" zoom out ", command=new_home)
+        button_zoomout = tk.Button(master=self.toolbarFrame, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
                        
@@ -1386,8 +1387,9 @@ class MainVisual(tk.Frame):
         def tracklist_on_select(even):
             position_in_list=listNodes.curselection()[0]
             
-            # creating a new window with class TrackViewer
+            # creating a new window with class TrackViewer                
             self.new_window = tk.Toplevel(self.master)
+            
              
             # create the track set with motion
             this_track=self.track_data_filtered['tracks'][position_in_list]
@@ -2235,6 +2237,53 @@ class TrackViewer(tk.Frame):
         self.show_list()   
         
         # movie control
+        
+        
+        self.fig_indwin, self.ax_indwin= plt.subplots(1,1, figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
+        self.ax_indwin.axis('off')
+#        self.ax_indwin.tight_layout()
+        
+        def update_position_text(x,y): 
+            # to add
+            try:
+                self.txt_position_coordinates.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                # add coordinates
+                self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+                
+                # add frame
+                self.txt_frame.destroy()
+                v_frame = tk.StringVar(root, value=str(self.frame_pos))          
+                self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length), textvariable=v_frame)
+                self.txt_frame.grid(row=0, column=11)                 
+#                print(" coordinates: " , str(x), str(y), ";  frame: ", str(self.frame_pos))
+                
+            except:
+                pass
+            
+           # to correct
+            try:
+                self.txt_position.destroy()
+                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
+                self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2) , textvariable=v)
+                self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
+#                print(" coordinates: " , str(x), str(y))
+                                
+            except:
+                pass            
+        def onclick(event):
+            
+            update_position_text(float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
+        
+        # DrawingArea
+        self.canvas_indwin = FigureCanvasTkAgg(self.fig_indwin, master=self.viewer)
+        self.canvas_indwin.draw()
+        self.canvas_indwin.get_tk_widget().grid(row=4, column=1, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
+        self.canvas_indwin.mpl_connect('button_press_event', onclick)        
+        
+        
+        
         self.plot_image()
         
         # plot displacement
@@ -2640,10 +2689,10 @@ class TrackViewer(tk.Frame):
         arrange the image viewer
         
         '''
-
-        fig = plt.figure(figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
-        plt.axis('off')
-        fig.tight_layout()
+#
+#        self.fig_indwin = plt.figure(figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
+#        plt.axis('off')
+#        self.fig_indwin.tight_layout()
                 
         img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
@@ -2707,68 +2756,33 @@ class TrackViewer(tk.Frame):
         
         blue_c=np.linspace(0., 1., len(self.trace))
         red_c=1-np.linspace(0., 1., len(self.trace))
-    
-        self.im = plt.imshow(region, cmap="gray")
+        
+        self.ax_indwin.clear()
+        self.ax_indwin.imshow(region, cmap="gray")
+        self.ax_indwin.axis('off')
+        
         if len(self.trace)>0:
             if self.plot_switch==0: # print full trajectory
                 for pos in range(0, len(self.trace)-1):
-                    plt.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
+                    self.ax_indwin.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
             
-                plt.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
-                plt.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+                self.ax_indwin.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
+                self.ax_indwin.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
                 
-                plt.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
+                self.ax_indwin.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
                 
-                plt.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
+                self.ax_indwin.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
                 
             elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
                 #define colour
                 red_c= (abs(np.array(self.motion)-1)).tolist()
                 green_c= self.motion
                 for pos in range(1, len(self.trace)):
-                    plt.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
-            
-        # on click -> get coordinates        
-        def update_position_text(x,y): 
-            # to add
-            try:
-                self.txt_position_coordinates.destroy()
-                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
-                # add coordinates
-                self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2) , textvariable=v)
-                self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
-                
-                # add frame
-                self.txt_frame.destroy()
-                v_frame = tk.StringVar(root, value=str(self.frame_pos))          
-                self.txt_frame = tk.Entry(self.add_position_window, width=int(self.button_length), textvariable=v_frame)
-                self.txt_frame.grid(row=0, column=11)                 
-#                print(" coordinates: " , str(x), str(y), ";  frame: ", str(self.frame_pos))
-                
-            except:
-                pass
-            
-           # to correct
-            try:
-                self.txt_position.destroy()
-                v = tk.StringVar(root, value=str(round(x,4))+","+str(round(y,4)))
-                self.txt_position = tk.Entry(self.correct_position_window, width=int(self.button_length*2) , textvariable=v)
-                self.txt_position.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val) 
-#                print(" coordinates: " , str(x), str(y))
-                                
-            except:
-                pass
-            
-        def onclick(event):
-            
-            update_position_text(float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
+                    self.ax_indwin.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
+      
+
+        self.canvas_indwin.draw()
         
-        
-        # DrawingArea
-        canvas = FigureCanvasTkAgg(fig, master=self.viewer)
-        canvas.draw()
-        canvas.get_tk_widget().grid(row=4, column=1, columnspan=4, pady=self.pad_val, padx=self.pad_val)   
-        canvas.mpl_connect('button_press_event', onclick)
 
     def show_parameters(self): 
         '''
