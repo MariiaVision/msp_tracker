@@ -76,7 +76,6 @@ class MainVisual(tk.Frame):
         self.movie_file=" " # path to the movie file
         self.track_file=" "# path to the file with tracking data
         self.movie=np.ones((1,200,200)) # matrix with data
-        self.membrane_movie=[]
         self.track_data_original={}
         self.track_data={'tracks':[]} # original tracking data
         self.track_data_filtered={'tracks':[]}  # filtered tracking data  
@@ -102,7 +101,6 @@ class MainVisual(tk.Frame):
         self.movie_length=1
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.monitor_axis=0 # 0 - not to show axis, 1- show axis
-        self.memebrane_switch=0 # 0 - don't show the membrane, 1 -s how the membrane
         self.mode_orientation_diagram=0 # mode of the orientation diagram: 0 - based on number of tracks, 1 - based on the distance, 2-combined (normalised distance)
         self.pad_val=1
         self.axis_name="A,P" # axis names for the orientation plot
@@ -147,34 +145,12 @@ class MainVisual(tk.Frame):
         
      # # # # # # menu to choose files  # # # # # #
         
-        self.button_mv = tk.Button(text="   Select particle movie   ", command=self.select_vesicle_movie, width=self.button_length)
-        self.button_mv.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
-
-        self.button_mm = tk.Button(text="   Select membrane movie   ", command=self.select_membrane_movie, width=self.button_length)
-        self.button_mm.grid(row=0, column=2, columnspan=2,pady=self.pad_val, padx=self.pad_val)
+        self.button_mv = tk.Button(text="   Select movie   ", command=self.select_vesicle_movie, width=self.button_length)
+        self.button_mv.grid(row=1, column=0, columnspan=2, pady=self.pad_val*3, padx=self.pad_val)
         
         self.button2 = tk.Button(text="Select file with tracks", command=self.select_track, width=self.button_length)
-        self.button2.grid(row=1, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        self.button2.grid(row=1, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
   
-
-     # # # # # #  Radiobutton: membrane on/off # # # # # # #   
-        var_membrane = tk.IntVar()
-        
-        def update_membrane_switch():            
-            self.memebrane_switch=var_membrane.get()
-            # change image
-            self.show_tracks()
-
-        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(root, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
-        self.M1.grid(row=3, column=0, pady=self.pad_val, padx=self.pad_val)  
-        
-        self.M2 = tk.Radiobutton(root, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M2.grid(row=3, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)
-        
-        self.M3 = tk.Radiobutton(root, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M3.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
-        
         
 #    # # # # # # Radiobuttone:tracks # # # # # # #   
         var = tk.IntVar()
@@ -185,13 +161,13 @@ class MainVisual(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(root, text="track and IDs", variable=var, value=0, bg='white', command =update_monitor_switch )
-        self.R1.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=3, column=0, pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(root, text=" only tracks ", variable=var, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
-        self.R2.grid(row=4, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+        self.R2.grid(row=3, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(root, text="    none    ", variable=var, value=2, bg='white',command=update_monitor_switch ) #  command=sel)
-        self.R3.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)
+        self.R3.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)
         
 #    # # # # # # Radiobuttone:axis # # # # # # #   
         var_axis = tk.IntVar()
@@ -202,38 +178,38 @@ class MainVisual(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(root, text="axis off", variable=var_axis, value=0, bg='white', command =update_monitor_switch )
-        self.R1.grid(row=5, column=0,  pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=4, column=0,  pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(root, text=" axis on ", variable=var_axis, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
-        self.R2.grid(row=5, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)     
+        self.R2.grid(row=4, column=1, columnspan=2, pady=self.pad_val, padx=self.pad_val)     
         
 #    # # # # # #  resolution in time and space   # # # # # # #  
             
         res_lb = tk.Label(master=root, text=" resolution (nm/pix) : ", width=self.button_length, bg='white')
-        res_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
+        res_lb.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.img_resolution))
         self.res_parameter = tk.Entry(root, width=10, text=v)
-        self.res_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.res_parameter.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)
             
         lbl3 = tk.Label(master=root, text=" frame rate (f/sec) : ", width=self.button_length, bg='white')
-        lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.frame_rate))
         self.frame_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.frame_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)        
+        self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)        
         
             
         # AP axis 
         ap_lb = tk.Label(master=root, text=" Axis orientation ", width=self.button_length, bg='white')
-        ap_lb.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val)
+        ap_lb.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.ap_axis))
         self.ap_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.ap_parameter.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
+        self.ap_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
             
         lbl3 = tk.Label(master=root, text="Axis  (A,B): ", width=self.button_length, bg='white')
-        lbl3.grid(row=7, column=2, pady=self.pad_val, padx=self.pad_val)
+        lbl3.grid(row=6, column=2, pady=self.pad_val, padx=self.pad_val)
         v = tk.StringVar(root, value=str(self.axis_name))
         self.axis_name_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-        self.axis_name_parameter.grid(row=7, column=3, pady=self.pad_val, padx=self.pad_val)   
+        self.axis_name_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)   
        
         
         #update the list
@@ -409,18 +385,6 @@ class MainVisual(tk.Frame):
                     if self.monitor_switch==0:
                         plt.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(track['trackID']), fontsize=10, color=self.color_list_plot[int(trackID)%len(self.color_list_plot)])
                 
-            if self.memebrane_switch==2:
-                #extract skeleton
-                skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
-                # create an individual cmap with red colour
-                cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-                cmap_new._init() 
-                alphas = np.linspace(0, 0.8, cmap_new.N+3)
-                cmap_new._lut[:,-1] = alphas
-                #plot the membrane border on the top
-                plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)         
-            
-            
             # plot
             if not(save_file.endswith(".png")):
                 save_file += ".png"  
@@ -718,24 +682,8 @@ class MainVisual(tk.Frame):
             plt.axis('off')
             ax = orientation_map_figure.add_subplot(121)
             
-            if self.memebrane_switch==0:
-                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
-            elif self.memebrane_switch==1: 
-                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/np.max(self.membrane_movie[self.frame_pos,:,:])*0.4, cmap='bone') 
-            else:
-                ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
-                
-                #skelitonisation of the membrane mask
-                skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
-                
-                # create an individual cmap with red colour
-                cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-                cmap_new._init() # create the _lut array, with rgba values
-                alphas = np.linspace(0, 0.8, cmap_new.N+3)
-                cmap_new._lut[:,-1] = alphas
-                
-                #plot the membrane border on the top
-                ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)                
+            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+            
             
             # position of axis
     
@@ -940,7 +888,6 @@ class MainVisual(tk.Frame):
             lim_y1=int(xlim_old[1]) # because y-axis is inverted
 
             saved_movie=self.movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
-            saved_membrane=self.membrane_movie[f_start:f_end,lim_x0:lim_x1,lim_y0:lim_y1]
             
             
             try: 
@@ -951,11 +898,10 @@ class MainVisual(tk.Frame):
               
                     plot_info=self.track_data_framed['frames'][frameN]['tracks']
                     frame_img=saved_movie[frameN,:,:]
-                    membrane_img=saved_membrane[frameN,:,:]
                     # make a colour image frame
                     orig_frame = np.zeros((saved_movie.shape[1], saved_movie.shape[2], 3), dtype=np.uint8)
             
-                    img=frame_img/np.max(frame_img)+membrane_img*0.2
+                    img=frame_img/np.max(frame_img)
                     orig_frame [:,:,0] = img/np.max(img)*256
                     orig_frame [:,:,1] = img/np.max(img)*256
                     orig_frame [:,:,2] = img/np.max(img)*256
@@ -1107,18 +1053,13 @@ class MainVisual(tk.Frame):
 
 
         # plot image
-        if self.memebrane_switch==0:
-            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        elif self.memebrane_switch==1:
-            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+self.membrane_movie[self.frame_pos,:,:]/4
-        else:
-            self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-
+        self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        
         self.ax.clear() # clean the plot 
         self.ax.imshow(self.image, cmap="gray")
         self.ax.axis('off')
 
-        if  self.track_data_framed and self.monitor_switch<=1:
+        if  self.track_data_framed:
 
             # plot tracks
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
@@ -1127,18 +1068,6 @@ class MainVisual(tk.Frame):
                 self.ax.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
                 if self.monitor_switch==0:
                     self.ax.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
-        if self.memebrane_switch==2:
-            #extract skeleton
-            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,:,:]).astype(np.int)
-            
-            # create an individual cmap with red colour
-            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-            cmap_new._init() # create the _lut array, with rgba values
-            alphas = np.linspace(0, 0.8, cmap_new.N+3)
-            cmap_new._lut[:,-1] = alphas
-            
-            #plot the membrane border on the top
-            self.ax.imshow(skeleton, interpolation='nearest', cmap=cmap_new)
 
         # plot axis
         if self.monitor_axis==1:
@@ -1472,7 +1401,7 @@ class MainVisual(tk.Frame):
       
             view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
 
-            TrackViewer(self.new_window, this_track, self.movie, self.membrane_movie, 
+            TrackViewer(self.new_window, this_track, self.movie, 
                         self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
             
             
@@ -1816,7 +1745,7 @@ class MainVisual(tk.Frame):
         duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
         # duplicate button
-        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="MERGE TRACK", command=merge_track_question, width=int(self.button_length*0.8),  bg='green')
+        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="MERGE TRACKS", command=merge_track_question, width=int(self.button_length*0.8),  bg='green')
         duplicatebutton.grid(row=16, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
        # plot the tracks from filtered folder 
@@ -1855,10 +1784,6 @@ class MainVisual(tk.Frame):
                 
             self.lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
             self.lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-            
-            # create a none-membrane movie
-            self.membrane_movie=np.ones(self.movie.shape)
-            
              
             
             # set axes
@@ -1886,21 +1811,6 @@ class MainVisual(tk.Frame):
                 self.track_to_frame()
             except:
                 pass
-            
-
-    def select_membrane_movie(self):
-        '''
-        function for select membrane movie button
-        '''
-        
-        filename = tk.filedialog.askopenfilename()
-        if not filename:
-            print("File was not selected")
-        else:  
-            # read files 
-            self.membrane_movie=skimage.io.imread(filename)
-            #normalise the membrane values
-            self.membrane_movie=self.membrane_movie/np.max(self.membrane_movie)
             
     
     def select_track(self):
@@ -2254,7 +2164,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the window of the individual tracks 
     '''
-    def __init__(self, master, track_data, movie, membrane_movie, img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None):
+    def __init__(self, master, track_data, movie,img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -2270,7 +2180,6 @@ class TrackViewer(tk.Frame):
         # save important data
         self.track_data=track_data
         self.movie=movie
-        self.membrane_movie=membrane_movie
         self.frames=track_data['frames']
         self.motion=track_data['motion']
         self.trace=track_data['trace']
@@ -2301,7 +2210,6 @@ class TrackViewer(tk.Frame):
         self.pixN_basic=100 # margin size 
         self.vesicle_patch_size=10
         
-        self.membrane_switch=0 # switch between membrane and no membrane
         self.traj_segm_switch_var=0 # calculate and show motion type
         
         #track evaluation 
@@ -2399,23 +2307,6 @@ class TrackViewer(tk.Frame):
         self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)    
                 
           
-    # # # # # #  Radiobutton : membrane on/off # # # # # # #   
-        var_membrane = tk.IntVar()
-        
-        def update_membrane_switch():            
-            self.membrane_switch=var_membrane.get()
-            # change image
-            self.plot_image()
-
-        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
-        self.M1 = tk.Radiobutton(master=self.viewer, text="without membrane", variable=var_membrane, value=0, bg='white', command =update_membrane_switch )
-        self.M1.grid(row=0, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)  
-        
-        self.M2 = tk.Radiobutton(master=self.viewer, text=" with membrane ", variable=var_membrane, value=1, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M2.grid(row=0, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
-        
-        self.M3 = tk.Radiobutton(master=self.viewer, text=" with border ", variable=var_membrane, value=2, bg='white',command = update_membrane_switch ) #  command=sel)
-        self.M3.grid(row=0, column=4, pady=self.pad_val, padx=self.pad_val)
 
     # # # # # #  Radiobutton : tracks on/off/motion # # # # # # #          
     # plotting switch 
@@ -2546,7 +2437,7 @@ class TrackViewer(tk.Frame):
         self.lbframechange.grid(row=0, column=10, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)              
         
 
-        self.buttonOKdel= tk.Button(master=self.delete_position_window,text=" apply ", command=self.action_apply_delete, width=int(self.button_length/2))
+        self.buttonOKdel= tk.Button(master=self.delete_position_window,text=" delete ", command=self.action_apply_delete, width=int(self.button_length/2), bg='red')
         self.buttonOKdel.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)  
         
         self.button_cancel= tk.Button(master=self.delete_position_window,text=" cancel ", command=self.action_cancel, width=int(self.button_length/2))
@@ -2753,14 +2644,8 @@ class TrackViewer(tk.Frame):
         fig = plt.figure(figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
         plt.axis('off')
         fig.tight_layout()
-        
-        if self.membrane_switch==0:
-            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-        elif self.membrane_switch==1:
-            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])+0.1*self.membrane_movie[self.frame_pos,:,:]
-        else:
-            img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-
+                
+        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
         #calculate window position        
         
@@ -2875,21 +2760,10 @@ class TrackViewer(tk.Frame):
                 pass
             
         def onclick(event):
-#            print("\n", self.img_range)
-#            print("onclick", float(event.ydata), float(event.xdata), " -> ",  float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
+            
             update_position_text(float(event.ydata)+self.img_range[0][0], float(event.xdata)+self.img_range[1][0])
         
-        #plot the border of the membrane if chosen
-        if self.membrane_switch==2:
-            #extract skeleton 
-            skeleton = skimage.morphology.skeletonize(self.membrane_movie[self.frame_pos,x_min:x_max, y_min:y_max]).astype(np.int)
-            # create an individual cmap with red colour
-            cmap_new = matplotlib.colors.LinearSegmentedColormap.from_list('my_cmap',['red','red'],256)
-            cmap_new._init() # create the _lut array, with rgba values
-            alphas = np.linspace(0, 0.8, cmap_new.N+3)
-            cmap_new._lut[:,-1] = alphas
-            #plot the membrane border on the top
-            plt.imshow(skeleton, interpolation='nearest', cmap=cmap_new)     
+        
         # DrawingArea
         canvas = FigureCanvasTkAgg(fig, master=self.viewer)
         canvas.draw()
@@ -3161,7 +3035,7 @@ class TrackViewer(tk.Frame):
 class MainApplication(tk.Frame):
     def __init__(self, parent):
         tk.Frame.__init__(self, parent)
-        parent.title("MSP-viewer 0.2")
+        parent.title("MSP-viewer 0.3")
         parent.configure(background='white')
         
         self.main = MainVisual(parent)
