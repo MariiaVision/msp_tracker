@@ -145,7 +145,7 @@ class MainVisual(tk.Frame):
         
      # # # # # # menu to choose files  # # # # # #
         
-        self.button_mv = tk.Button(text="   Select movie   ", command=self.select_vesicle_movie, width=self.button_length)
+        self.button_mv = tk.Button(text="   Select image sequence   ", command=self.select_vesicle_movie, width=self.button_length)
         self.button_mv.grid(row=1, column=0, columnspan=2, pady=self.pad_val*3, padx=self.pad_val)
         
         self.button2 = tk.Button(text="Select file with tracks", command=self.select_track, width=self.button_length)
