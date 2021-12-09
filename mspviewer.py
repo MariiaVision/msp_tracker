@@ -1,7 +1,7 @@
 
 #########################################################
 #
-#  MSP-viewer GUI 
+#  MSP-viewer GUI  v 0.3
 #        
 #########################################################
 
@@ -126,6 +126,8 @@ class MainVisual(tk.Frame):
         ### frames ###
     
         # Framework: filtering tracks
+        self.is_zoom_filtered=False # check is any tracks were filtered by zoom
+        
         self.filterframe= tk.Frame(root, bg='white') 
         self.filterframe.grid(row=2, column=5, columnspan=4,rowspan=4,  pady=self.pad_val, padx=self.pad_val) 
         
@@ -1001,7 +1003,12 @@ class MainVisual(tk.Frame):
         '''
         
         def save_data():
-        
+            
+            try:
+                cancel_window()
+            except:
+                pass
+            
             # ask for the file location        
             save_file = tk.filedialog.asksaveasfilename()
             
@@ -1060,25 +1067,35 @@ class MainVisual(tk.Frame):
                     
     
                 print("                 in csv format to  ", result_path_csv)
-            
-            def cancel_window():
-                self.save_data_window.destroy()
                 
-            # if zoom is on
-            zoom=True
-            if zoom==True:
-              self.save_data_window = tk.Toplevel(root,  bg='white')
-              self.save_data_window.title("ATTENTION !!! ")
-              
-              qnewtext = tk.Label(master=self.save_data_window, text=" The image is zoomed! \n Only tracks visible in the viewer will be saved!   " ,  bg='white', font=("Times", 10))
-              qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+            
+        def cancel_window():
+            self.save_data_window.destroy()
+            
+        # if zoom is on
 
+#        xlim=self.ax.get_xlim()
+#        ylim=self.ax.get_ylim()
+#        print(xlim, ylim)
+#        print(self.movie.shape)
+#        print(xlim[0]!=0, ylim[1]!=0, xlim[1]!=self.movie.shape[2], ylim[0]!=self.movie.shape[1])
+#        zoom= xlim[0]!=0 or ylim[1]!=0 or xlim[1]!=self.movie.shape[2] or ylim[0]!=self.movie.shape[1]
+        print(self.is_zoom_filtered)
+        if self.is_zoom_filtered==True:
+          self.save_data_window = tk.Toplevel(root,  bg='white')
+          self.save_data_window.title("ATTENTION !!! ")
+          
+          qnewtext = tk.Label(master=self.save_data_window, text="  Trajectories are filtered based on the zoomed area. \n The changes you want to save will include the filter. " ,  bg='white', font=("Times", 10))
+          qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val*2, padx=self.pad_val*2) 
+
+        
+          newbutton = tk.Button(master=self.save_data_window, text=" Continue ", command=save_data)
+          newbutton.grid(row=2, column=0, columnspan=1, pady=self.pad_val*2, padx=self.pad_val*2) 
             
-              newbutton = tk.Button(master=self.choose_traj_segmentation, text=" continue ", command=save_data,  bg='green')
-              newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-                
-              deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window)
-              deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+          deletbutton = tk.Button(master=self.save_data_window, text=" Cancel ", command=cancel_window)
+          deletbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val*2, padx=self.pad_val*2)
+        else:
+            save_data()
             
 
     def move_to_previous(self):
@@ -1215,6 +1232,8 @@ class MainVisual(tk.Frame):
         
         '''
         
+        self.is_zoom_filtered=False
+        
         def cancel_window():
             '''
             destroy the window
@@ -1306,6 +1325,9 @@ class MainVisual(tk.Frame):
                 if position_based==False:
                     zoom_filter=True
                     
+                #change value for zoomed filter indicator if needed
+                if zoom_filter==True:
+                    self.is_zoom_filtered=True
                     
                 if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True:
                                     # check speed limitation
@@ -2096,7 +2118,7 @@ class MainVisual(tk.Frame):
                         y_e=np.asarray(trajectory)[-1,1]
                         
                         displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)*self.img_resolution
-                        #calculate all type of displacementsself.ax.get_ylim()
+
                         # max displacement
                         max_displacement=np.round(np.max(displacement_array),2)
                         
