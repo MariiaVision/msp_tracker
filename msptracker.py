@@ -420,6 +420,16 @@ See the Manual for the detailed description of the software.
                 
         def update_info():
             self.show_parameters()
+            
+            
+        def run_tracking_entire():
+            self.run_tracking(0)
+            
+        def run_tracking_detection():
+            self.run_tracking(1)
+            
+        def run_tracking_linking():
+            self.run_tracking(2)
 
         # button to set 
         lbl3 = tk.Button(master=self.action_frame, text=" update info ", command=update_info, width=int(self.button_length*2), bg="#80818a")
@@ -429,8 +439,15 @@ See the Manual for the detailed description of the software.
         lbl3.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)  
         
         # button to run tracking        
-        lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=self.run_tracking, width=self.button_length*2, bg="#80818a")
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN TRACKING  ", command=run_tracking_entire, width=self.button_length*2, bg="#80818a")
         lbl3.grid(row=7, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        
+        # button to run tracking        
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN DETECTION ONLY  ", command=run_tracking_detection, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=8, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
+        # button to run tracking        
+        lbl3 = tk.Button(master=self.action_frame, text=" RUN LINKING ONLY  ", command=run_tracking_linking, width=self.button_length*2, bg="#80818a")
+        lbl3.grid(row=9, column=0,  columnspan=4, pady=self.pad_val, padx=self.pad_val)
 
         # show parameters
         self.show_parameters()
@@ -1226,27 +1243,7 @@ See the Manual for the detailed description of the software.
         button_zoomout = tk.Button(master=self.toolbarFrame_detection, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
-        
-#        # toolbar
-#        toolbarFrame = tk.Frame(master=self.viewFrame_detection)
-#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-#        
-#        # update home button
-#
-#        def new_home( *args, **kwargs):
-#            # zoom out
-#            self.axd.set_xlim(0,self.movie.shape[2])
-#            self.axd.set_ylim(0,self.movie.shape[1])
-#
-#            self.show_frame_detection()
-#            
-#        NavigationToolbar2Tk.home = new_home
-#        
-#        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-#        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-#        self.toolbar.update()
-      
-#            
+           
     def select_vesicle_movie_linking(self):
         
         filename = tk.filedialog.askopenfilename()
@@ -1567,7 +1564,6 @@ See the Manual for the detailed description of the software.
             for p in self.track_data_framed['frames'][self.frame_pos]['tracks']:
                 trace=p['trace']
                 self.axl.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
-#                self.axl.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
         
         #set the same "zoom"
@@ -1579,16 +1575,10 @@ See the Manual for the detailed description of the software.
         if ylim_old[0]<ylim_old[1]:
             self.axl.invert_yaxis()
             
-#        
-#        # DrawingArea
-#        self.canvas = FigureCanvasTkAgg(self.figl, master=self.viewFrame_linking)
-#        self.canvas.get_tk_widget().grid(row=5, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-        self.canvas_linking.draw()
-#        
-#        # toolbar
-#        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
-#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
         
+        # DrawingArea
+        self.canvas_linking.draw()
+
         # place buttons
         
         def new_home(): # zoom
@@ -1621,38 +1611,19 @@ See the Manual for the detailed description of the software.
         button_zoomout = tk.Button(master=self.toolbarFrame_linking, text=" zoom out ", command=new_home)
         button_zoomout.grid(row=0, column=1,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
 
-        
-        # toolbar
-#        toolbarFrame = tk.Frame(master=self.viewFrame_linking)
-#        toolbarFrame.grid(row=10, column=2, columnspan=5, pady=self.pad_val, padx=self.pad_val)
-#        
-#        # update home button
-#
-#        def new_home( *args, **kwargs):
-#            # zoom out
-#        
-#            self.axl.set_xlim(0,self.movie.shape[2])
-#            self.axl.set_ylim(0,self.movie.shape[1])
-#
-#
-#            self.show_frame_linking()
-#            
-#        NavigationToolbar2Tk.home = new_home
-#        
-#        self.toolbar = NavigationToolbar2Tk(self.canvas, toolbarFrame)
-#        self.toolbar.set_message=lambda x:"" # remove message with coordinates
-#        self.toolbar.update()
 
 
  ############# Running the code  ##################
 
-    def run_tracking(self):
+    def run_tracking(self, tracking_val=0):
         '''
         running the final tracking 
+        tracking_val - tracking mode: 0 - both, 1 - detection only, 2 - linking only
         '''
         
+        
         # ask where to save 
-        filename=tk.filedialog.asksaveasfilename(title = "Save tracking results ")
+        filename=tk.filedialog.asksaveasfilename(title = "Save results ")
             # save in parameters
         if not filename:
             print("File was not provided")
@@ -1670,72 +1641,107 @@ See the Manual for the detailed description of the software.
                 self.detector.end_frame=int(self.r_end_frame.get())
             
             self.detector.movie=self.movie
-            self.final_tracks=self.detector.linking()
             
-    
-            # save tracks to json file 
-            if not(self.result_path.endswith(".txt")):
-                if self.result_path.endswith(".csv"):
-                    result_path =self.result_path.split(".csv")[0]+ ".txt"
-                else:
-                    result_path=self.result_path+ ".txt"
-#                
-#                # check if the file with the same name exists
-#                
-#                if os.path.isfile(result_path)==True:
-#                    # add  (updated) to the end if it exists already
-#                    result_path=result_path.split(".")[0]+"(updated)"+"."+result_path.split(".")[-1]
-            else:
-                result_path=self.result_path
-                            
-                
-    
-            
-            with open(result_path, 'w') as f:
-                json.dump(self.final_tracks, f, ensure_ascii=False)
-    
-            # save tracks to csv file 
-            # prepare csv file
-            ############## json ->csv ######################
-                
-            tracks_data=[]
-            
-            tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
-                
-            for trackID_pos in self.final_tracks:
-                trajectory=self.final_tracks[trackID_pos]
-                new_frames=trajectory["frames"]
-                new_trace=trajectory["trace"]
-                trackID=trajectory["trackID"]
-                for pos in range(0, len(new_frames)):
-                    point=new_trace[pos]
-                    frame=new_frames[pos]
-                    tracks_data.append([trackID, point[0], point[1],  frame])
-    
-    
-            # save to csv 
-            if not(self.result_path.endswith(".csv")):
-                if self.result_path.endswith(".txt"):
-                    result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
-                    
-                else:
-                    result_path_csv =self.result_path+ ".csv"
-#                    
-#                # check if the file with the same name exists
-#                if os.path.isfile(result_path_csv)==True:
-#                    
-#                    # add  (updated) to the end if it exists already
-#                    result_path_csv=result_path_csv.split(".")[0]+"(updated)"+"."+result_path_csv.split(".")[-1]
-    
-            else:
-                 result_path_csv =self.result_path
-                
-            with open(result_path_csv, 'w') as csvFile:
-                writer = csv.writer(csvFile)
-                writer.writerows(tracks_data)
-                csvFile.close()
+            # mode 1 - detection
+            if tracking_val==1:
+                detection_results=self.detector.detection_only()
 
+
+                # msp-tracker format (json)
+                
+                if not(self.result_path.endswith(".txt")):
+                    if self.result_path.endswith(".csv"):
+                        self.result_path =self.result_path.split(".csv")[0]+ ".txt"
+                    else:
+                        self.result_path=self.result_path+ ".txt"    
+                        
+                
+                with open(self.result_path, 'w') as f:
+                    json.dump(detection_results, f, ensure_ascii=False)
+                    
+                # csv format
+
+                save_csv=[["Name", "ID", "frame", "x", "y", "z", "Quality"]]
+
+                data=detection_results["detections"]
+                id_name=0
+                for frame in data:
+                   points=data[frame]
+                   for coord in points:
+                       save_csv.append([id_name,"ID"+str(id_name), frame, coord[1], coord[0], 0, 1])
+                       id_name+=1
+                
+                filename_save=self.result_path.split(".txt")[0]+".csv"
+                
+                with open(filename_save, 'w') as csvFile:
+                    writer = csv.writer(csvFile)
+                    writer.writerows(save_csv)
+                    csvFile.close()
+                 
+                print("Detection results are saved to  file ", self.result_path, "\n and", filename_save)
+            
+            # mode 0 - detection+linking
+            elif tracking_val==0 or tracking_val==2:
+                
+                if tracking_val==2:
+                    self.detector.detection_file_name=tk.filedialog.askopenfilename(title=" Open txt file with detections")
+                    self.detector.detection_choice=1
+                    
+                    
+                
+                self.final_tracks=self.detector.linking()
+                
         
+                # save tracks to json file 
+                if not(self.result_path.endswith(".txt")):
+                    if self.result_path.endswith(".csv"):
+                        result_path =self.result_path.split(".csv")[0]+ ".txt"
+                    else:
+                        result_path=self.result_path+ ".txt"
+                        
+                else:
+                    result_path=self.result_path
+        
+                
+                with open(result_path, 'w') as f:
+                    json.dump(self.final_tracks, f, ensure_ascii=False)
+        
+                # save tracks to csv file 
+                # prepare csv file
+                ############## json ->csv ######################
+                    
+                tracks_data=[]
+                
+                tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
+                    
+                for trackID_pos in self.final_tracks:
+                    trajectory=self.final_tracks[trackID_pos]
+                    new_frames=trajectory["frames"]
+                    new_trace=trajectory["trace"]
+                    trackID=trajectory["trackID"]
+                    for pos in range(0, len(new_frames)):
+                        point=new_trace[pos]
+                        frame=new_frames[pos]
+                        tracks_data.append([trackID, point[0], point[1],  frame])
+        
+        
+                # save to csv 
+                if not(self.result_path.endswith(".csv")):
+                    if self.result_path.endswith(".txt"):
+                        result_path_csv =self.result_path.split(".txt")[0]+ ".csv"
+                        
+                    else:
+                        result_path_csv =self.result_path+ ".csv"                 
+        
+                else:
+                     result_path_csv =self.result_path
+                    
+                with open(result_path_csv, 'w') as csvFile:
+                    writer = csv.writer(csvFile)
+                    writer.writerows(tracks_data)
+                    csvFile.close()
+    
+            
     
 if __name__ == "__main__":
     root = tk.Tk()
