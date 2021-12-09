@@ -263,6 +263,57 @@ class TrackingSetUp(object):
         self.box_size_fit=settings['box_size_fit']
         self.cnn_model_path=settings['cnn_model_path']
             
+    def detection_only(self):
+        '''
+        run detection for the frame sequence
+        '''
+        #set up parameters
+        detector=Detectors()
+        
+        #MSSEF
+        detector.c=self.c #=coef for the thresholding
+        detector.k_max=self.k_max # end of  the iteration
+        detector.k_min=self.k_min # start of the iteration
+        detector.sigma_min=self.sigma_min # min sigma for LOG
+        detector.sigma_max=self.sigma_max# max sigma for LOG           
+        detector.intensity_min=self.intensity_min # min relevant intensity
+        detector.intensity_max=self.intensity_max# max relevant intensity
+
+
+        #thresholding
+        detector.min_distance=self.min_distance # minimum distance between two max after MSSEF
+        detector.threshold_rel=self.threshold_rel # min pix value in relation to the image
+        
+        detector.box_size=self.box_size # bounding box size for detection#
+        detector.box_size_fit=self.box_size_fit  # bounding box size for gaussian fit
+        detector.img_set=self.movie
+        #CNN based classification        
+        detector.detection_threshold=self.detection_threshold
+         
+        detector.substract_bg_step =self.substract_bg_step   
+        
+        #option for Gaussian fit
+        detector.gaussian_fit=self.gaussian_fit
+        detector.expected_radius=self.expected_radius
+
+        # loading CNN        
+        cnn_model=load_model(self.cnn_model_path) 
+  
+        ###########
+
+        data={}
+        for frameN in range(self.start_frame, np.min((self.end_frame+1, self.movie.shape[0]))):
+            print("frame ", frameN)
+            #detection
+            vesicles=detector.detect(frameN, cnn_model)
+            
+            data.update({frameN:vesicles})
+         
+        detection_dict={"detections": data}
+        
+        return detection_dict
+                    
+    
         
     def linking(self):
         '''
