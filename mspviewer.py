@@ -1000,65 +1000,86 @@ class MainVisual(tk.Frame):
         
         '''
         
-        # ask for the file location        
-        save_file = tk.filedialog.asksaveasfilename()
+        def save_data():
         
-        if not save_file:
-            print("File name was not provided. The data was not saved. ")
+            # ask for the file location        
+            save_file = tk.filedialog.asksaveasfilename()
             
-        else: 
-            # save txt file with json format            
-            if not(save_file.endswith(".txt")):                
-                if save_file.endswith(".csv"):
-                    save_file =save_file.split(".csv")[0]+ ".txt"
-                else:
-                    save_file += ".txt"  
-
-                if os.path.isfile(save_file)==True:
-                    # add date if the file exists already
-                    now = datetime.datetime.now()
-                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+            if not save_file:
+                print("File name was not provided. The data was not saved. ")
                 
-                
-            # create dictionary with settings
-            save_dict=self.track_data_filtered.copy()
-            self.update_movie_parameters()
-            param_dict={"viewer_set":{"resolution (nm/pix)": self.img_resolution, "frame rate (f/sec)":self.frame_rate, "axis orientation": self.ap_axis, "axis": self.axis_name}}
-            save_dict.update(param_dict)
-
-            with open(save_file, 'w') as f:
-                json.dump(save_dict, f, ensure_ascii=False) 
-                
-            print("tracks are saved in json format to  ", save_file)                
-                          
-            # save tracks to csv file 
-            # prepare csv file                
-            tracks_data=[]
-            
-            tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
-            for trajectory in self.track_data_filtered["tracks"]:
-                new_frames=trajectory["frames"]
-                new_trace=trajectory["trace"]
-                trackID=trajectory["trackID"]
-                for pos in range(0, len(new_frames)):
-                    point=new_trace[pos]
-                    frame=new_frames[pos]
-                    tracks_data.append([trackID, point[0], point[1],  frame])
+            else: 
+                # save txt file with json format            
+                if not(save_file.endswith(".txt")):                
+                    if save_file.endswith(".csv"):
+                        save_file =save_file.split(".csv")[0]+ ".txt"
+                    else:
+                        save_file += ".txt"  
     
-    
-            # save to csv 
-            result_path_csv =save_file.split(".txt")[0]+ ".csv"
-                
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
                     
-            with open(result_path_csv, 'w') as csvFile:
-                writer = csv.writer(csvFile)
-                writer.writerows(tracks_data)
-                csvFile.close()
-
-                
-
-            print("                 in csv format to  ", result_path_csv)
+                    
+                # create dictionary with settings
+                save_dict=self.track_data_filtered.copy()
+                self.update_movie_parameters()
+                param_dict={"viewer_set":{"resolution (nm/pix)": self.img_resolution, "frame rate (f/sec)":self.frame_rate, "axis orientation": self.ap_axis, "axis": self.axis_name}}
+                save_dict.update(param_dict)
     
+                with open(save_file, 'w') as f:
+                    json.dump(save_dict, f, ensure_ascii=False) 
+                    
+                print("tracks are saved in json format to  ", save_file)                
+                              
+                # save tracks to csv file 
+                # prepare csv file                
+                tracks_data=[]
+                
+                tracks_data.append([ 'TrackID', 'x', 'y', 'frame'])   
+                for trajectory in self.track_data_filtered["tracks"]:
+                    new_frames=trajectory["frames"]
+                    new_trace=trajectory["trace"]
+                    trackID=trajectory["trackID"]
+                    for pos in range(0, len(new_frames)):
+                        point=new_trace[pos]
+                        frame=new_frames[pos]
+                        tracks_data.append([trackID, point[0], point[1],  frame])
+        
+        
+                # save to csv 
+                result_path_csv =save_file.split(".txt")[0]+ ".csv"
+                    
+                        
+                with open(result_path_csv, 'w') as csvFile:
+                    writer = csv.writer(csvFile)
+                    writer.writerows(tracks_data)
+                    csvFile.close()
+    
+                    
+    
+                print("                 in csv format to  ", result_path_csv)
+            
+            def cancel_window():
+                self.save_data_window.destroy()
+                
+            # if zoom is on
+            zoom=True
+            if zoom==True:
+              self.save_data_window = tk.Toplevel(root,  bg='white')
+              self.save_data_window.title("ATTENTION !!! ")
+              
+              qnewtext = tk.Label(master=self.save_data_window, text=" The image is zoomed! \n Only tracks visible in the viewer will be saved!   " ,  bg='white', font=("Times", 10))
+              qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+
+            
+              newbutton = tk.Button(master=self.choose_traj_segmentation, text=" continue ", command=save_data,  bg='green')
+              newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+                
+              deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window)
+              deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            
 
     def move_to_previous(self):
         '''

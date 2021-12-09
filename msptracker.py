@@ -1,11 +1,12 @@
 
 #########################################################
 #
-#  MSP-tracker GUI v 0.2
+#  MSP-tracker GUI v 0.3
 #        
 #########################################################
 
 import os
+
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' # not to show warnings
@@ -71,6 +72,7 @@ class MainApplication(tk.Frame):
             # widget in there with a text 
             text_help="""
             
+            
 The MSP-tracker provides tools for particle tracking. 
 The tracking software allows to set parameters and test them before running the tracker for the entire image sequence. 
 You can test detection on a single frame and linking on a sequence of frames.   
@@ -108,7 +110,6 @@ See the Manual for the detailed description of the software.
             
             T.insert(tk.END, text_help)
             T.pack(side=tk.LEFT, fill=tk.Y)
-          
             
         helpmenu.add_command(label="About the software", command=HelpAbout)
         
