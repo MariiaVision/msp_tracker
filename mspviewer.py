@@ -1841,6 +1841,7 @@ class MainVisual(tk.Frame):
         
         global folder_path_output  
         filename = tk.filedialog.askopenfilename()
+        
         if not filename:
             print("File was not selected")
         else:  
@@ -1913,29 +1914,36 @@ class MainVisual(tk.Frame):
                         read_parameters = self.track_data_original["viewer_set"]
                         print(read_parameters)
                         
+                        try:
+                            self.res_parameter.destroy()
+                            self.frame_parameter.destroy()
+                        except:
+                            pass
+                            
+                        
                         # img resolution
                         self.img_resolution=read_parameters["resolution (nm/pix)"]
                         v = tk.StringVar(root, value=str(self.img_resolution))
                         self.res_parameter = tk.Entry(root, width=10, text=v)
-                        self.res_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)      
+                        self.res_parameter.grid(row=5, column=1, pady=self.pad_val, padx=self.pad_val)      
                         
                         # frame rate
                         self.frame_rate=read_parameters["frame rate (f/sec)"]
                         v = tk.StringVar(root, value=str(self.frame_rate))
                         self.frame_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-                        self.frame_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)  
+                        self.frame_parameter.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)  
 
                         # axis orientation
                         self.ap_axis=read_parameters["axis orientation"]
                         v = tk.StringVar(root, value=str(self.ap_axis))
                         self.ap_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-                        self.ap_parameter.grid(row=7, column=1, pady=self.pad_val, padx=self.pad_val)
+                        self.ap_parameter.grid(row=6, column=1, pady=self.pad_val, padx=self.pad_val)
                         
                         # axis names
                         self.axis_name=read_parameters["axis"]        
                         v = tk.StringVar(root, value=str(self.axis_name))
                         self.axis_name_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
-                        self.axis_name_parameter.grid(row=7, column=3, pady=self.pad_val, padx=self.pad_val)  
+                        self.axis_name_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)  
            
                         
                     except:
