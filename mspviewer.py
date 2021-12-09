@@ -213,6 +213,37 @@ class MainVisual(tk.Frame):
        
         
         #update the list
+
+        # show the list of data with scroll bar       
+        self.scrollbar_tracks = tk.Scrollbar(master=self.listframework, orient="vertical")
+        self.scrollbar_tracks.grid(row=12, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
+
+        self.listNodes_tracks = tk.Listbox(master=self.listframework, width=self.button_length*3, height=int(self.img_width/20),  font=("Times", 12), selectmode='single')
+        self.listNodes_tracks.grid(row=12, column=5, columnspan=4, sticky=tk.N+tk.S,padx=self.pad_val)
+        self.listNodes_tracks.config(yscrollcommand=self.scrollbar_tracks.set)
+        self.listNodes_tracks.bind('<Double-1>', self.tracklist_on_select)
+
+        self.scrollbar_tracks.config(command=self.listNodes_tracks.yview)
+        
+        #delete button
+        
+        self.deletbutton = tk.Button(master=self.resultbuttonframe, text="DELETE TRACK", command=self.detele_track_question, width=int(self.button_length*0.8),  bg='red')
+        self.deletbutton.grid(row=13, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        # add button
+
+        self.deletbutton = tk.Button(master=self.resultbuttonframe, text="ADD TRACK", command=self.new_track_question, width=int(self.button_length*0.8),  bg='green')
+        self.deletbutton.grid(row=14, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+
+        # duplicate button
+        self.duplicatebutton = tk.Button(master=self.resultbuttonframe, text="DUPLICATE TRACK", command=self.duplicate_track_question, width=int(self.button_length*0.8),  bg='green')
+        self.duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        # duplicate button
+        self.duplicatebutton = tk.Button(master=self.resultbuttonframe, text="MERGE TRACKS", command=self.merge_track_question, width=int(self.button_length*0.8),  bg='green')
+        self.duplicatebutton.grid(row=16, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        
         self.list_update()        
         
         
@@ -1375,6 +1406,332 @@ class MainVisual(tk.Frame):
             run_filtering()
             
         
+    def tracklist_on_select(self, even):
+        position_in_list=self.listNodes_tracks.curselection()[0]
+        
+        # creating a new window with class TrackViewer                
+        self.new_window = tk.Toplevel(self.master)
+        
+         
+        # create the track set with motion
+        this_track=self.track_data_filtered['tracks'][position_in_list]
+        motion_type=[0]*len(this_track['frames'])
+        this_track['motion']=motion_type
+        
+        
+        # update movie and ap-axis parameters
+        self.update_movie_parameters()
+        
+  
+        view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
+
+        TrackViewer(self.new_window, this_track, self.movie, 
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
+            
+
+
+    def detele_track_question(self):
+        '''
+        function for the delete track button
+        '''
+        # close windows if open
+        self.cancel_action()
+        
+        # get  trackID from the list
+        try:
+            
+            # open new window
+            self.delete_window = tk.Toplevel(root ,  bg='white')
+            self.delete_window.title(" Delete the track ")
+            self.delete_window.geometry("+20+20")
+
+            self.qdeletetext = tk.Label(master=self.delete_window, text="delete track "+str(self.track_data_filtered['tracks'][self.listNodes_tracks.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=self.button_length*2)
+            self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.deletbutton = tk.Button(master=self.delete_window, text=" OK ", command=self.detele_track, width=int(self.button_length/2),  bg='red')
+            self.deletbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+            self.deletbutton = tk.Button(master=self.delete_window, text=" Cancel ", command=self.cancel_action, width=int(self.button_length/2),  bg='green')
+            self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+
+        except:
+            self.delete_window = tk.Toplevel(root ,  bg='white')
+            self.delete_window.title(" Delete the track ")
+            self.delete_window.geometry("+20+20")
+            self.qdeletetext = tk.Label(master=self.delete_window, text=" Track is not selected! ",  bg='white', font=("Times", 10), width=self.button_length*2)
+            self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+
+        
+        
+    def detele_track(self):
+        '''
+        delete selected track
+        '''
+        self.deleted_tracks_N+=1
+        delete_trackID=self.track_data_filtered['tracks'][self.listNodes_tracks.curselection()[0]]['trackID']
+        
+        pos=0
+        for p in self.track_data['tracks']:
+            
+            if p['trackID']==delete_trackID:
+                self.track_data['tracks'].remove(p)
+                
+            pos+=1
+
+        print("track ", delete_trackID, "is removed")
+        
+        #visualise without the track
+        self.filtering()
+        self.track_to_frame()
+        
+        #update the list
+        self.list_update()
+        
+        #close the window
+        self.cancel_action()
+        
+        
+    def  merge_track_question(self):
+        '''
+        function for the "merge tracks" button
+        '''
+        # close windows if open
+        self.cancel_action()
+        
+        # open new window
+        self.create_window = tk.Toplevel(root ,  bg='white')
+        self.create_window.title(" Merge the tracks")
+        
+        self.qnewtext = tk.Label(master=self.create_window, text=" Provide ID of the tracks to merge below (use ',' for separation): " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.merge_ids_text = tk.Entry(self.create_window, width=int(self.button_length*2))
+        self.merge_ids_text.grid(row=1, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val)              
+        
+        #define new trackID:
+        for p in tqdm(self.track_data['tracks']):
+            
+            self.new_trackID=np.max((self.new_trackID, p['trackID']))
+        self.new_trackID+=1
+        
+        qnewtext1 = tk.Label(master=self.create_window, text=" ID of the new merged track: " ,  bg='white', font=("Times", 10))
+        qnewtext1.grid(row=2, column=0, pady=self.pad_val, padx=self.pad_val) 
+        
+        v = tk.StringVar(root, value=str(self.new_trackID))
+        self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
+        self.trackID_parameter.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)
+
+        self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=self.merge_track, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=3, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=self.cancel_action, width=int(self.button_length/2),  bg='green')
+        self.deletbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+    def merge_track(self):
+        '''
+        merge tracks
+        '''
+        if self.merge_ids_text.get()!='':
+            try:
+                merge_ids=[int(idpos) for idpos in self.merge_ids_text.get().split(",")]
+            except:
+                 print("Some of the provided tracks are not exist!")   
+        else:
+            merge_ids=[]
+            
+        # convert IDs to positions in list
+        list_of_ids=[self.track_data_filtered['tracks'][pos]["trackID"] for pos in range(0, len(self.track_data_filtered['tracks']))]
+        
+        try:
+            pos_in_list=[np.where(np.asarray(list_of_ids)==pos)[0][0] for pos in merge_ids]
+        except:
+            print("Some of the provided tracks are not exist or filtered out!")
+            pos_in_list=[]
+
+        
+        # define the tracks order 
+        
+        first_frames=[self.track_data_filtered['tracks'][pos]['frames'][0] for pos in pos_in_list]
+
+        merging_order=np.argsort(first_frames)
+        
+        # merge the tracks
+        
+        frames=[]
+        trace=[]
+        
+        for k in merging_order:
+            i=pos_in_list[k]
+            track=self.track_data_filtered['tracks'][i]
+            frames=frames+track["frames"]
+            trace=trace+track["trace"]
+                        
+        if len(frames)!=0:
+            
+            new_track={"trackID":self.new_trackID, "trace":trace, "frames":frames}
+            
+            self.track_data['tracks'].append(new_track)
+            
+            #visualise without the track
+            self.filtering()
+            self.track_to_frame()
+            
+            #update the list
+            self.list_update()
+            
+            # close the windows
+            self.cancel_action()     
+                
+            print("Tracks ", merge_ids, " are mergerd, the new track ID is ", self.new_trackID)
+
+    def duplicate_track_question(self):
+        '''
+        function for the "duplicate track" button
+        
+        '''
+        
+        # close windows if open
+        self.cancel_action()
+        
+        # open new window
+        self.create_window = tk.Toplevel(root ,  bg='white')
+        self.create_window.title(" Duplicate the track")
+        
+        self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][self.listNodes_tracks.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
+        self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+                    
+        #define new trackID:
+        for p in tqdm(self.track_data['tracks']):
+            
+            self.new_trackID=np.max((self.new_trackID, p['trackID']))
+        self.new_trackID+=1
+        
+        v = tk.StringVar(root, value=str(self.new_trackID))
+        self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
+        self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
+
+            
+        self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=self.duplicate_track, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=self.cancel_action, width=int(self.button_length/2),  bg='green')
+        self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
+        
+        
+    def new_track_question(self):
+        '''
+        function for the new track button
+        '''
+        # close windows if open
+        self.cancel_action()
+        
+        
+        # open new window
+        self.create_window = tk.Toplevel(root ,  bg='white')
+        self.create_window.title(" Create new track")
+        self.create_window.geometry("+20+20")
+        
+        self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
+        self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
+        
+                    
+        #define new trackID:
+        for p in tqdm(self.track_data['tracks']):
+            
+            self.new_trackID=np.max((self.new_trackID, p['trackID']))
+        self.new_trackID+=1
+        
+        v = tk.StringVar(root, value=str(self.new_trackID))
+        self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
+        self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
+
+            
+        self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=self.create_track, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=self.cancel_action, width=int(self.button_length/2),  bg='green')
+        self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+
+    def cancel_action(self):
+        '''
+        destroy the windows
+        '''
+        
+        try:
+            self.create_window.destroy()
+        except: 
+            pass
+        
+        try:
+            self.delete_window.destroy()        
+        except: 
+            pass
+        
+        
+    def duplicate_track(self):
+        '''
+        duplicate a track
+        '''
+        
+        # read ap axis
+        if self.trackID_parameter.get()!='':
+            self.new_trackID=int(self.trackID_parameter.get())
+            
+        # update counting of the new tracks
+        self.created_tracks_N+=1
+        duplicate_trackID=self.track_data_filtered['tracks'][self.listNodes_tracks.curselection()[0]]['trackID']
+        
+        for p in self.track_data['tracks']:
+            
+            if p['trackID']==duplicate_trackID:
+                duplicated_track=copy.deepcopy(p)
+            
+        
+        new_track={"trackID":self.new_trackID, "trace":duplicated_track['trace'], "frames":duplicated_track['frames']}
+        
+        self.track_data['tracks'].append(new_track)
+        
+        print(" track is duplicated with new trackID ", self.new_trackID)
+        
+        #visualise without the track
+        self.filtering()
+        self.track_to_frame()
+        
+        #update the list
+        self.list_update()
+        
+        # close the windows
+        self.cancel_action()        
+        
+        
+    def create_track(self):
+        '''
+        create a track
+        '''
+        
+        #read ap axis
+        if self.trackID_parameter.get()!='':
+            print(self.trackID_parameter.get())
+            self.new_trackID=int(self.trackID_parameter.get())
+            
+        self.created_tracks_N+=1
+        
+        p={"trackID":self. new_trackID, "trace":[], "frames":[]}
+        
+        self.track_data['tracks'].append(p)
+        
+        print("new track ", self.new_trackID, "is created")
+        
+        #visualise without the track
+        self.filtering()
+        self.track_to_frame()
+        
+        #update the list
+        self.list_update()
+        
+        # close the windows
+        self.cancel_action()                    
 
     def list_update(self):
         '''
@@ -1384,373 +1741,34 @@ class MainVisual(tk.Frame):
         # update movie parameters
         self.update_movie_parameters()
         
-        def tracklist_on_select(even):
-            position_in_list=listNodes.curselection()[0]
-            
-            # creating a new window with class TrackViewer                
-            self.new_window = tk.Toplevel(self.master)
-            
-             
-            # create the track set with motion
-            this_track=self.track_data_filtered['tracks'][position_in_list]
-            motion_type=[0]*len(this_track['frames'])
-            this_track['motion']=motion_type
-            
-            
-            # update movie and ap-axis parameters
-            self.update_movie_parameters()
-            
-      
-            view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
-
-            TrackViewer(self.new_window, this_track, self.movie, 
-                        self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
-            
-            
-        def detele_track_question():
-            '''
-            function for the delete track button
-            '''
-            # close windows if open
-            cancel_action()
-            
-            # get  trackID from the list
-            try:
-                
-                # open new window
-                self.delete_window = tk.Toplevel(root ,  bg='white')
-                self.delete_window.title(" Delete the track ")
-                self.delete_window.geometry("+20+20")
-    
-                self.qdeletetext = tk.Label(master=self.delete_window, text="delete track "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ?",  bg='white', font=("Times", 10), width=self.button_length*2)
-                self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-                
-                self.deletbutton = tk.Button(master=self.delete_window, text=" OK ", command=detele_track, width=int(self.button_length/2),  bg='red')
-                self.deletbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-                
-                self.deletbutton = tk.Button(master=self.delete_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
-                self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-
-            except:
-                self.delete_window = tk.Toplevel(root ,  bg='white')
-                self.delete_window.title(" Delete the track ")
-                self.delete_window.geometry("+20+20")
-                self.qdeletetext = tk.Label(master=self.delete_window, text=" Track is not selected! ",  bg='white', font=("Times", 10), width=self.button_length*2)
-                self.qdeletetext.grid(row=0, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-
-            
-            
-        def detele_track():
-            '''
-            delete selected track
-            '''
-            self.deleted_tracks_N+=1
-            delete_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
-            
-            pos=0
-            for p in self.track_data['tracks']:
-                
-                if p['trackID']==delete_trackID:
-                    self.track_data['tracks'].remove(p)
-                    
-                pos+=1
-
-            print("track ", delete_trackID, "is removed")
-            
-            #visualise without the track
-            self.filtering()
-            self.track_to_frame()
-            
-            #update the list
-            self.list_update()
-            
-            #close the window
-            cancel_action()
-            
-            
-        def  merge_track_question():
-            '''
-            function for the "merge tracks" button
-            '''
-            # close windows if open
-            cancel_action()
-            
-            # open new window
-            self.create_window = tk.Toplevel(root ,  bg='white')
-            self.create_window.title(" Merge the tracks")
-            
-            self.qnewtext = tk.Label(master=self.create_window, text=" Provide ID of the tracks to merge below (use ',' for separation): " ,  bg='white', font=("Times", 10))
-            self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-            
-            self.merge_ids_text = tk.Entry(self.create_window, width=int(self.button_length*2))
-            self.merge_ids_text.grid(row=1, column=0,  columnspan=2, pady=self.pad_val, padx=self.pad_val)              
-            
-            #define new trackID:
-            for p in tqdm(self.track_data['tracks']):
-                
-                self.new_trackID=np.max((self.new_trackID, p['trackID']))
-            self.new_trackID+=1
-            
-            qnewtext1 = tk.Label(master=self.create_window, text=" ID of the new merged track: " ,  bg='white', font=("Times", 10))
-            qnewtext1.grid(row=2, column=0, pady=self.pad_val, padx=self.pad_val) 
-            
-            v = tk.StringVar(root, value=str(self.new_trackID))
-            self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
-            self.trackID_parameter.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)
-
-            self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=merge_track, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=3, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-            
-            self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
-            self.deletbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
-            
-        def merge_track():
-            '''
-            merge tracks
-            '''
-            if self.merge_ids_text.get()!='':
-                try:
-                    merge_ids=[int(idpos) for idpos in self.merge_ids_text.get().split(",")]
-                except:
-                     print("Some of the provided tracks are not exist!")   
-            else:
-                merge_ids=[]
-                
-            # convert IDs to positions in list
-            list_of_ids=[self.track_data_filtered['tracks'][pos]["trackID"] for pos in range(0, len(self.track_data_filtered['tracks']))]
-            
-            try:
-                pos_in_list=[np.where(np.asarray(list_of_ids)==pos)[0][0] for pos in merge_ids]
-            except:
-                print("Some of the provided tracks are not exist or filtered out!")
-                pos_in_list=[]
-
-            
-            # define the tracks order 
-            
-            first_frames=[self.track_data_filtered['tracks'][pos]['frames'][0] for pos in pos_in_list]
-
-            merging_order=np.argsort(first_frames)
-            
-            # merge the tracks
-            
-            frames=[]
-            trace=[]
-            
-            for k in merging_order:
-                i=pos_in_list[k]
-                track=self.track_data_filtered['tracks'][i]
-                frames=frames+track["frames"]
-                trace=trace+track["trace"]
-                            
-            if len(frames)!=0:
-                
-                new_track={"trackID":self.new_trackID, "trace":trace, "frames":frames}
-                
-                self.track_data['tracks'].append(new_track)
-                
-                #visualise without the track
-                self.filtering()
-                self.track_to_frame()
-                
-                #update the list
-                self.list_update()
-                
-                # close the windows
-                cancel_action()     
-                    
-                print("Tracks ", merge_ids, " are mergerd, the new track ID is ", self.new_trackID)
-
-        def duplicate_track_question():
-            '''
-            function for the "duplicate track" button
-            
-            '''
-            
-            # close windows if open
-            cancel_action()
-            
-            # open new window
-            self.create_window = tk.Toplevel(root ,  bg='white')
-            self.create_window.title(" Duplicate the track")
-            
-            self.qnewtext = tk.Label(master=self.create_window, text="duplicate  track  "+str(self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID'])+" ? new track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
-            self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-                        
-            #define new trackID:
-            for p in tqdm(self.track_data['tracks']):
-                
-                self.new_trackID=np.max((self.new_trackID, p['trackID']))
-            self.new_trackID+=1
-            
-            v = tk.StringVar(root, value=str(self.new_trackID))
-            self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
-            self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
-
-                
-            self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=duplicate_track, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-            
-            self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
-            self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
-            
-            
-            
-        def new_track_question():
-            '''
-            function for the new track button
-            '''
-            # close windows if open
-            cancel_action()
-            
-            
-            # open new window
-            self.create_window = tk.Toplevel(root ,  bg='white')
-            self.create_window.title(" Create new track")
-            self.create_window.geometry("+20+20")
-            
-            self.qnewtext = tk.Label(master=self.create_window, text="create new track ?  track ID: " ,  bg='white', font=("Times", 10), width=self.button_length*2)
-            self.qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
-            
-                        
-            #define new trackID:
-            for p in tqdm(self.track_data['tracks']):
-                
-                self.new_trackID=np.max((self.new_trackID, p['trackID']))
-            self.new_trackID+=1
-            
-            v = tk.StringVar(root, value=str(self.new_trackID))
-            self.trackID_parameter = tk.Entry(self.create_window, width=int(self.button_length/2), text=v)
-            self.trackID_parameter.grid(row=0, column=2, pady=self.pad_val, padx=self.pad_val)
-
-                
-            self.newbutton = tk.Button(master=self.create_window, text=" OK ", command=create_track, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=1, column=0, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-            
-            self.deletbutton = tk.Button(master=self.create_window, text=" Cancel ", command=cancel_action, width=int(self.button_length/2),  bg='green')
-            self.deletbutton.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)
-
-        def cancel_action():
-            '''
-            destroy the windows
-            '''
-            
-            try:
-                self.create_window.destroy()
-            except: 
-                pass
-            
-            try:
-                self.delete_window.destroy()        
-            except: 
-                pass
-            
-            
-        def duplicate_track():
-            '''
-            duplicate a track
-            '''
-            
-            # read ap axis
-            if self.trackID_parameter.get()!='':
-                self.new_trackID=int(self.trackID_parameter.get())
-                
-            # update counting of the new tracks
-            self.created_tracks_N+=1
-            duplicate_trackID=self.track_data_filtered['tracks'][listNodes.curselection()[0]]['trackID']
-            
-            for p in self.track_data['tracks']:
-                
-                if p['trackID']==duplicate_trackID:
-                    duplicated_track=copy.deepcopy(p)
-                
-            
-            new_track={"trackID":self.new_trackID, "trace":duplicated_track['trace'], "frames":duplicated_track['frames']}
-            
-            self.track_data['tracks'].append(new_track)
-            
-            print(" track is duplicated with new trackID ", self.new_trackID)
-            
-            #visualise without the track
-            self.filtering()
-            self.track_to_frame()
-            
-            #update the list
-            self.list_update()
-            
-            # close the windows
-            cancel_action()        
-            
-            
-        def create_track():
-            '''
-            create a track
-            '''
-            
-            #read ap axis
-            if self.trackID_parameter.get()!='':
-                print(self.trackID_parameter.get())
-                self.new_trackID=int(self.trackID_parameter.get())
-                
-            self.created_tracks_N+=1
-            
-            p={"trackID":self. new_trackID, "trace":[], "frames":[]}
-            
-            self.track_data['tracks'].append(p)
-            
-            print("new track ", self.new_trackID, "is created")
-            
-            #visualise without the track
-            self.filtering()
-            self.track_to_frame()
-            
-            #update the list
-            self.list_update()
-            
-            # close the windows
-            cancel_action()
-            
-            
-        lbl2 = tk.Label(master=self.listframework, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 14, "bold"))
-        lbl2.grid(row=7, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)
-        
         # show track statistics
-        lbl2 = tk.Label(master=self.listframework, text="deleted tracks: "+str(self.deleted_tracks_N), width=int(self.button_length*1.5), bg='white',  font=("Times", 12,))
-        lbl2.grid(row=8, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)         
-
-        lbl2 = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 12))
-        lbl2.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+        try:
+            self.text_deleted_tracks.destroy()
+            self.text_filtered_tracks.destroy()
+            self.text_total_tracks.destroy()
+        except:
+            pass
         
-        # show the list of data with scroll bar       
-        scrollbar = tk.Scrollbar(master=self.listframework, orient="vertical")
-        scrollbar.grid(row=12, column=9,  sticky=tk.N+tk.S,padx=self.pad_val)
-
-        listNodes = tk.Listbox(master=self.listframework, width=self.button_length*3, height=int(self.img_width/20),  font=("Times", 12), selectmode='single')
-        listNodes.grid(row=12, column=5, columnspan=4, sticky=tk.N+tk.S,padx=self.pad_val)
-        listNodes.config(yscrollcommand=scrollbar.set)
-        listNodes.bind('<Double-1>', tracklist_on_select)
-
-        scrollbar.config(command=listNodes.yview)
         
-        #delete button
-        
-        deletbutton = tk.Button(master=self.resultbuttonframe, text="DELETE TRACK", command=detele_track_question, width=int(self.button_length*0.8),  bg='red')
-        deletbutton.grid(row=13, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-        
-        # add button
+        self.text_total_tracks = tk.Label(master=self.listframework, text="Total number of tracks: "+str(len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 14, "bold"))
+        self.text_total_tracks.grid(row=7, column=5, columnspan=4, pady=self.pad_val, padx=self.pad_val)        
 
-        deletbutton = tk.Button(master=self.resultbuttonframe, text="ADD TRACK", command=new_track_question, width=int(self.button_length*0.8),  bg='green')
-        deletbutton.grid(row=14, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+        self.text_deleted_tracks = tk.Label(master=self.listframework, text="deleted tracks: "+str(self.deleted_tracks_N), width=int(self.button_length*1.5), bg='white',  font=("Times", 12,))
+        self.text_deleted_tracks.grid(row=8, column=5, columnspan=2, pady=self.pad_val, padx=self.pad_val)         
 
-        # duplicate button
-        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="DUPLICATE TRACK", command=duplicate_track_question, width=int(self.button_length*0.8),  bg='green')
-        duplicatebutton.grid(row=15, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.text_filtered_tracks = tk.Label(master=self.listframework, text="filtered tracks: "+str(len(self.track_data['tracks'])-len(self.track_data_filtered['tracks'])), width=int(self.button_length*1.5), bg='white',  font=("Times", 12))
+        self.text_filtered_tracks.grid(row=8, column=7, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
         
-        # duplicate button
-        duplicatebutton = tk.Button(master=self.resultbuttonframe, text="MERGE TRACKS", command=merge_track_question, width=int(self.button_length*0.8),  bg='green')
-        duplicatebutton.grid(row=16, column=5, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        
 
        # plot the tracks from filtered folder 
+        try:
+           self.listNodes_tracks.delete(0,tk.END)
+        except:
+            pass
+                
+        
         for p in self.track_data_filtered['tracks']:
             
             #calculate length and duration
@@ -1760,7 +1778,7 @@ class MainVisual(tk.Frame):
                 start_track_frame=0
             
             # add to the list
-            listNodes.insert(tk.END, "ID: "+str(p['trackID'])+" start frame: "+str(start_track_frame))        
+            self.listNodes_tracks.insert(tk.END, "ID: "+str(p['trackID'])+" start frame: "+str(start_track_frame))        
 
             
             
@@ -2031,7 +2049,7 @@ class MainVisual(tk.Frame):
                 self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)'  ]) 
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)'  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -2086,14 +2104,14 @@ class MainVisual(tk.Frame):
                         moving_speeds=self.tg.calculate_speed(track, "movement")
                         moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
                         moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
-                        moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
+           #             moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
                         moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
                         
                         
                         
                         self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                                  max_displacement, time,
-                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxcs, moving_maxsegcs])
+                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs])
                     else:
                         self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None])
                         
@@ -2231,7 +2249,37 @@ class TrackViewer(tk.Frame):
         self.dpi=100
         self.img_width=int(self.window_height*0.6)
         self.figsize_value=(int(self.img_width/self.dpi), int(self.img_width/self.dpi*0.75))
+
+    
+    ############### lists ##############################
+    
+        # with parameters 
         
+        self.listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*6),  font=("Times", 10), selectmode='single')
+        self.listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        
+        # with detections        
+            
+        def tracklist_on_select(even):
+            try:
+                
+                self.frame_pos_to_change=self.listNodes.curselection()
+            except:
+                pass
+
+                # show the list of data with scroll bar
+        self.detection_lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 12))
+        self.detection_lbend.grid(row=1, column=5, columnspan=3, pady=self.pad_val, padx=self.pad_val)
+        
+        self.scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
+        self.scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
+        
+        self.listNodes = tk.Listbox(master=self.viewer, width=int(self.button_length*3), font=("Times", 10), selectmode='multiple')
+        self.listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
+        self.listNodes.config(yscrollcommand=self.scrollbar.set)
+        self.listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
+        self.scrollbar.config(command=self.listNodes.yview)
+
         
      # # #  build layout of the frame
         self.show_list()   
@@ -2287,10 +2335,18 @@ class TrackViewer(tk.Frame):
         self.plot_image()
         
         # plot displacement
-        
+        self.fig_displacment, self.ax_displacement = plt.subplots(1, 1, figsize=self.figsize_value)           
+        self.canvas_displacement = FigureCanvasTkAgg(self.fig_displacment, master=self.viewer)
+        self.canvas_displacement.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
+
         self.plot_displacement()
         
-        # plot intensity graph
+        # plot intensity graph    
+        self.fig_intensity, self.ax_intensity = plt.subplots(1,1, figsize=self.figsize_value)        
+        self.canvas_intensity = FigureCanvasTkAgg(self.fig_intensity, master=self.viewer)            
+        self.canvas_intensity.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)  
+             
+        
         self.intensity_calculation()
         
         # plot parameters
@@ -2373,7 +2429,9 @@ class TrackViewer(tk.Frame):
         
         self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
         self.R3.grid(row=1, column=4, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
-    
+
+        
+        
     
     def calculate_direction(self, trace):
         '''
@@ -2689,10 +2747,6 @@ class TrackViewer(tk.Frame):
         arrange the image viewer
         
         '''
-#
-#        self.fig_indwin = plt.figure(figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
-#        plt.axis('off')
-#        self.fig_indwin.tight_layout()
                 
         img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
@@ -2791,36 +2845,38 @@ class TrackViewer(tk.Frame):
         '''
 
         # show the list of data with scroll bar
-               
-        listNodes_parameters = tk.Listbox(master=self.viewer, width=int(self.button_length*6),  font=("Times", 10), selectmode='single')
-        listNodes_parameters.grid(row=6, column=1,  columnspan=4, sticky=tk.N+tk.S, pady=self.pad_val, padx=self.pad_val)
+        try:
+            self.listNodes_parameters.delete(0,tk.END)
+        except:
+            pass
+                
         
         if len(self.track_data['frames'])>1:
         
             average_speeds=self.tg.calculate_speed(self.track_data, "average")
             moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
            # add to the list
-            listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
+            self.listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
     
-            listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
+            self.listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
     
-            listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
+            self.listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
             
-            listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
+            self.listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
     
-            listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
+            self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
-            listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
      
-            listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+       #     self.listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
@@ -2829,33 +2885,12 @@ class TrackViewer(tk.Frame):
         arrangement for the position list
         
         '''
-        
+
         try:
-            #destroy existing list
-            self.listNodes.destroy()
+            self.listNodes.delete(0,tk.END)
         except:
             pass
-            
-        def tracklist_on_select(even):
-            try:
                 
-                self.frame_pos_to_change=self.listNodes.curselection()
-            except:
-                pass
-
-                # show the list of data with scroll bar
-        lbend = tk.Label(master=self.viewer, text="LIST OF DETECTIONS:  ",  bg='white', font=("Times", 12))
-        lbend.grid(row=1, column=5, columnspan=3, pady=self.pad_val, padx=self.pad_val)
-        
-        scrollbar = tk.Scrollbar(master=self.viewer, orient="vertical")
-        scrollbar.grid(row=2, column=8, rowspan=5,  sticky=tk.N+tk.S)
-        
-        self.listNodes = tk.Listbox(master=self.viewer, width=int(self.button_length*3), font=("Times", 10), selectmode='multiple')
-        self.listNodes.grid(row=2, column=5, columnspan=3, rowspan=5 , sticky=tk.N+tk.S, pady=self.pad_val)
-        self.listNodes.config(yscrollcommand=scrollbar.set)
-        self.listNodes.bind('<<ListboxSelect>>', tracklist_on_select)
-        scrollbar.config(command=self.listNodes.yview)
-        
         
        # plot the track positions
         for i in range(0, len(self.frames)):
@@ -2948,23 +2983,22 @@ class TrackViewer(tk.Frame):
         
         # plotting
         try :
-            fig1 = plt.figure(figsize=self.figsize_value)
-            plt.plot(frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
+            
+            self.ax_intensity.clear()
+            self.ax_intensity.plot(frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
     
-            plt.ylabel("intensity", fontsize='small')
-            plt.plot(frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
+#            self.ax_intensity.set_ylabel("intensity", fontsize='small')
+            self.ax_intensity.plot(frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
-                plt.title('Vesicle intensity per frame', fontsize='small')
+                self.ax_intensity.set_title('Vesicle intensity (scaled [0,1]) per frame', fontsize='small')
             else:
-                plt.title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
-            plt.legend(fontsize='small')   
-            plt.ylim(top = 1.1, bottom = 0)            
+                self.ax_intensity.set_title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
+            self.ax_intensity.legend(fontsize='small')   
+            self.ax_intensity.set_ylim(top = 1.1, bottom = 0)            
             
             # DrawingArea
-            canvas1 = FigureCanvasTkAgg(fig1, master=self.viewer)
-            canvas1.draw()
-            canvas1.get_tk_widget().grid(row=5, column=9, columnspan=4, rowspan=3, pady=self.pad_val, padx=self.pad_val)  
-                         
+            self.canvas_intensity.draw()
+            
         except:
             pass
     def plot_displacement(self):
@@ -2999,26 +3033,30 @@ class TrackViewer(tk.Frame):
             
             self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
             
-            fig = plt.figure(figsize=self.figsize_value)
-            
+ 
             disaplcement=self.displacement_array*self.img_resolution
             
+            
+            
             # plot dosplacement colour
+            self.ax_displacement.clear()
             for i in range(1, len(self.motion)):
+
                 if self.motion[i]==0:
                     colourV='r'
                 else:
                     colourV='g'
-                plt.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
+
+                self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
                 
-            plt.ylabel('Displacement (nm)', fontsize='small')
-    
-            plt.title('Displacement per frame', fontsize='small')
             
+#            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
+
+            self.ax_displacement.set_title('Displacement (nm) per frame', fontsize='small')
+
             # DrawingArea
-            canvas = FigureCanvasTkAgg(fig, master=self.viewer)
-            canvas.draw()
-            canvas.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
+            self.canvas_displacement.draw()
+            
         except:
             pass
 
