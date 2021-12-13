@@ -1326,7 +1326,7 @@ class MainVisual(tk.Frame):
                     zoom_filter=True
                     
                 #change value for zoomed filter indicator if needed
-                if zoom_filter==True:
+                if zoom_filter==False:
                     self.is_zoom_filtered=True
                     
                 if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True:
