@@ -1234,8 +1234,8 @@ See the Manual for the detailed description of the software.
             self.plot_range_coordinates[1]=float(event.ydata)            
             
         def zoom_in():
-            self.canvas.mpl_connect('button_press_event', onclick_zoomin)
-            self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
+            self.canvas_detection.mpl_connect('button_press_event', onclick_zoomin)
+            self.canvas_detection.mpl_connect('button_release_event', offclick_zoomin)           
             
         button_zoomin = tk.Button(master=self.toolbarFrame_detection, text=" zoom in ", command=zoom_in)
         button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
@@ -1602,8 +1602,8 @@ See the Manual for the detailed description of the software.
             self.plot_range_coordinates[1]=float(event.ydata)            
             
         def zoom_in():
-            self.canvas.mpl_connect('button_press_event', onclick_zoomin)
-            self.canvas.mpl_connect('button_release_event', offclick_zoomin)           
+            self.canvas_linking.mpl_connect('button_press_event', onclick_zoomin)
+            self.canvas_linking.mpl_connect('button_release_event', offclick_zoomin)           
             
         button_zoomin = tk.Button(master=self.toolbarFrame_linking, text=" zoom in ", command=zoom_in)
         button_zoomin.grid(row=0, column=0,  columnspan=1, pady=self.pad_val, padx=self.pad_val)
