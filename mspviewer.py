@@ -1139,7 +1139,7 @@ class MainVisual(tk.Frame):
         
         self.ax.axis('off')
 
-        if  self.track_data_framed:
+        if  self.track_data_framed and self.monitor_switch<2:
 
             # plot tracks
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
