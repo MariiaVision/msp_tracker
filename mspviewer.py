@@ -2913,7 +2913,7 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
             
-            self.listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0]+1)/self.frame_rate,5))+" sec")
+            self.listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0])/self.frame_rate,5))+" sec")
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
