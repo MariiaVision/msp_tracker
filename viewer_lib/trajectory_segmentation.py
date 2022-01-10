@@ -261,7 +261,7 @@ class TrajectorySegment(object):
     output: 
         curvilinear_speed_mean
         straightline_speed
-        curvilinear_speed_max
+        curvilinear_speed_all
         curvilinear_speed_segment_max
         
         '''
@@ -269,7 +269,6 @@ class TrajectorySegment(object):
         frames=track['frames']
         motion=track['motion']
 
-        
         # Mean curvilinear speed
 
         # separated arrays for coordinates
@@ -307,9 +306,9 @@ class TrajectorySegment(object):
         # curvilinear speed        
         curvilinear_speed_mean=disp/time  
         try:
-            curvilinear_speed_max=np.max(np.asarray(motion[1:])*sqr_disp_back)  
+            curvilinear_speed_all=np.asarray(motion[1:])*sqr_disp_back  
         except:
-            curvilinear_speed_max=0
+            curvilinear_speed_all=[]
         
         # straightline_speed
         if  mode=="average":
@@ -407,10 +406,10 @@ class TrajectorySegment(object):
             except:
                 curvilinear_speed_segment_max=0
             
-#            print("all: ", curvilinear_speed_mean, straightline_speed, curvilinear_speed_max, curvilinear_speed_segment_max)
+#            print("all: ", curvilinear_speed_mean, straightline_speed, curvilinear_speed_all, curvilinear_speed_segment_max)
 
             
-        return curvilinear_speed_mean, straightline_speed, curvilinear_speed_max, curvilinear_speed_segment_max # pix/frame
+        return curvilinear_speed_mean, straightline_speed, curvilinear_speed_all, curvilinear_speed_segment_max # pix/frame
         #
 #        
 #
