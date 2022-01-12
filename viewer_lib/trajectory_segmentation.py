@@ -254,7 +254,7 @@ class TrajectorySegment(object):
         return new_segment.tolist()
     
     
-    def calculate_speed(self, track, mode="average"): # mode: "average"/"movement"
+    def calculate_speed(self, track, mode="average"): # mode: "average"/"moving"
         '''
         calculate speed of vesicle movement
         
@@ -305,8 +305,13 @@ class TrajectorySegment(object):
         
         # curvilinear speed        
         curvilinear_speed_mean=disp/time  
+        
+        # curvilinear all
         try:
-            curvilinear_speed_all=np.asarray(motion[1:])*sqr_disp_back  
+            if mode=="average": 
+                curvilinear_speed_all=sqr_disp_back  
+            else: 
+                curvilinear_speed_all=np.asarray(motion[1:])*sqr_disp_back 
         except:
             curvilinear_speed_all=[]
         
@@ -330,10 +335,10 @@ class TrajectorySegment(object):
             dist_list=[]
             speed_list=[]
             
-#            print("\n")
+
             for pos in range(1, len(motion)):
                 move_pos=motion[pos]
-#                print(pos)
+
                 if move_pos==1 and move_switch==0 and pos!=(len(motion)-1): # switching to the moving
                     
                     #for strightline speed
@@ -352,7 +357,7 @@ class TrajectorySegment(object):
                     move_switch=1 # switch to moving mode
                     start=trajectory[pos-1]
                     end=trajectory[pos]
-#                    print(start, end)
+
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
                     # for max segment speed
@@ -366,7 +371,7 @@ class TrajectorySegment(object):
                     # for strightline speed
                     move_switch=0 # switch off moving mode
                     end=trajectory[pos-1] 
-#                    print(start, end)
+
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
                     # for max segment speed
@@ -386,7 +391,7 @@ class TrajectorySegment(object):
 
                     frame_n+=1
                     end=trajectory[pos]
-#                    print(start, end)
+
                     distance=distance+np.sqrt((end[0]-start[0])**2+(end[1]-start[1])**2)
                     
                     # for max segment speed
@@ -395,7 +400,6 @@ class TrajectorySegment(object):
                     speed_list.append(dist_seg/frames_seg_n)
                     dist_list.append(dist_seg)
                     
-#                print("motion", move_pos, " Nframes ", frame_n, ", dist: ", distance)
 
         
             frame_n=np.max((1, frame_n))

@@ -3089,7 +3089,7 @@ class TrackViewer(tk.Frame):
             
             
             
-            # plot dosplacement colour
+            # plot displacement colour
             self.ax_displacement.clear()
             for i in range(1, len(self.motion)):
 
