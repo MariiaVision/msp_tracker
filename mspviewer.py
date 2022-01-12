@@ -1469,7 +1469,7 @@ class MainVisual(tk.Frame):
         view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
 
         TrackViewer(self.new_window, this_track, self.movie, 
-                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range, self.track_data_framed)
             
 
 
@@ -1795,7 +1795,7 @@ class MainVisual(tk.Frame):
         view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
 
         TrackViewer(self.new_window, this_track, self.movie, 
-                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range, self.track_data_framed)
              
 
     def list_update(self):
@@ -2257,7 +2257,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the window of the individual tracks 
     '''
-    def __init__(self, master, track_data, movie,img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None):
+    def __init__(self, master, track_data, movie,img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None, track_data_framed=[]):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -2271,6 +2271,7 @@ class TrackViewer(tk.Frame):
 
         
         # save important data
+        self.track_data_framed=track_data_framed
         self.track_data=track_data
         self.movie=movie
         self.frames=track_data['frames']
@@ -2310,6 +2311,11 @@ class TrackViewer(tk.Frame):
         self.max_displacement=0
         self.net_displacement=0
         self.total_distance=0
+        
+        #colours for plotting tracks        
+        self.color_list_plot=["#00FFFF", "#7FFFD4", "#0000FF", "#8A2BE2", "#7FFF00", "#D2691E", "#FF7F50", "#DC143C",
+            "#008B8B", "#8B008B", "#FF8C00", "#E9967A", "#FF1493", "#9400D3", "#FF00FF", "#B22222",
+            "#FFD700", "#ADFF2F", "#FF69B4", "#ADD8E6", "#F08080", "#90EE90", "#20B2AA", "#C71585", "#FF00FF"]
         
         # change the name to add track ID
         master.title("TrackViewer: track ID "+str(self.id))
@@ -2498,9 +2504,12 @@ class TrackViewer(tk.Frame):
         self.R1.grid(row=1, column=1, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
 
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=2, columnspan=2,  pady=self.pad_val, padx=self.pad_val)
+        self.R2.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
+        self.R3.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        
+        self.R3 = tk.Radiobutton(master=self.viewer, text=" all tracks ", variable=var, value=5, bg='white',command = update_monitor_plot ) #  command=sel)
         self.R3.grid(row=1, column=4, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
 
         
@@ -2888,25 +2897,36 @@ class TrackViewer(tk.Frame):
         self.ax_indwin.imshow(region, cmap="gray")
         self.ax_indwin.axis('off')
         
-        if len(self.trace)>0:
-            if self.plot_switch==0: # print full trajectory
-                for pos in range(0, len(self.trace)-1):
-                    self.ax_indwin.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
+        if self.plot_switch==5:
+            # plot tracks
+            plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
+            for p in plot_info:
+                trace=p['trace']
+                self.ax_indwin.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
+                self.ax_indwin.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+
             
-                self.ax_indwin.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
-                self.ax_indwin.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+        else:
+        
+            if len(self.trace)>0:
+                if self.plot_switch==0: # print full trajectory
+                    for pos in range(0, len(self.trace)-1):
+                        self.ax_indwin.plot(np.asarray(self.trace)[pos:pos+2,1]- y_min,np.asarray(self.trace)[pos:pos+2,0]-x_min,  color=(red_c[pos],0,blue_c[pos]))
                 
-                self.ax_indwin.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
-                
-                self.ax_indwin.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
-                
-            elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
-                #define colour
-                red_c= (abs(np.array(self.motion)-1)).tolist()
-                green_c= self.motion
-                for pos in range(1, len(self.trace)):
-                    self.ax_indwin.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
-      
+                    self.ax_indwin.text(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min, "  END  ", fontsize=16, color="b")
+                    self.ax_indwin.plot(np.asarray(self.trace)[-1,1]- y_min,np.asarray(self.trace)[-1,0]- x_min,  "bo",)  
+                    
+                    self.ax_indwin.text(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min, "  START  ", fontsize=16, color="r")
+                    
+                    self.ax_indwin.plot(np.asarray(self.trace)[0,1]- y_min,np.asarray(self.trace)[0,0]- x_min,  "ro",)
+                    
+                elif self.plot_switch==2 and self.traj_segm_switch_var>0: # plotting motion type
+                    #define colour
+                    red_c= (abs(np.array(self.motion)-1)).tolist()
+                    green_c= self.motion
+                    for pos in range(1, len(self.trace)):
+                        self.ax_indwin.plot(np.asarray(self.trace)[pos-1:pos+1,1]- y_min,np.asarray(self.trace)[pos-1:pos+1,0]-x_min,  color=(red_c[pos],green_c[pos],0))
+          
 
         self.canvas_indwin.draw()
         
