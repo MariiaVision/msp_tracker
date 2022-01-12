@@ -1085,7 +1085,7 @@ class MainVisual(tk.Frame):
           self.save_data_window = tk.Toplevel(root,  bg='white')
           self.save_data_window.title("ATTENTION !!! ")
           
-          qnewtext = tk.Label(master=self.save_data_window, text="  Trajectories are filtered based on the zoomed area. \n The changes you want to save will include the filter. " ,  bg='white', font=("Times", 10))
+          qnewtext = tk.Label(master=self.save_data_window, text="  Trajectories are filtered based on the zoomed area. \n Only tracks in this area will be included. " ,  bg='white', font=("Times", 10))
           qnewtext.grid(row=0, column=0, columnspan=2, pady=self.pad_val*2, padx=self.pad_val*2) 
 
         
@@ -1774,7 +1774,29 @@ class MainVisual(tk.Frame):
         self.list_update()
         
         # close the windows
-        self.cancel_action()                    
+        self.cancel_action()   
+
+        # open the windows 
+        
+        
+        # creating a new window with class TrackViewer                
+        self.new_window = tk.Toplevel(self.master)
+        
+         
+        # create the track set with motion
+        this_track=self.track_data['tracks'][-1]
+        this_track['motion']=[]
+        
+        
+        # update movie and ap-axis parameters
+        self.update_movie_parameters()
+        
+  
+        view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
+
+        TrackViewer(self.new_window, this_track, self.movie, 
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range)
+             
 
     def list_update(self):
         '''
