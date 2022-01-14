@@ -424,7 +424,7 @@ class TrajectorySegment(object):
         width=width+1
         trace=track['trace']
         speed_max=0
-        outcome={"frames":[], "speed": None}
+        outcome={"frames":[], "speed": 0}
         segment_list=skimage.measure.label(np.asarray(track['motion']))
 
         

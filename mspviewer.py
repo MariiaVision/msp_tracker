@@ -2546,16 +2546,16 @@ class TrackViewer(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=0, bg='white', command =update_monitor_plot )
-        self.R1.grid(row=1, column=1, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
 
         self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R2.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R3.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R3.grid(row=2, column=2, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
         
         self.R3 = tk.Radiobutton(master=self.viewer, text=" all tracks ", variable=var, value=5, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R3.grid(row=1, column=4, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R3.grid(row=2, column=3, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
 
         
         
@@ -2994,6 +2994,7 @@ class TrackViewer(tk.Frame):
         
             average_speeds=self.tg.calculate_speed(self.track_data, "average")
             moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
+            max_curvilinear_segment=self.tg.max_speed_segment(self.track_data, int(self.speed_sliding_window*self.frame_rate))["speed"]
            # add to the list
             self.listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
     
@@ -3015,7 +3016,7 @@ class TrackViewer(tk.Frame):
     
        #     self.listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Max curvilinear speed per segment : moving  "+str(np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Max curvilinear speed over a segment : moving  "+str(np.round(max_curvilinear_segment*self.img_resolution*self.frame_rate,0))+" nm/sec")
       
 
         
@@ -3234,7 +3235,7 @@ class TrackViewer(tk.Frame):
     
                     frame_val=(speed_dict['frames'][0]+speed_dict['frames'][1])/2
                     displacement_val=(disaplcement[fastest_segment_start]+disaplcement[fastest_segment_end])/2
-                    self.ax_displacement.text(frame_val,displacement_val, str(int(fastest_speed_value))+" nm", fontsize='8') #, c=colourV)
+                    self.ax_displacement.text(frame_val,displacement_val, str(int(np.round(fastest_speed_value, 0)))+" nm", fontsize='8') #, c=colourV)
                
                 #colourbar 
     #            normi = matplotlib.colors.Normalize(vmin=np.min(speed_array), vmax=np.max(speed_array));
