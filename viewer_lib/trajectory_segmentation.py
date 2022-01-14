@@ -11,6 +11,7 @@ import math
 from scipy import stats
 import pandas as pd
 from viewer_lib.model_1dunet import unet
+import skimage
 
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -414,6 +415,47 @@ class TrajectorySegment(object):
 
             
         return curvilinear_speed_mean, straightline_speed, curvilinear_speed_all, curvilinear_speed_segment_max # pix/frame
+    
+    def max_speed_segment(self, track, width):
+        '''
+        calculate max speed within a moving window
+
+        '''
+        width=width+1
+        trace=track['trace']
+        speed_max=0
+        outcome={"frames":[], "speed": None}
+        segment_list=skimage.measure.label(np.asarray(track['motion']))
+
+        
+        for seg_pos in range(1, np.max(segment_list)+1):
+            trace_segment=np.asarray(track['trace'])[segment_list==seg_pos].tolist()
+            frame_segment=np.asarray(track['frames'])[segment_list==seg_pos].tolist()
+
+            #iterate over segments
+            if len(trace_segment)>=width:
+            
+                for pos in range(0, len(trace_segment)-width):
+                    mini_track=np.asarray(trace_segment[pos:pos + width])
+                    
+                    speed=np.mean(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2)))
+    
+                    if speed>speed_max:
+                        speed_max=speed
+                        outcome.update({"frames":[pos+frame_segment[0], pos+width+frame_segment[0]], "speed":speed_max})
+                        
+                        
+            else:
+                
+                speed=np.mean(np.sqrt((trace_segment[1:, 0] - trace_segment[:-1, 0])**2+((trace_segment[1:, 1] - trace_segment[:-1, 1])**2)))
+                    
+                outcome.update({"frames":[frame_segment[0], len(trace)-1+frame_segment[0]], "speed":speed})
+                
+        return outcome
+            
+        
+        
+        
         #
 #        
 #

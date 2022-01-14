@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.backend_bases import Event
 from matplotlib.figure import Figure
+from matplotlib import cm
 
 import skimage
 from skimage import io
@@ -2295,6 +2296,8 @@ class TrackViewer(tk.Frame):
         
         # segmentation 
         self.traj_segm_switch_var=0 # calculate and show motion type
+        self.speed_graph_var=0 # show curvilinear speed in colours
+        self.speed_sliding_window=1 # sliding window interval for the speed evaluation
         self.tg = TrajectorySegment()     
         self.tg.window_length=8            
         #update motion information
@@ -2414,7 +2417,13 @@ class TrackViewer(tk.Frame):
         self.plot_image()
         
         # plot displacement
-        self.fig_displacment, self.ax_displacement = plt.subplots(1, 1, figsize=self.figsize_value)           
+        self.fig_displacment, self.ax_displacement = plt.subplots(1, 1, figsize=self.figsize_value)  
+        
+        normi = matplotlib.colors.Normalize(vmin=np.min(0), vmax=np.max(1500));
+        self.cbar=self.fig_displacment.colorbar(cm.ScalarMappable(norm=normi, cmap='rainbow') )
+        self.cbar.ax.set_ylabel("curvilinear speed, nm/sec")
+        
+                 
         self.canvas_displacement = FigureCanvasTkAgg(self.fig_displacment, master=self.viewer)
         self.canvas_displacement.get_tk_widget().grid(row=3, column=9, columnspan=4, rowspan=2, pady=self.pad_val, padx=self.pad_val)   
 
@@ -2464,9 +2473,27 @@ class TrackViewer(tk.Frame):
         self.lbftracjsegm.grid(row=0, column=9, columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
 
         var_traj_segm_switch = tk.IntVar()
+        speed_show_switch = tk.IntVar()
         
+        def update_segment_segm_switch():            
+            
+            self.speed_graph_var = speed_show_switch.get()
+            self.speed_sliding_window = float(self.speed_window_position.get())  # in sec
+                       
+            # change image
+            self.plot_image()
+            
+            # change plot
+            self.plot_displacement()
+            
+            # change parameters
+            self.show_parameters()
+            
         def update_traj_segm_switch():            
+            
             self.traj_segm_switch_var=var_traj_segm_switch.get()
+            self.speed_graph_var = speed_show_switch.get()
+            self.speed_sliding_window = float(self.speed_window_position.get())  # in sec
             
             #update motion information
             self.motion=self.motion_type_evaluate(self.track_data)
@@ -2488,7 +2515,25 @@ class TrackViewer(tk.Frame):
         self.segmentation_switch_msd.grid(row=1, column=10, pady=self.pad_val, padx=self.pad_val)     
         
         self.segmentation_switch_unet = tk.Radiobutton(master=self.viewer,text="U-Net based", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
-        self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)    
+        self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)  
+     
+        self.lbftracjsegm = tk.Label(master=self.viewer, text=" curvilinear speed: ",  bg='white')
+        self.lbftracjsegm.grid(row=2, column=9, columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        
+        
+        self.segmentation_switch_off = tk.Radiobutton(master=self.viewer,text=" off ",variable=speed_show_switch, value=0, bg='white', command =update_traj_segm_switch )
+        self.segmentation_switch_off.grid(row=3, column=9, pady=self.pad_val, padx=self.pad_val)     
+
+        self.segmentation_switch_msd = tk.Radiobutton(master=self.viewer,text=" on ",variable=speed_show_switch, value=1, bg='white', command =update_traj_segm_switch )
+        self.segmentation_switch_msd.grid(row=3, column=10, pady=self.pad_val, padx=self.pad_val)    
+        
+        self.lbpose1 = tk.Label(master=self.viewer, text="time interval, sec", bg='white')
+        self.lbpose1.grid(row=3, column=11, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
+        
+        v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
+        self.speed_window_position = tk.Entry(self.viewer, width=int(self.button_length/3), text=v_speed)
+        self.speed_window_position.grid(row=3, column=12, pady=self.pad_val, padx=self.pad_val)   
+         
                 
           
 
@@ -2832,6 +2877,7 @@ class TrackViewer(tk.Frame):
                 
         img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
 
+
         #calculate window position        
         
         if len(self.trace)==0:
@@ -3099,6 +3145,16 @@ class TrackViewer(tk.Frame):
         displacement plot
         
         '''
+        def color_map_color(value, cmap_name='rainbow', vmin=0, vmax=10):
+
+            norm = matplotlib.colors.Normalize(vmin=vmin, vmax=vmax)
+            cmap = cm.get_cmap(cmap_name)  # PiYG
+
+            rgb = cmap(norm(abs(value)))[:3]  # will return rgba, we take only first 3 so we get rgb
+            color = matplotlib.colors.rgb2hex(rgb)
+            return color
+        
+        
         trajectory=self.trace
         try:
             #calculate the displacement
@@ -3126,27 +3182,70 @@ class TrackViewer(tk.Frame):
             
             self.total_distance=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2) 
             
- 
+     
             disaplcement=self.displacement_array*self.img_resolution
             
-            
-            
-            # plot displacement colour
+                    
             self.ax_displacement.clear()
-            for i in range(1, len(self.motion)):
-
-                if self.motion[i]==0:
-                    colourV='r'
-                else:
-                    colourV='g'
-
-                self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
-                
             
-#            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
-
+            if self.speed_graph_var==0: 
+            
+                # plot displacement colour
+                
+                for i in range(1, len(self.motion)):
+    
+                    if self.motion[i]==0:
+                        colourV='r'
+                    else:
+                        colourV='g'
+    
+                    self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
+                    
+            else: # self.speed_graph_var==1:
+                
+                speed_dict=self.tg.max_speed_segment(self.track_data, int(self.speed_sliding_window*self.frame_rate))
+    
+                
+                speed_disp=np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)
+                
+                speed_array=speed_disp*self.frame_rate
+                for i in range(1, len(self.motion)):
+    
+                    if self.motion[i]==0:
+                        colourV='k'
+                    else:
+                        colourV=color_map_color(speed_array[i-1], vmin=np.min(speed_array), vmax=np.max(speed_array))
+    
+                    self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
+                
+                #plot fastest segment
+                
+                if speed_dict['frames']!=[]:
+                
+                    fastest_segment_start=np.where(np.asarray(self.frames)==int(speed_dict['frames'][0]))[0][0]
+                    fastest_segment_end=np.where(np.asarray(self.frames)==int(speed_dict['frames'][1]))[0][0]
+                    
+                    fastest_speed_value=speed_dict['speed']*self.img_resolution*self.frame_rate
+                              
+                    
+                    colourV=color_map_color(fastest_speed_value, vmin=np.min(speed_array), vmax=np.max(speed_array))
+                    self.ax_displacement.plot((speed_dict['frames'][0]-0.6,speed_dict['frames'][1]-0.6), (disaplcement[fastest_segment_start],disaplcement[fastest_segment_end]), colourV)
+                    
+    
+                    frame_val=(speed_dict['frames'][0]+speed_dict['frames'][1])/2
+                    displacement_val=(disaplcement[fastest_segment_start]+disaplcement[fastest_segment_end])/2
+                    self.ax_displacement.text(frame_val,displacement_val, str(int(fastest_speed_value))+" nm", fontsize='8') #, c=colourV)
+               
+                #colourbar 
+    #            normi = matplotlib.colors.Normalize(vmin=np.min(speed_array), vmax=np.max(speed_array));
+    #            self.cbar.set_clim(vmin=np.min(speed_array),vmax=np.max(speed_array))
+            
+    
+            
+    #            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
+    
             self.ax_displacement.set_title('Displacement (nm) per frame', fontsize='small')
-
+    
             # DrawingArea
             self.canvas_displacement.draw()
             
@@ -3157,6 +3256,7 @@ class TrackViewer(tk.Frame):
         '''
         provide motion type evaluation to select directed movement for speed evaluation
         '''
+        
         if self.traj_segm_switch_var==0: # no segmentation required
             motion_type=[0] * len(track_data_original['frames'])
             
