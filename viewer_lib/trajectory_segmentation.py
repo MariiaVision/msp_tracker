@@ -263,7 +263,6 @@ class TrajectorySegment(object):
         curvilinear_speed_mean
         straightline_speed
         curvilinear_speed_all
-        curvilinear_speed_segment_max
         
         '''
         trajectory=track['trace']
@@ -323,7 +322,6 @@ class TrajectorySegment(object):
             straightline_time=(frames[-1]-frames[0])
             straightline_speed=straightline_dist/straightline_time
             
-            curvilinear_speed_segment_max=0
         else:
             move_switch=0
             start=[0,0]
@@ -405,38 +403,42 @@ class TrajectorySegment(object):
         
             frame_n=np.max((1, frame_n))
             straightline_speed=distance/frame_n
-            
-            try:
-                curvilinear_speed_segment_max=np.max(speed_list)
-            except:
-                curvilinear_speed_segment_max=0
-            
-#            print("all: ", curvilinear_speed_mean, straightline_speed, curvilinear_speed_all, curvilinear_speed_segment_max)
 
+        
+        # there is no movement 
+        if curvilinear_speed_mean==0:
+            curvilinear_speed_mean=None
             
-        return curvilinear_speed_mean, straightline_speed, curvilinear_speed_all, curvilinear_speed_segment_max # pix/frame
+        if straightline_speed==0:
+            straightline_speed=None
+            
+        return curvilinear_speed_mean, straightline_speed, curvilinear_speed_all
     
     def max_speed_segment(self, track, width):
         '''
         calculate max speed within a moving window
 
         '''
-        width=width+1
-        trace=track['trace']
+
         speed_max=0
-        outcome={"frames":[], "speed": 0}
+        outcome={"frames":[], "speed": None}
         segment_list=skimage.measure.label(np.asarray(track['motion']))
 
-        
-        for seg_pos in range(1, np.max(segment_list)+1):
-            trace_segment=np.asarray(track['trace'])[segment_list==seg_pos].tolist()
-            frame_segment=np.asarray(track['frames'])[segment_list==seg_pos].tolist()
 
-            #iterate over segments
+        for seg_pos in range(1, np.max(segment_list)+1): # over segments
+            
+            positions=np.where(segment_list==seg_pos)
+            start_pos=np.max((0, np.min(positions[0])-1))
+            end_pos=np.min((len(track['frames'])+1, np.max(positions[0])+1))            
+            
+            trace_segment=track['trace'][start_pos:end_pos]
+            frame_segment=track['frames'][start_pos:end_pos]
+
+            #iterate wit sliding window
             if len(trace_segment)>=width:
             
                 for pos in range(0, len(trace_segment)-width):
-                    mini_track=np.asarray(trace_segment[pos:pos + width])
+                    mini_track=np.asarray(trace_segment[pos:pos + width+1])
                     
                     speed=np.mean(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2)))
     
@@ -446,11 +448,8 @@ class TrajectorySegment(object):
                         
                         
             else:
-                
-                speed=np.mean(np.sqrt((trace_segment[1:, 0] - trace_segment[:-1, 0])**2+((trace_segment[1:, 1] - trace_segment[:-1, 1])**2)))
-                    
-                outcome.update({"frames":[frame_segment[0], len(trace)-1+frame_segment[0]], "speed":speed})
-                
+                pass
+
         return outcome
             
         
