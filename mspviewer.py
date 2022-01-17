@@ -2267,11 +2267,11 @@ class MainVisual(tk.Frame):
             
         
         self.lbpose1 = tk.Label(master=self.choose_traj_segmentation, text="segment speed evalution \n time interval, sec", bg='white')
-        self.lbpose1.grid(row=2, column=1,  columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
+        self.lbpose1.grid(row=2, column=1,  columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
         self.speed_window_position = tk.Entry(self.choose_traj_segmentation, width=int(self.button_length/3), text=v_speed)
-        self.speed_window_position.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)   
+        self.speed_window_position.grid(row=2, column=3, pady=self.pad_val, padx=self.pad_val)   
         
         
             
