@@ -2549,7 +2549,7 @@ class TrackViewer(tk.Frame):
         self.segmentation_switch_unet = tk.Radiobutton(master=self.viewer,text="U-Net based", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
         self.segmentation_switch_unet.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)  
      
-        self.lbftracjsegm = tk.Label(master=self.viewer, text=" curvilinear speed: ",  bg='white')
+        self.lbftracjsegm = tk.Label(master=self.viewer, text="Visualise curvilinear speed for moevment: ",  bg='white')
         self.lbftracjsegm.grid(row=2, column=9, columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
         
