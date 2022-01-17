@@ -83,6 +83,7 @@ class MainVisual(tk.Frame):
         self.track_data_framed={}  # tracking data arranged by frames  
         self.stat_data=[] # stat data to save csv file
         self.new_trackID=1 # default value or new track ID
+        self.speed_sliding_window = 1 # length of the sliding window to evaluate speed
         
         # segmentation 
         self.tg = TrajectorySegment()     
@@ -1441,10 +1442,10 @@ class MainVisual(tk.Frame):
             
                 
             self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_filtering, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-            self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
         else:
             run_filtering()
@@ -1470,7 +1471,7 @@ class MainVisual(tk.Frame):
         view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
 
         TrackViewer(self.new_window, this_track, self.movie, 
-                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range, self.track_data_framed)
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, self.speed_sliding_window, view_range, self.track_data_framed)
             
 
 
@@ -1796,7 +1797,7 @@ class MainVisual(tk.Frame):
         view_range=[self.ax.get_xlim(),self.ax.get_ylim()]
 
         TrackViewer(self.new_window, this_track, self.movie, 
-                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, view_range, self.track_data_framed)
+                    self.img_resolution, self.frame_rate, self.ap_axis, self.axis_name, self.speed_sliding_window, view_range, self.track_data_framed)
              
 
     def list_update(self):
@@ -2098,8 +2099,14 @@ class MainVisual(tk.Frame):
             
             '''
             
+            # read the speed interval
+            
+            self.speed_sliding_window = float(self.speed_window_position.get())
+            
             # destroy the question window 
             cancel_window()
+            
+            
             
             # select file location and name
             save_file = tk.filedialog.asksaveasfilename()
@@ -2165,7 +2172,7 @@ class MainVisual(tk.Frame):
                         net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)           
                         
                         # frames        
-                        time=(track['frames'][-1]-track['frames'][0]+1)/self.frame_rate
+                        time=(track['frames'][-1]-track['frames'][0])/self.frame_rate
                         
                         # speed 
                                 
@@ -2176,10 +2183,25 @@ class MainVisual(tk.Frame):
                         average_msls=np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0)
                                              
                         moving_speeds=self.tg.calculate_speed(track, "movement")
-                        moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
-                        moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
+                        try:
+                            moving_mcs=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
+                            moving_msls=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
+                        except:
+                            moving_mcs=None
+                            moving_msls=None
+                            
+                            
            #             moving_maxcs=np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0)
-                        moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
+           
+                                         
+                        max_curvilinear_segment=self.tg.max_speed_segment(track, int(self.speed_sliding_window*self.frame_rate))["speed"]
+                        try:
+                            moving_maxsegcs=np.round(max_curvilinear_segment*self.img_resolution*self.frame_rate,0)
+                        except:
+                            moving_maxsegcs=None
+                                
+
+#                        moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
                         
                         
                         
@@ -2243,11 +2265,21 @@ class MainVisual(tk.Frame):
         segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
             
+        
+        self.lbpose1 = tk.Label(master=self.choose_traj_segmentation, text="segment speed evalution \n time interval, sec", bg='white')
+        self.lbpose1.grid(row=2, column=1,  columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
+        
+        v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
+        self.speed_window_position = tk.Entry(self.choose_traj_segmentation, width=int(self.button_length/3), text=v_speed)
+        self.speed_window_position.grid(row=2, column=2, pady=self.pad_val, padx=self.pad_val)   
+        
+        
+            
         self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=run_main_parameters_set, width=int(self.button_length/2),  bg='green')
-        self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-        self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                 
@@ -2258,7 +2290,7 @@ class TrackViewer(tk.Frame):
     '''
     class for the window of the individual tracks 
     '''
-    def __init__(self, master, track_data, movie,img_resolution, frame_rate, ap_axis, axis_name, frame_zoom=None, track_data_framed=[]):
+    def __init__(self, master, track_data, movie,img_resolution, frame_rate, ap_axis, axis_name, speed_sliding_window, frame_zoom=None, track_data_framed=[]):
         tk.Frame.__init__(self, master)
 
         master.configure(background='white')
@@ -2297,7 +2329,7 @@ class TrackViewer(tk.Frame):
         # segmentation 
         self.traj_segm_switch_var=0 # calculate and show motion type
         self.speed_graph_var=0 # show curvilinear speed in colours
-        self.speed_sliding_window=1 # sliding window interval for the speed evaluation
+        self.speed_sliding_window=speed_sliding_window # sliding window interval for the speed evaluation
         self.tg = TrajectorySegment()     
         self.tg.window_length=8            
         #update motion information
@@ -2419,9 +2451,9 @@ class TrackViewer(tk.Frame):
         # plot displacement
         self.fig_displacment, self.ax_displacement = plt.subplots(1, 1, figsize=self.figsize_value)  
         
-        normi = matplotlib.colors.Normalize(vmin=np.min(0), vmax=np.max(1500));
+        normi = matplotlib.colors.Normalize(vmin=0, vmax=1500);
         self.cbar=self.fig_displacment.colorbar(cm.ScalarMappable(norm=normi, cmap='rainbow') )
-        self.cbar.ax.set_ylabel("curvilinear speed, nm/sec")
+        self.cbar.ax.set_ylabel(" for curvilinear speed, nm/sec")
         
                  
         self.canvas_displacement = FigureCanvasTkAgg(self.fig_displacment, master=self.viewer)
@@ -2527,7 +2559,7 @@ class TrackViewer(tk.Frame):
         self.segmentation_switch_msd = tk.Radiobutton(master=self.viewer,text=" on ",variable=speed_show_switch, value=1, bg='white', command =update_traj_segm_switch )
         self.segmentation_switch_msd.grid(row=3, column=10, pady=self.pad_val, padx=self.pad_val)    
         
-        self.lbpose1 = tk.Label(master=self.viewer, text="time interval, sec", bg='white')
+        self.lbpose1 = tk.Label(master=self.viewer, text="segment speed evalution \n time interval, sec", bg='white')
         self.lbpose1.grid(row=3, column=11, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)  
         
         v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
@@ -2994,7 +3026,38 @@ class TrackViewer(tk.Frame):
         
             average_speeds=self.tg.calculate_speed(self.track_data, "average")
             moving_speeds=self.tg.calculate_speed(self.track_data, "movement")
+            
             max_curvilinear_segment=self.tg.max_speed_segment(self.track_data, int(self.speed_sliding_window*self.frame_rate))["speed"]
+            
+            try:
+                max_curvilinear_segment=np.round(max_curvilinear_segment*self.img_resolution*self.frame_rate,0)
+            except:
+                 max_curvilinear_segment=None  
+                 
+            try:
+                mean_curvilinear_average=np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0)
+            except:
+                 mean_curvilinear_average=None  
+                 
+                 
+            try:
+                mean_straightline_average=np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0)
+            except:
+                 mean_straightline_average=None  
+                 
+                 
+            try:
+                mean_curvilinear_moving=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
+            except:
+                 mean_curvilinear_moving=None  
+            try:
+                mean_straightline_moving=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
+            except:
+                 mean_straightline_moving=None  
+                 
+                 
+                
+                
            # add to the list
             self.listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
     
@@ -3006,18 +3069,17 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
-            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(np.round(average_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
      
-            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(np.round(average_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(mean_straightline_average)+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(mean_curvilinear_moving)+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0))+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(mean_straightline_moving)+" nm/sec")
     
        #     self.listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Max curvilinear speed over a segment : moving  "+str(np.round(max_curvilinear_segment*self.img_resolution*self.frame_rate,0))+" nm/sec")
-      
+            self.listNodes_parameters.insert(tk.END, " Max curvilinear speed over a segment : moving  "+str(max_curvilinear_segment)+" nm/sec")
 
         
     def show_list(self): 
@@ -3157,7 +3219,8 @@ class TrackViewer(tk.Frame):
         
         
         trajectory=self.trace
-        try:
+#        try:
+        if 1>0:
             #calculate the displacement
             x=np.asarray(trajectory)[:,0]    
             y=np.asarray(trajectory)[:,1]
@@ -3202,6 +3265,7 @@ class TrackViewer(tk.Frame):
     
                     self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
                     
+                    
             else: # self.speed_graph_var==1:
                 
                 speed_dict=self.tg.max_speed_segment(self.track_data, int(self.speed_sliding_window*self.frame_rate))
@@ -3209,13 +3273,13 @@ class TrackViewer(tk.Frame):
                 
                 speed_disp=np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)
                 
-                speed_array=speed_disp*self.frame_rate
+                speed_array=speed_disp*self.frame_rate*self.img_resolution
                 for i in range(1, len(self.motion)):
     
                     if self.motion[i]==0:
                         colourV='k'
                     else:
-                        colourV=color_map_color(speed_array[i-1], vmin=np.min(speed_array), vmax=np.max(speed_array))
+                        colourV=color_map_color(speed_array[i-1], vmin=0, vmax=1500)
     
                     self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
                 
@@ -3229,7 +3293,7 @@ class TrackViewer(tk.Frame):
                     fastest_speed_value=speed_dict['speed']*self.img_resolution*self.frame_rate
                               
                     
-                    colourV=color_map_color(fastest_speed_value, vmin=np.min(speed_array), vmax=np.max(speed_array))
+                    colourV=color_map_color(fastest_speed_value, vmin=0, vmax=1500)
                     self.ax_displacement.plot((speed_dict['frames'][0]-0.6,speed_dict['frames'][1]-0.6), (disaplcement[fastest_segment_start],disaplcement[fastest_segment_end]), colourV)
                     
     
@@ -3246,12 +3310,12 @@ class TrackViewer(tk.Frame):
     #            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
     
             self.ax_displacement.set_title('Displacement (nm) per frame', fontsize='small')
-    
+
             # DrawingArea
             self.canvas_displacement.draw()
             
-        except:
-            pass
+#        except:
+#            pass
 
     def motion_type_evaluate(self, track_data_original):
         '''
