@@ -3219,8 +3219,7 @@ class TrackViewer(tk.Frame):
         
         
         trajectory=self.trace
-#        try:
-        if 1>0:
+        try:
             #calculate the displacement
             x=np.asarray(trajectory)[:,0]    
             y=np.asarray(trajectory)[:,1]
@@ -3314,8 +3313,8 @@ class TrackViewer(tk.Frame):
             # DrawingArea
             self.canvas_displacement.draw()
             
-#        except:
-#            pass
+        except:
+            pass
 
     def motion_type_evaluate(self, track_data_original):
         '''
