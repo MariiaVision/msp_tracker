@@ -2451,7 +2451,7 @@ class TrackViewer(tk.Frame):
         # plot displacement
         self.fig_displacment, self.ax_displacement = plt.subplots(1, 1, figsize=self.figsize_value)  
         
-        normi = matplotlib.colors.Normalize(vmin=0, vmax=1500);
+        normi = matplotlib.colors.Normalize(vmin=0, vmax=2000);
         self.cbar=self.fig_displacment.colorbar(cm.ScalarMappable(norm=normi, cmap='rainbow') )
         self.cbar.ax.set_ylabel(" for curvilinear speed, nm/sec")
         
@@ -2478,7 +2478,7 @@ class TrackViewer(tk.Frame):
             self.frame_pos=int(v)
             self.plot_image() 
                    
-        self.scale_movie = tk.Scale(master=self.viewer, from_=0, to=self.movie_length, tickinterval=100, length=int(self.img_width), width=5, orient="horizontal", command=show_values)
+        self.scale_movie = tk.Scale(master=self.viewer, from_=0, to=self.movie_length-1, tickinterval=100, length=int(self.img_width), width=5, orient="horizontal", command=show_values)
         self.scale_movie.set(self.frame_pos)        
         self.scale_movie.grid(row=5, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
         
@@ -2895,7 +2895,7 @@ class TrackViewer(tk.Frame):
         one step forward
         
         '''
-        if self.frame_pos!=self.movie_length:
+        if self.frame_pos!=self.movie_length-1:
             self.frame_pos+=1
         self.plot_image() 
         self.scale_movie.set(self.frame_pos)            
@@ -2976,12 +2976,34 @@ class TrackViewer(tk.Frame):
         self.ax_indwin.axis('off')
         
         if self.plot_switch==5:
+            
             # plot tracks
+            '''
+            
+            left_point_y=int(self.frame_zoom[0][0])
+            right_point_y=int(self.frame_zoom[0][1])
+            top_point_x=int(self.frame_zoom[1][1])
+            bottom_point_x=int(self.frame_zoom[1][0])
+            
+            '''
             plot_info=self.track_data_framed['frames'][self.frame_pos]['tracks']
+            
             for p in plot_info:
+                
+                # check that the track is in the area
+                
                 trace=p['trace']
-                self.ax_indwin.plot(np.asarray(trace)[:,1],np.asarray(trace)[:,0],  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
-                self.ax_indwin.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
+                
+                ys=np.asarray(trace)[:,1]
+                xs=np.asarray(trace)[:,0]
+                margin=5
+                condition_x= np.any(xs-margin>x_min) and np.any(xs+margin<x_max) 
+                condition_y= np.any(ys-margin>y_min) and np.any(ys+margin<y_max) 
+                
+                
+                if condition_x and condition_y:
+                    self.ax_indwin.plot(np.asarray(trace)[:,1]-y_min,np.asarray(trace)[:,0]-x_min,  self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])     
+                    self.ax_indwin.text(np.asarray(trace)[0,1]-y_min-5,np.asarray(trace)[0,0]-x_min-5, str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
             
         else:
@@ -3278,7 +3300,7 @@ class TrackViewer(tk.Frame):
                     if self.motion[i]==0:
                         colourV='k'
                     else:
-                        colourV=color_map_color(speed_array[i-1], vmin=0, vmax=1500)
+                        colourV=color_map_color(speed_array[i-1], vmin=0, vmax=2000)
     
                     self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
                 
@@ -3292,7 +3314,7 @@ class TrackViewer(tk.Frame):
                     fastest_speed_value=speed_dict['speed']*self.img_resolution*self.frame_rate
                               
                     
-                    colourV=color_map_color(fastest_speed_value, vmin=0, vmax=1500)
+                    colourV=color_map_color(fastest_speed_value, vmin=0, vmax=2000)
                     self.ax_displacement.plot((speed_dict['frames'][0]-0.6,speed_dict['frames'][1]-0.6), (disaplcement[fastest_segment_start],disaplcement[fastest_segment_end]), colourV)
                     
     
