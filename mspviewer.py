@@ -2361,8 +2361,8 @@ class TrackViewer(tk.Frame):
         self.button_length=np.max((10,int(self.window_width/70)))
         self.pad_val=2
         self.dpi=100
-        self.img_width=int(self.window_height*0.6)
-        self.figsize_value=(int(self.img_width*1.5/self.dpi), int(self.img_width/self.dpi))
+        self.img_width=int(self.window_height*0.7)
+        self.figsize_value=(int(self.window_height*0.8/self.dpi), int(self.window_height*0.4/self.dpi))
 
     
     ############### lists ##############################
@@ -2403,7 +2403,7 @@ class TrackViewer(tk.Frame):
         
         self.fig_indwin, self.ax_indwin= plt.subplots(1,1, figsize=(int(self.img_width/self.dpi), int(self.img_width/self.dpi)))
         self.ax_indwin.axis('off')
-#        self.ax_indwin.tight_layout()
+        self.fig_indwin.tight_layout()
         
         def update_position_text(x,y): 
             # to add
@@ -3328,7 +3328,7 @@ class TrackViewer(tk.Frame):
             
     
             
-            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
+            #        self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
     
             self.ax_displacement.set_title('Displacement (nm) per frame', fontsize='small')
 
