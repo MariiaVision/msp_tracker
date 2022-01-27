@@ -2757,8 +2757,8 @@ class TrackViewer(tk.Frame):
         self.txt_frame.grid(row=0, column=11)                
         
 
-        self.lbpose = tk.Label(master=self.add_position_window, text=" new coordinates: x, y ", bg='white')
-        self.lbpose.grid(row=1, columnspan=2, column=10, pady=self.pad_val, padx=self.pad_val)  
+        self.lbpose = tk.Label(master=self.add_position_window, text=" coordinates: x, y ", bg='white')
+        self.lbpose.grid(row=1, columnspan=1, column=10, pady=self.pad_val, padx=self.pad_val)
         
         self.txt_position_coordinates = tk.Entry(self.add_position_window, width=int(self.button_length*2))
         self.txt_position_coordinates.grid(row=1, column=11, pady=self.pad_val, padx=self.pad_val)                
