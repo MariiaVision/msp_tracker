@@ -2362,7 +2362,7 @@ class TrackViewer(tk.Frame):
         self.pad_val=2
         self.dpi=100
         self.img_width=int(self.window_height*0.6)
-        self.figsize_value=(int(self.img_width/self.dpi), int(self.img_width/self.dpi*0.75))
+        self.figsize_value=(int(self.img_width*1.5/self.dpi), int(self.img_width/self.dpi))
 
     
     ############### lists ##############################
@@ -3328,7 +3328,7 @@ class TrackViewer(tk.Frame):
             
     
             
-    #            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
+            self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
     
             self.ax_displacement.set_title('Displacement (nm) per frame', fontsize='small')
 
