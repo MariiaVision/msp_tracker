@@ -713,7 +713,7 @@ class MainVisual(tk.Frame):
             the main code run after OK button
             
                 '''
-        #read ap axis
+        # read ap axis
             if self.ap_parameter.get()!='':
                 self.ap_axis=int(self.ap_parameter.get())
                 
@@ -812,8 +812,8 @@ class MainVisual(tk.Frame):
             ax = orientation_map_figure.add_subplot(122, projection='polar')
     
     
-            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-               [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
+            plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+               [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
             ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
             ax.set_theta_direction(1)
             if self.mode_orientation_diagram==0: # track based
@@ -3091,6 +3091,8 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
+            self.listNodes_parameters.insert(tk.END, " Mean brightness of the particle             "+str(0)+" pix")
+            
             self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
      
             self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(mean_straightline_average)+" nm/sec")
