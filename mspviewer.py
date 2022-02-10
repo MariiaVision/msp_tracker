@@ -600,15 +600,38 @@ class MainVisual(tk.Frame):
             a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
     
-            plt.xticks(np.radians((0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330)),
-               [second_name, '30', '60', '90' , '120', '150',first_name,'210', '240', '270', '300', '330'])
-            ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
-            ax_new.set_theta_direction(1)
+
+
+            # if scale is provided 
+            
+            if self.set_range.get()!='':
+                ylim_max=int(self.set_range.get())
+            
+                ax_new.set_ylim([0, ylim_max])
+                
+            
             if self.mode_orientation_diagram==0: # track based
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   ["\n \n  \n "+second_name+"\n \n number of tracks", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                 
+                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax_new.set_theta_direction(1)
                 ax_new.set_title(" trajectory orientation \n based on track count ")
+                ax_new.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True)) # provide only integer
+                
             elif self.mode_orientation_diagram==1: # distance based
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   ["\n \n  \n "+second_name+"\n \n total net distance, $\mu$m", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                
+                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax_new.set_theta_direction(1)                
                 ax_new.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
+                
             else: # combined
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax_new.set_theta_direction(1)
                 ax_new.set_title(" trajectory orientation \n based on track count and net distance travelled")           
             
             ax_new.set_thetamin(0)
@@ -681,12 +704,17 @@ class MainVisual(tk.Frame):
             segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
             segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
-                
+            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=2, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
+            
+            self.set_range = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+            self.set_range.grid(row=2, column=4, pady=self.pad_val, padx=self.pad_val)  
+                    
             self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-            self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                                     
@@ -707,7 +735,6 @@ class MainVisual(tk.Frame):
             except:
                 pass
                     
-        
         def run_main_code():
             '''
             the main code run after OK button
@@ -810,23 +837,45 @@ class MainVisual(tk.Frame):
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
             
             ax = orientation_map_figure.add_subplot(122, projection='polar')
-    
-    
-            plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-               [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
-            ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
-            ax.set_theta_direction(1)
+                
+            # if scale is provided 
+            
+            if self.set_range.get()!='':
+                ylim_max=int(self.set_range.get())
+            
+                ax.set_ylim([0, ylim_max])
+                
             if self.mode_orientation_diagram==0: # track based
+    
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   ["\n \n  \n "+second_name+"\n \n number of tracks", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax.set_theta_direction(1)
+            
                 ax.set_title(" trajectory orientation \n based on track count ")
-            elif self.mode_orientation_diagram==1: # distance based
+
+                ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True)) # provide only integer
+                
+                
+            elif self.mode_orientation_diagram==1: # distance based    
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   ["\n \n  \n "+second_name+"\n \n total net distance, $\mu$m", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax.set_theta_direction(1)
+                
                 ax.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
-            else: # combined
+
+            else: # combined    
+                plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax.set_theta_direction(1)
+                
                 ax.set_title(" trajectory orientation \n based on track count and net distance travelled")
                 
-                
+            
             ax.set_thetamin(0)
             ax.set_thetamax(180)        
-        
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
             self.show_orientation_map_win.title(" orientation plot ")
@@ -887,14 +936,20 @@ class MainVisual(tk.Frame):
         segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
         
         segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
-        segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)             
         
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=2, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
+        
+        self.set_range = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+        self.set_range.grid(row=2, column=4, pady=self.pad_val, padx=self.pad_val)  
+    
             
         self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-        self.newbutton.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-        self.deletbutton.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                 
@@ -1151,6 +1206,15 @@ class MainVisual(tk.Frame):
                 if self.monitor_switch==0:
                     self.ax.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
+        #set the same "zoom"        
+        self.ax.set_xlim(xlim_old[0],xlim_old[1])
+        self.ax.set_ylim(ylim_old[0],ylim_old[1])
+        
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.ax.invert_yaxis()
+
+
         # plot axis
         if self.monitor_axis==1:
             # position of axis
@@ -1165,34 +1229,38 @@ class MainVisual(tk.Frame):
             else:
                 second_name=" "
             
-            arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
-            dist=int(self.image.shape[1]/10)
-            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+            # get position and orientation
+#            print("zoomed: ", xlim_old, ylim_old)
+            image_size_x=abs(xlim_old[0]-xlim_old[1])
+            image_size_y=abs(ylim_old[0]-ylim_old[1])
+            arrow_a=[int(image_size_x/10)+np.min((xlim_old[0], xlim_old[1])),int(image_size_y/10)+np.min((ylim_old[0], ylim_old[1]))]
+#            print("arrow_a", arrow_a)
+#            dist=int(self.image.shape[1]/10)
+            dist=int(np.min((image_size_x, image_size_y))/10)
             
+            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+            arrow_length=[int(dist*math.cos(math.radians(self.ap_axis+90))),int(dist*math.sin(math.radians(self.ap_axis+90)))]
+#            print("arrow_b", arrow_b)
             # check that the points are not outside the view
 
-            if arrow_b[0]<int(self.image.shape[0]/10):
+            if arrow_b[0]<int(image_size_x/10): #arrow_b[0]<int(self.image.shape[0]/10):
                 # move the points
                 arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
                 arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
 
-            if arrow_b[1]<int(self.image.shape[1]/10):
+            if arrow_b[1]<int(image_size_y/10): #arrow_b[1]<int(self.image.shape[1]/10):
                 # move the points
                 arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
                 arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
 
-            self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
+#            self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
+            
+            self.ax.arrow(arrow_b[1], arrow_b[0], arrow_length[1], arrow_length[0],  color='r', alpha=0.5, width=0.3, length_includes_head=True)
+            
             self.ax.text(arrow_a[1]-2, arrow_a[0]-2,  second_name, color='r', size=9, alpha=0.5)
             self.ax.text(arrow_b[1]-2, arrow_b[0]-2,  first_name, color='r', size=9, alpha=0.5)
             
-        #set the same "zoom"        
-        self.ax.set_xlim(xlim_old[0],xlim_old[1])
-        self.ax.set_ylim(ylim_old[0],ylim_old[1])
-        
-        # inver y-axis as set_ylim change the orientation
-        if ylim_old[0]<ylim_old[1]:
-            self.ax.invert_yaxis()
-        
+            
         self.canvas.draw()
         # place buttons
         
