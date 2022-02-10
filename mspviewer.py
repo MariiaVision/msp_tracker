@@ -787,9 +787,9 @@ class MainVisual(tk.Frame):
                 arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
                 arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
                 
-            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='g', alpha=0.7)
-            ax.text(arrow_a[1], arrow_a[0]-5,  second_name, color='g', size=12, alpha=0.7)
-            ax.text(arrow_b[1], arrow_b[0]-5,  first_name, color='g', size=12, alpha=0.7)
+            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7)
+            ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='r', size=12, alpha=0.7)
+            ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='g', size=12, alpha=0.7)
     
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
@@ -817,8 +817,15 @@ class MainVisual(tk.Frame):
                 
                 orintation_array.append(orintation_move)
                 distance_array.append(net_displacement)
-       
-                color='r'
+                
+                # select colour
+                if orintation_move<45:
+                    color='r'
+                elif orintation_move>135: 
+                    color='g'
+                else:
+                    color='b'
+                    
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
                           fc=color, ec=color, length_includes_head = True)
             
