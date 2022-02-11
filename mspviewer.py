@@ -820,11 +820,11 @@ class MainVisual(tk.Frame):
                 
                 # select colour
                 if orintation_move<45:
-                    color='r'
+                    color='magenta'
                 elif orintation_move>135: 
-                    color='g'
+                    color='green'
                 else:
-                    color='b'
+                    color='gold'
                     
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
                           fc=color, ec=color, length_includes_head = True)
