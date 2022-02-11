@@ -34,13 +34,13 @@ import imageio
 import math
 from skimage.feature import peak_local_max
 from tqdm import tqdm
-from viewer_lib.fusion_events import FusionEvent 
+
+from viewer_lib.utils import SupportFunctions
 
 from viewer_lib.trajectory_segmentation import TrajectorySegment
 
 import os
 import os.path
-import copy
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
@@ -2205,7 +2205,7 @@ class MainVisual(tk.Frame):
                 self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)'  ]) 
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', "Mean brightness (segmented)", "Mean brightness (region based)"  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -2274,7 +2274,14 @@ class MainVisual(tk.Frame):
                             moving_maxsegcs=np.round(max_curvilinear_segment*self.img_resolution*self.frame_rate,0)
                         except:
                             moving_maxsegcs=None
-                                
+
+                        try:
+                            _, _, intensity_mean_segment, intensity_mean_roi,_=SupportFunctions.intensity_calculation(self, self.movie, track['trace'], track['frames'])
+                            intensity_mean_segment=np.round(intensity_mean_segment,5)
+                            intensity_mean_roi=np.round(intensity_mean_roi,5)
+                        except:
+                            intensity_mean_segment=None
+                            intensity_mean_roi=None
 
 #                        moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
                         
@@ -2282,9 +2289,9 @@ class MainVisual(tk.Frame):
                         
                         self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                                  max_displacement, time,
-                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs])
+                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs, intensity_mean_segment, intensity_mean_roi])
                     else:
-                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None])
+                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None, None, None])
                         
         
                 if not(save_file.endswith(".csv")):
@@ -2412,7 +2419,7 @@ class TrackViewer(tk.Frame):
         self.track_data['motion']=self.motion 
         
         self.pixN_basic=100 # margin size 
-        self.vesicle_patch_size=10
+        self.vesicle_patch_size=16
         
         self.traj_segm_switch_var=0 # calculate and show motion type
         
@@ -3151,8 +3158,13 @@ class TrackViewer(tk.Frame):
                 mean_straightline_moving=np.round(moving_speeds[1]*self.img_resolution*self.frame_rate,0)
             except:
                  mean_straightline_moving=None  
-                 
-                 
+            
+            try:
+                _, _, intensity_mean_1, intensity_mean_2,_=SupportFunctions.intensity_calculation(self, self.movie, self.trace, self.frames, self.vesicle_patch_size)
+            except:
+                intensity_mean_1=None
+                intensity_mean_2=None
+#                        
                 
                 
            # add to the list
@@ -3166,7 +3178,9 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
-            self.listNodes_parameters.insert(tk.END, " Mean brightness of the particle             "+str(0)+" pix")
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (segmented)                 "+str(np.round(intensity_mean_1,5)))  
+            
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (region based)              "+str(np.round(intensity_mean_2,5)))
             
             self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
      
@@ -3216,80 +3230,20 @@ class TrackViewer(tk.Frame):
         Calculates changes in intersity for the given track
         and plot it into a canva
         '''
-        trace=self.trace
-        frames=self.frames
-        patch_size=self.vesicle_patch_size
-        
-        def img_segmentation(img_segment, int_size, box_size):
-            '''
-            the function segments the image based on the thresholding and watershed segmentation
-            the only center part of the segmented part is taked into account.
-            '''
-    
-        # calculate threshold based on the centre
-            threshold=np.mean(img_segment[int(box_size/2-int_size):int(box_size/2+int_size), int(box_size/2-int_size):int(box_size/2+int_size)])
-        #    thresholding to get the mask
-            mask=np.zeros(np.shape(img_segment))
-            mask[img_segment>threshold]=1
-        
-            # separate the objects in image
-        ## Generate the markers as local maxima of the distance to the background
-            distance = sp.ndimage.distance_transform_edt(mask)
-            local_maxi = peak_local_max(distance, indices=False, footprint=np.ones((3, 3)), labels=mask)
-            markers = sp.ndimage.label(local_maxi)[0]
-        
-            # segment the mask
-            segment = skimage.morphology.watershed(-distance, markers, mask=mask)
-           
-        # save the segment which is only in the centre
-            val=segment[int(box_size/2), int(box_size/2)]
-            segment[segment!=val]=0
-            segment[segment==val]=1
-    
-            return segment
-        
-        #extract images
-        track_img=np.zeros((len(trace),patch_size,patch_size))
-        
-        intensity_array_1=[]
-        intensity_array_2=[]
-        
-        check_border=0 
-        for N in range(0,len(frames)):
-            frameN=frames[N]
-            point=trace[N]
-            x_min=int(point[0]-patch_size/2)
-            x_max=int(point[0]+patch_size/2)
-            y_min=int(point[1]-patch_size/2)
-            y_max=int(point[1]+patch_size/2)
-            
-            if x_min>0 and y_min>0 and x_max<self.movie.shape[1] and y_max<self.movie.shape[2]:
-                
-                # create img
-                track_img[N,:,:]= self.movie[frameN, x_min:x_max, y_min:y_max]
-                
-                #segment img
-                int_size=5
-                segmented_vesicle=img_segmentation(track_img[N,:,:]/np.max(track_img[N,:,:]), int_size, patch_size)
-                
-                #calculate mean intensity inside the segment                
-                intensity_1=np.sum(track_img[N,:,:]*segmented_vesicle)/np.sum(segmented_vesicle)
-                intensity_2=np.sum(track_img[N,:,:])/(patch_size*patch_size)
-                intensity_array_1.append(intensity_1)
-                intensity_array_2.append(intensity_2)
-            else:
-                check_border=1
-                intensity_array_1.append(0)
-                intensity_array_2.append(0)
+
+        intensity_array_1, intensity_array_2, intensity_mean_1, intensity_mean_2,check_border=SupportFunctions.intensity_calculation(self, self.movie, self.trace, self.frames, self.vesicle_patch_size)
         
         # plotting
         try :
             
-            self.ax_intensity.clear()
-            self.ax_intensity.plot(frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
-    
-#            self.ax_intensity.set_ylabel("intensity", fontsize='small')
-            self.ax_intensity.plot(frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
+            self.ax_intensity.clear()           
+            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="segmented vesicle")
+            self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="without segmentation")
+
+#            self.ax_intensity.plot(self.frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
+#    
+##            self.ax_intensity.set_ylabel("intensity", fontsize='small')
+#            self.ax_intensity.plot(self.frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
                 self.ax_intensity.set_title('Vesicle intensity (scaled [0,1]) per frame', fontsize='small')
             else:
