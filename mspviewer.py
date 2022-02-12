@@ -94,6 +94,7 @@ class MainVisual(tk.Frame):
         self.filter_length=[0, float('Inf')] 
         self.filter_length_total=[0, float('Inf')] 
         self.filter_speed=[0, float('Inf')] 
+        self.filter_orientation=[float('-Inf'), float('Inf')] 
         self.filter_zoom=0 # option to include tracks only in zoomed area
         
         self.xlim_zoom=[0,float('Inf')]
@@ -316,17 +317,17 @@ class MainVisual(tk.Frame):
         
         
         # orientation
-        lbl4 = tk.Label(master=self.filterframe, text="Trajectory net orientation : from ", width=int(self.button_length*2), bg='white')
-        lbl4.grid(row=6, column=5)
+        lbl14 = tk.Label(master=self.filterframe, text="Trajectory net orientation : from ", width=int(self.button_length*2), bg='white')
+        lbl14.grid(row=7, column=5)
         
-        self.txt_speed_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
-        self.txt_speed_from.grid(row=6, column=6, pady=self.pad_val, padx=self.pad_val)
+        self.txt_orientation_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_orientation_from.grid(row=7, column=6, pady=self.pad_val, padx=self.pad_val)
         
-        lbl5 = tk.Label(master=self.filterframe, text="to", bg='white')
-        lbl5.grid(row=6, column=7, pady=self.pad_val, padx=self.pad_val)
+        lbl15 = tk.Label(master=self.filterframe, text="to", bg='white')
+        lbl15.grid(row=7, column=7, pady=self.pad_val, padx=self.pad_val)
         
-        self.txt_speed_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
-        self.txt_speed_to.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)
+        self.txt_orientation_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_orientation_to.grid(row=7, column=8, pady=self.pad_val, padx=self.pad_val)
         
         
         
@@ -1354,7 +1355,7 @@ class MainVisual(tk.Frame):
                     
         
         def run_filtering():       
-            print("filtering for net length: ", self.filter_length, "filtering for total length: ", self.filter_length_total, ";   duration: ", self.filter_duration, ";   speed: ", self.filter_speed) #, ";   final stop duration: ", self.filter_stop)
+            print("filtering for net length: ", self.filter_length, "filtering for total length: ", self.filter_length_total, ";   duration: ", self.filter_duration, ";   speed: ", self.filter_speed, ";   orientation: ", self.filter_orientation) #, ";   final stop duration: ", self.filter_stop)
     
             # filtering 
             self.track_data_filtered={}
@@ -1386,17 +1387,39 @@ class MainVisual(tk.Frame):
                     y_to=np.asarray(p['trace'])[1:,1] 
                     
                     track_length_total=np.round(np.sum(np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)),2)*self.img_resolution
-
+                    
+                    # orientation
+                                          
+                    pointB=p['trace'][-1]                        
+                    pointA=p['trace'][0]    
+                    
+                    y=pointB[1]-pointA[1]
+                    x=pointB[0]-pointA[0]
+                    net_direction=int((math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360)
+                    
+                    #scale to 0-180
+                    
+                    if net_direction>180:
+                        net_direction=abs(net_direction-360)
+                    
+                    if self.filter_orientation[0]>180:
+                        self.filter_orientation[0]=abs(self.filter_orientation[0]-360)
+                        
+                    if self.filter_orientation[1]>180:
+                        self.filter_orientation[1]=abs(self.filter_orientation[1]-360)
+                        
                     
                 else:
                     track_duration=0
                     track_length=0
                     track_length_total=0
+                    net_direction=0
     
                     # variables to evaluate the trackS
                 length_var=track_length>=self.filter_length[0] and track_length<=self.filter_length[1]
                 length_total_var=track_length_total>=self.filter_length_total[0] and track_length_total<=self.filter_length_total[1]
                 duration_var=track_duration>=self.filter_duration[0] and track_duration<=self.filter_duration[1]
+                orientation_var=net_direction>=np.min((self.filter_orientation[0],self.filter_orientation[1])) and net_direction<=np.max((self.filter_orientation[0],self.filter_orientation[1]))
                 
                 if self.txt_track_number.get()=='':
                     filterID=True 
@@ -1437,7 +1460,7 @@ class MainVisual(tk.Frame):
                 if zoom_filter==False:
                     self.is_zoom_filtered=True
                     
-                if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True:
+                if length_var==True and length_total_var==True and duration_var==True and filterID==True and zoom_filter==True and orientation_var==True:
                                     # check speed limitation
                     if movement_1==True or movement_2==True:
                         # evaluate motion 
@@ -1517,6 +1540,18 @@ class MainVisual(tk.Frame):
         else:
             self.filter_speed[1]=float(self.txt_speed_to.get())                     
             movement_2=True
+
+            
+        if self.txt_orientation_from.get()=='':
+            self.filter_orientation[0]=float('-Inf')
+        else:
+            self.filter_orientation[0]=float(self.txt_orientation_from.get())                     
+            
+        if self.txt_orientation_to.get()=='':
+            self.filter_orientation[1]=float('Inf')
+        else:
+            self.filter_orientation[1]=float(self.txt_orientation_to.get())                     
+
             
         
         #choose trajectory segmentation type if needed and run filtering        
