@@ -314,6 +314,22 @@ class MainVisual(tk.Frame):
         self.txt_speed_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
         self.txt_speed_to.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)
         
+        
+        # orientation
+        lbl4 = tk.Label(master=self.filterframe, text="Trajectory net orientation : from ", width=int(self.button_length*2), bg='white')
+        lbl4.grid(row=6, column=5)
+        
+        self.txt_speed_from = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_speed_from.grid(row=6, column=6, pady=self.pad_val, padx=self.pad_val)
+        
+        lbl5 = tk.Label(master=self.filterframe, text="to", bg='white')
+        lbl5.grid(row=6, column=7, pady=self.pad_val, padx=self.pad_val)
+        
+        self.txt_speed_to = tk.Entry(self.filterframe, width=int(self.button_length/2))
+        self.txt_speed_to.grid(row=6, column=8, pady=self.pad_val, padx=self.pad_val)
+        
+        
+        
         # Radio button zoom
         var_filter_zoom = tk.IntVar()
         
@@ -321,22 +337,22 @@ class MainVisual(tk.Frame):
             self.filter_zoom=var_filter_zoom.get()
             
         lbl5 = tk.Label(master=self.filterframe, text=" Trajectories included for zoomed area: ", width=int(self.button_length*2), bg='white')
-        lbl5.grid(row=7, column=5)
+        lbl5.grid(row=12, column=5)
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.filterframe, text=" at least one point", variable=var_filter_zoom, value=0, bg='white', command =update_monitor_switch )
-        self.R1.grid(row=7, column=6,  pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=12, column=6,  pady=self.pad_val, padx=self.pad_val)  
         
         self.R2 = tk.Radiobutton(master=self.filterframe, text=" all points ", variable=var_filter_zoom, value=1, bg='white',command = update_monitor_switch ) #  command=sel)
-        self.R2.grid(row=7, column=8, pady=self.pad_val, padx=self.pad_val)          
+        self.R2.grid(row=12, column=8, pady=self.pad_val, padx=self.pad_val)          
         
         # button to filter
         
         self.buttonFilter = tk.Button(master=self.filterframe, text=" Filter ", command=self.filtering, width=self.button_length)
-        self.buttonFilter.grid(row=8, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
+        self.buttonFilter.grid(row=13, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
         self.buttonFilter = tk.Button(master=self.filterframe, text=" Update ", command=self.filtering, width=self.button_length)
-        self.buttonFilter.grid(row=9, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
+        self.buttonFilter.grid(row=14, column=4, columnspan=4, pady=self.pad_val, padx=self.pad_val)  
  
 
 
@@ -788,8 +804,8 @@ class MainVisual(tk.Frame):
                 arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
                 
             ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7)
-            ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='r', size=12, alpha=0.7)
-            ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='g', size=12, alpha=0.7)
+            ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='magenta', size=12, alpha=0.7)
+            ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='green', size=12, alpha=0.7)
     
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
@@ -800,8 +816,8 @@ class MainVisual(tk.Frame):
     
                 # calculate orientation
                 y=point_end[1]-point_start[1]
-                x=point_end[0]-point_start[0]
-                
+                x=point_end[0]-point_start[0]                
+
                 orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360
                 
                 # define weights
@@ -1213,15 +1229,6 @@ class MainVisual(tk.Frame):
                 if self.monitor_switch==0:
                     self.ax.text(np.asarray(trace)[0,1],np.asarray(trace)[0,0], str(p['trackID']), fontsize=10, color=self.color_list_plot[int(p['trackID'])%len(self.color_list_plot)])
 
-        #set the same "zoom"        
-        self.ax.set_xlim(xlim_old[0],xlim_old[1])
-        self.ax.set_ylim(ylim_old[0],ylim_old[1])
-        
-        # inver y-axis as set_ylim change the orientation
-        if ylim_old[0]<ylim_old[1]:
-            self.ax.invert_yaxis()
-
-
         # plot axis
         if self.monitor_axis==1:
             # position of axis
@@ -1237,35 +1244,59 @@ class MainVisual(tk.Frame):
                 second_name=" "
             
             # get position and orientation
-#            print("zoomed: ", xlim_old, ylim_old)
-            image_size_x=abs(xlim_old[0]-xlim_old[1])
-            image_size_y=abs(ylim_old[0]-ylim_old[1])
-            arrow_a=[int(image_size_x/10)+np.min((xlim_old[0], xlim_old[1])),int(image_size_y/10)+np.min((ylim_old[0], ylim_old[1]))]
-#            print("arrow_a", arrow_a)
-#            dist=int(self.image.shape[1]/10)
-            dist=int(np.min((image_size_x, image_size_y))/10)
             
-            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
-            arrow_length=[int(dist*math.cos(math.radians(self.ap_axis+90))),int(dist*math.sin(math.radians(self.ap_axis+90)))]
-#            print("arrow_b", arrow_b)
+            image_size_y=abs(xlim_old[0]-xlim_old[1])
+            image_size_x=abs(ylim_old[0]-ylim_old[1])
+            
+            dist=np.max((5,int(round(np.min((image_size_x, image_size_y))/10, 0))))
+
+            
+            arrow_a=[int(round(dist+np.min((ylim_old[0], ylim_old[1])),0)),int(round(dist+np.min((xlim_old[0], xlim_old[1])),0))]
+            
+            arrow_b=[int(round(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0], 0)),int(round(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1],0))]
+                                
+
             # check that the points are not outside the view
 
-            if arrow_b[0]<int(image_size_x/10): #arrow_b[0]<int(self.image.shape[0]/10):
+            if arrow_b[0]>np.max((ylim_old[0], ylim_old[1]))-dist: #arrow_b[0]<int(self.image.shape[0]/10):
                 # move the points
-                arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
-                arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
+                arrow_a[0]=arrow_a[0]-dist
+                arrow_b[0]=arrow_b[0]-dist
 
-            if arrow_b[1]<int(image_size_y/10): #arrow_b[1]<int(self.image.shape[1]/10):
+            if arrow_b[1]>np.max((xlim_old[0], xlim_old[1]))-dist: #arrow_b[1]<int(self.image.shape[1]/10):
                 # move the points
-                arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
-                arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
+                arrow_a[1]=arrow_a[1]-dist
+                arrow_b[1]=arrow_b[1]-dist
+                
+                
+            if arrow_b[0]<np.min((ylim_old[0], ylim_old[1]))+dist: #arrow_b[0]<int(self.image.shape[0]/10):
+                # move the points
+                arrow_a[0]=arrow_a[0]+dist
+                arrow_b[0]=arrow_b[0]+dist
 
-#            self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
-            
-            self.ax.arrow(arrow_b[1], arrow_b[0], arrow_length[1], arrow_length[0],  color='r', alpha=0.5, width=0.3, length_includes_head=True)
-            
+            if arrow_b[1]<np.min((xlim_old[0], xlim_old[1]))+dist: #arrow_b[1]<int(self.image.shape[1]/10):
+                # move the points
+                arrow_a[1]=arrow_a[1]+dist
+                arrow_b[1]=arrow_b[1]+dist
+                
+
+#            arrow_length=[int(dist*math.cos(math.radians(self.ap_axis))),int(dist*math.sin(math.radians(self.ap_axis)))]
+#            self.ax.arrow(arrow_a[0], arrow_a[1], arrow_length[0], arrow_length[1],  color='r', alpha=0.5, width=0.3, head_length=3, head_width=4, length_includes_head=True)
+
+            self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
             self.ax.text(arrow_a[1]-2, arrow_a[0]-2,  second_name, color='r', size=9, alpha=0.5)
             self.ax.text(arrow_b[1]-2, arrow_b[0]-2,  first_name, color='r', size=9, alpha=0.5)
+
+        #set the same "zoom"        
+        self.ax.set_xlim(xlim_old[0],xlim_old[1])
+        self.ax.set_ylim(ylim_old[0],ylim_old[1])
+        
+        # inver y-axis as set_ylim change the orientation
+        if ylim_old[0]<ylim_old[1]:
+            self.ax.invert_yaxis()
+
+
+
             
             
         self.canvas.draw()
