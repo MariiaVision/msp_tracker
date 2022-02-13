@@ -828,9 +828,12 @@ class MainVisual(tk.Frame):
                 else: # distance based or combined
                      net_displacement=np.round(np.sqrt((x)**2+(y)**2),2)*self.img_resolution
     
-    
                 if orintation_move>180:
+                    
                     orintation_move=abs(orintation_move-360)
+                    
+                if orintation_move==180:
+                    orintation_move=179.99
                 
                 orintation_array.append(orintation_move)
                 distance_array.append(net_displacement)
@@ -846,7 +849,7 @@ class MainVisual(tk.Frame):
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
                           fc=color, ec=color, length_includes_head = True)
             
-            if self.mode_orientation_diagram==1: # combined mode -> normalise the distances
+            if self.mode_orientation_diagram==1: # distance mode
                
             # move to micrometers for histogram
                 distance_array=[x / 1000 for x in distance_array]
@@ -854,20 +857,22 @@ class MainVisual(tk.Frame):
             if self.mode_orientation_diagram==2: # combined mode -> normalise the distances
                 distance_array=distance_array/np.max(distance_array)
                 
-                
-            bin_size=10
+            bin_size=10           
             
             a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
             
             ax = orientation_map_figure.add_subplot(122, projection='polar')
-                
+
             # if scale is provided 
             
             if self.set_range.get()!='':
-                ylim_max=int(self.set_range.get())
-            
+                ylim_max=int(self.set_range.get())            
                 ax.set_ylim([0, ylim_max])
+#                print("limit set manually: ", [0, ylim_max])
+#            else: 
+#                ax.set_ylim([0, np.max(a)])
+#                print("limit set automatically: ", [0, np.max(a)])
                 
             if self.mode_orientation_diagram==0: # track based
     
