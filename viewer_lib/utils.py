@@ -24,11 +24,15 @@ class SupportFunctions(object):
             frames - trajectory frames
             patch_size - patch size for intensity identification
         
-        out:
+        out: curretly it is different
             intensity_array_1 - array of intensity based on the segmented particles
             intensity_array_2 - array of intensity based on the patch_size
             intensity_mean_1 - mean intensity based on the patch
             intensity_mean_2 - mean intensity of the segmented vesicle
+            
+            intensity_array_1_norm - normalised in range[0,1]
+            intensity_array_1_maxbased - normalised by max
+            
             check_border - if there was any problem obtaining intensity due to the image boarder it will be 1
         '''
         
@@ -103,8 +107,16 @@ class SupportFunctions(object):
         intensity_mean_1=(np.mean(non_zero_intensity_array_1)-min_val)/(np.max((max_val, 0.00001))-min_val)
         intensity_mean_2=(np.mean(non_zero_intensity_array_2)-min_val)/(np.max((max_val, 0.00001))-min_val)
         
-        intensity_array_1=(intensity_array_1-min_val)/(np.max((max_val, 0.00001))-min_val)
-        intensity_array_2=(intensity_array_2-min_val)/(np.max((max_val, 0.00001))-min_val)
+        intensity_array_1_norm=(intensity_array_1-min_val)/(np.max((max_val, 0.00001))-min_val)
+        intensity_array_2_norm=(intensity_array_2-min_val)/(np.max((max_val, 0.00001))-min_val)
+        
+
+        intensity_mean_1_maxbased=np.mean(non_zero_intensity_array_1)/np.max((max_val, 0.00001))
+        intensity_mean_2_maxbased=np.mean(non_zero_intensity_array_2)/np.max((max_val, 0.00001))
+        
+        intensity_array_1_maxbased=intensity_array_1/np.max((max_val, 0.00001))
+        intensity_array_2_maxbased=intensity_array_2/np.max((max_val, 0.00001))
+
 
         
         
@@ -112,4 +124,7 @@ class SupportFunctions(object):
 #        print("intensities: ", intensity_mean_1, intensity_mean_2)
 #        print(" --------range---- \n result: ", (np.mean(intensity_array_1)-min_val)/(max_val-min_val), (np.mean(intensity_array_2)-min_val)/(max_val-min_val))
         
-        return intensity_array_1, intensity_array_2, intensity_mean_1, intensity_mean_2, check_border
+#        return intensity_array_1, intensity_array_2, intensity_mean_1, intensity_mean_2, check_border
+    
+    
+        return intensity_array_1_norm, intensity_array_1_maxbased, intensity_mean_1, intensity_mean_1_maxbased, check_border
