@@ -569,6 +569,7 @@ class MainVisual(tk.Frame):
                        
             # create the joint orientation list            
             orientation_all=[]
+            orientation=[]
             distance_all=[]
             
             for file_name in load_files:
@@ -577,8 +578,15 @@ class MainVisual(tk.Frame):
                 with open(file_name) as json_file:  
                     orientation_new = json.load(json_file)
                     
-                orientation_all+=orientation_new['orientation']       
+                orientation+=orientation_new['orientation']       
                 distance_all+=orientation_new['distance'] 
+                
+            
+            for pos in orientation:
+                if pos==180:
+                    pos=179.99
+                orientation_all+=[pos]
+                
             
             # axis name               
             if self.axis_name_parameter.get()!='':
@@ -605,8 +613,10 @@ class MainVisual(tk.Frame):
             elif self.mode_orientation_diagram==1: # distance based 
                 distance_array=distance_all
                 distance_array=[x / 1000 for x in distance_array]
-            else: # combined
-                distance_array=distance_all/np.max(distance_all) 
+            else: # normalised by number of tracks
+                distance_array=distance_all
+                distance_array_dist=[x / 1000 for x in distance_array]
+                distance_array_track=[1]*len(distance_all)
             
             # plot and save 
             orientation_fig=plt.figure(figsize=(8,8))
@@ -614,9 +624,19 @@ class MainVisual(tk.Frame):
             ax_new = plt.subplot(111, projection='polar')
             
             bin_size=10
-            a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
-            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
-    
+            
+            if self.mode_orientation_diagram<=1:
+                a , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
+                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+            else:
+                a_dist , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array_dist)
+                
+                a_track , b=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array_track)
+                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+                
+                a=a_dist/a_track
+                a[a_track==0]=0
+                
 
 
             # if scale is provided 
@@ -644,12 +664,12 @@ class MainVisual(tk.Frame):
                 ax_new.set_theta_direction(1)                
                 ax_new.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
                 
-            else: # combined
+            else: # distance normalised by the track count
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   ["\n \n  \n "+second_name+"\n (total net distance [$\mu$m])/(number of tracks)", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
                 ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax_new.set_theta_direction(1)
-                ax_new.set_title(" trajectory orientation \n based on track count and net distance travelled")           
+                ax_new.set_title(" trajectory orientation \n based on net distance travelled normalised by the number of tracks")           
             
             ax_new.set_thetamin(0)
             ax_new.set_thetamax(180)
@@ -718,7 +738,7 @@ class MainVisual(tk.Frame):
             segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
             segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
             
-            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the track count", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
             segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
@@ -854,13 +874,26 @@ class MainVisual(tk.Frame):
             # move to micrometers for histogram
                 distance_array=[x / 1000 for x in distance_array]
             
-            if self.mode_orientation_diagram==2: # combined mode -> normalise the distances
-                distance_array=distance_array/np.max(distance_array)
-                
-            bin_size=10           
+            if self.mode_orientation_diagram==2:  # normalised by number of tracks
+                distance_array_dist=[x / 1000 for x in distance_array]
+                distance_array_track=[1]*len(distance_array)
             
-            a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
-            centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1])   
+                
+            bin_size=10       
+                        
+            if self.mode_orientation_diagram<=1:
+                a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
+                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+
+            else:
+                a_dist , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array_dist)
+                
+                a_track , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array_track)
+                centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
+                
+                a=a_dist/a_track
+                a[a_track==0]=0
+                
             
             ax = orientation_map_figure.add_subplot(122, projection='polar')
 
@@ -869,10 +902,6 @@ class MainVisual(tk.Frame):
             if self.set_range.get()!='':
                 ylim_max=int(self.set_range.get())            
                 ax.set_ylim([0, ylim_max])
-#                print("limit set manually: ", [0, ylim_max])
-#            else: 
-#                ax.set_ylim([0, np.max(a)])
-#                print("limit set automatically: ", [0, np.max(a)])
                 
             if self.mode_orientation_diagram==0: # track based
     
@@ -894,13 +923,14 @@ class MainVisual(tk.Frame):
                 
                 ax.set_title(" trajectory orientation \n based on net distance travelled [$\mu$m] ")
 
-            else: # combined    
+
+            else: # distance normalised by the track count
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   ["\n \n  \n "+second_name+"\n \n (total net distance [$\mu$m])/(number of tracks)", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
                 ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax.set_theta_direction(1)
-                
-                ax.set_title(" trajectory orientation \n based on track count and net distance travelled")
+                ax.set_title(" trajectory orientation \n based on net distance travelled normalised by the number of tracks")           
+            
                 
             
             ax.set_thetamin(0)
@@ -964,7 +994,7 @@ class MainVisual(tk.Frame):
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
         segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
         
-        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" combined ", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the track count", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
         segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)             
         
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
@@ -2276,7 +2306,7 @@ class MainVisual(tk.Frame):
                 self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', "Mean brightness (segmented)", "Mean brightness (region based)"  ]) 
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', "Mean brightness (normalised [0,1]])", "Mean brightness (normalised by max)"  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -3249,9 +3279,9 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
-            self.listNodes_parameters.insert(tk.END, " Mean brightness (segmented)                 "+str(np.round(intensity_mean_1,5)))  
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised [0,1])                 "+str(np.round(intensity_mean_1,5)))  
             
-            self.listNodes_parameters.insert(tk.END, " Mean brightness (region based)              "+str(np.round(intensity_mean_2,5)))
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised by max)              "+str(np.round(intensity_mean_2,5)))
             
             self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
      
@@ -3308,15 +3338,18 @@ class TrackViewer(tk.Frame):
         try :
             
             self.ax_intensity.clear()           
-            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="segmented vesicle")
-            self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="without segmentation")
+            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="normalised [0,1]")
+            self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="normalised by max")
+            
+#            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="segmented vesicle")
+#            self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="without segmentation")
 
 #            self.ax_intensity.plot(self.frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
 #    
 ##            self.ax_intensity.set_ylabel("intensity", fontsize='small')
 #            self.ax_intensity.plot(self.frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
-                self.ax_intensity.set_title('Vesicle intensity (scaled [0,1]) per frame', fontsize='small')
+                self.ax_intensity.set_title('Vesicle intensiintensityty (scaled [0,1]) per frame', fontsize='small')
             else:
                 self.ax_intensity.set_title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
             self.ax_intensity.legend(fontsize='small')   
