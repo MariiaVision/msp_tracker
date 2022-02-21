@@ -1150,7 +1150,9 @@ class MainVisual(tk.Frame):
                 self.update_movie_parameters()
                 param_dict={"viewer_set":{"resolution (nm/pix)": self.img_resolution, "frame rate (f/sec)":self.frame_rate, "axis orientation": self.ap_axis, "axis": self.axis_name}}
                 save_dict.update(param_dict)
-    
+                
+                print(save_dict)
+                
                 with open(save_file, 'w') as f:
                     json.dump(save_dict, f, ensure_ascii=False) 
                     
@@ -1732,7 +1734,7 @@ class MainVisual(tk.Frame):
         #define new trackID:
         for p in tqdm(self.track_data['tracks']):
             
-            self.new_trackID=np.max((self.new_trackID, p['trackID']))
+            self.new_trackID=int(np.max((self.new_trackID, p['trackID'])))
         self.new_trackID+=1
         
         qnewtext1 = tk.Label(master=self.create_window, text=" ID of the new merged track: " ,  bg='white', font=("Times", 10))
@@ -1786,10 +1788,12 @@ class MainVisual(tk.Frame):
             track=self.track_data_filtered['tracks'][i]
             frames=frames+track["frames"]
             trace=trace+track["trace"]
-                        
+        
+
         if len(frames)!=0:
             
-            new_track={"trackID":self.new_trackID, "trace":trace, "frames":frames}
+#            motion=[0]*len(trace)
+            new_track={"trackID":int(self.new_trackID), "trace":trace, "frames":frames} #, "motion": motion}
             
             self.track_data['tracks'].append(new_track)
             
