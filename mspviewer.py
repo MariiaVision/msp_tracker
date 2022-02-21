@@ -1151,8 +1151,6 @@ class MainVisual(tk.Frame):
                 param_dict={"viewer_set":{"resolution (nm/pix)": self.img_resolution, "frame rate (f/sec)":self.frame_rate, "axis orientation": self.ap_axis, "axis": self.axis_name}}
                 save_dict.update(param_dict)
                 
-                print(save_dict)
-                
                 with open(save_file, 'w') as f:
                     json.dump(save_dict, f, ensure_ascii=False) 
                     
