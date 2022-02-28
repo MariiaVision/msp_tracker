@@ -791,7 +791,19 @@ class MainVisual(tk.Frame):
             plt.axis('off')
             ax = orientation_map_figure.add_subplot(121)
             
-            ax.imshow(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]), cmap='bone')
+            # set zoom as in the main window
+            # read limits
+            xlim_old=self.ax.get_xlim()
+            ylim_old=self.ax.get_ylim()
+            
+            lim_x0=int(ylim_old[1])
+            lim_x1=int(ylim_old[0])
+            lim_y0=int(xlim_old[0]) # because y-axis is inverted
+            lim_y1=int(xlim_old[1]) # because y-axis is inverted
+
+            img_to_show=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+            img_to_show=img_to_show[lim_x0:lim_x1,lim_y0:lim_y1]
+            ax.imshow(img_to_show, cmap='bone')
             
             
             # position of axis
