@@ -646,6 +646,10 @@ class MainVisual(tk.Frame):
             
                 ax_new.set_ylim([0, ylim_max])
                 
+                
+            if self.set_norm_val.get()!='' and self.mode_orientation_diagram>1:
+                a=a/float(self.set_norm_val.get())
+                
             
             if self.mode_orientation_diagram==0: # track based
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
@@ -666,10 +670,10 @@ class MainVisual(tk.Frame):
                 
             else: # distance normalised by the track count
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n (total net distance [$\mu$m])/(number of tracks)", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   ["\n \n  \n "+second_name+"\n (total net distance [$\mu$m])/(movie length [sec])", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
                 ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax_new.set_theta_direction(1)
-                ax_new.set_title(" trajectory orientation \n based on net distance travelled normalised by the number of tracks")           
+                ax_new.set_title(" trajectory orientation \n based on net distance travelled normalised by the movie length")           
             
             ax_new.set_thetamin(0)
             ax_new.set_thetamax(180)
@@ -738,7 +742,7 @@ class MainVisual(tk.Frame):
             segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
             segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
             
-            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the track count", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by movie length", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
             segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
@@ -746,12 +750,19 @@ class MainVisual(tk.Frame):
             
             self.set_range = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
             self.set_range.grid(row=2, column=4, pady=self.pad_val, padx=self.pad_val)  
+            
+            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Movie length to normalise the diagram (sec):  " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=3, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
+            
+            self.set_norm_val = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+            self.set_norm_val.grid(row=3, column=4, pady=self.pad_val, padx=self.pad_val)  
+                    
                     
             self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.newbutton.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-            self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            self.deletbutton.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                                     
@@ -915,6 +926,11 @@ class MainVisual(tk.Frame):
                 ylim_max=int(self.set_range.get())            
                 ax.set_ylim([0, ylim_max])
                 
+                
+            if self.set_norm_val.get()!='' and self.mode_orientation_diagram>1:
+                a=a/float(self.set_norm_val.get())
+                
+                
             if self.mode_orientation_diagram==0: # track based
     
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
@@ -938,10 +954,10 @@ class MainVisual(tk.Frame):
 
             else: # distance normalised by the track count
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n \n (total net distance [$\mu$m])/(number of tracks)", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   ["\n \n  \n "+second_name+"\n \n (total net distance [$\mu$m])/(movie length [sec])", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
                 ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax.set_theta_direction(1)
-                ax.set_title(" trajectory orientation \n based on net distance travelled normalised by the number of tracks")           
+                ax.set_title(" trajectory orientation \n based on net distance travelled normalised by the movie length")           
             
                 
             
@@ -1015,12 +1031,20 @@ class MainVisual(tk.Frame):
         self.set_range = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
         self.set_range.grid(row=2, column=4, pady=self.pad_val, padx=self.pad_val)  
     
+
+            
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Movie length to normalise the diagram (sec):  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=3, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
+        
+        self.set_norm_val = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+        self.set_norm_val.grid(row=3, column=4, pady=self.pad_val, padx=self.pad_val)  
+                        
             
         self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-        self.newbutton.grid(row=3, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        self.newbutton.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-        self.deletbutton.grid(row=3, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.deletbutton.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                 
