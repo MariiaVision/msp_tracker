@@ -3317,9 +3317,9 @@ class TrackViewer(tk.Frame):
     
             self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
     
-            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised [0,1])                 "+str(np.round(intensity_mean_1,5)))  
+#            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised [0,1])                 "+str(np.round(intensity_mean_1,5)))  
             
-            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised by max)              "+str(np.round(intensity_mean_2,5)))
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (normalised)                "+str(np.round(intensity_mean_2,5)))
             
             self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
      
@@ -3376,7 +3376,7 @@ class TrackViewer(tk.Frame):
         try :
             
             self.ax_intensity.clear()           
-            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="normalised [0,1]")
+#            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="normalised [0,1]")
             self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="normalised by max")
             
 #            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="segmented vesicle")
@@ -3387,10 +3387,10 @@ class TrackViewer(tk.Frame):
 ##            self.ax_intensity.set_ylabel("intensity", fontsize='small')
 #            self.ax_intensity.plot(self.frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
-                self.ax_intensity.set_title('Vesicle intensiintensityty (scaled [0,1]) per frame', fontsize='small')
+                self.ax_intensity.set_title('Vesicle intensiintensityty (normalised) per frame', fontsize='small')
             else:
                 self.ax_intensity.set_title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
-            self.ax_intensity.legend(fontsize='small')   
+#            self.ax_intensity.legend(fontsize='small')   
             self.ax_intensity.set_ylim(top = 1.1, bottom = 0)            
             
             # DrawingArea
