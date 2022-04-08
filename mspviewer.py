@@ -897,7 +897,7 @@ class MainVisual(tk.Frame):
             # move to micrometers for histogram
                 distance_array=[x / 1000 for x in distance_array]
             
-            if self.mode_orientation_diagram==2:  # normalised by number of tracks
+            if self.mode_orientation_diagram==2:  # normalised by the movie length
                 distance_array_dist=[x / 1000 for x in distance_array]
                 distance_array_track=[1]*len(distance_array)
             
@@ -1022,7 +1022,7 @@ class MainVisual(tk.Frame):
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
         segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
         
-        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the track count", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the movie length", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
         segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)             
         
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" To set diagram range provide max value to display:  " ,  bg='white', font=("Times", 10))
@@ -3387,7 +3387,7 @@ class TrackViewer(tk.Frame):
 ##            self.ax_intensity.set_ylabel("intensity", fontsize='small')
 #            self.ax_intensity.plot(self.frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
-                self.ax_intensity.set_title('Vesicle intensiintensityty (normalised) per frame', fontsize='small')
+                self.ax_intensity.set_title('Vesicle intensity (normalised) per frame', fontsize='small')
             else:
                 self.ax_intensity.set_title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
 #            self.ax_intensity.legend(fontsize='small')   
