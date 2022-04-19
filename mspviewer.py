@@ -935,7 +935,7 @@ class MainVisual(tk.Frame):
                 ax.set_title(title_text)
 
 
-            else: # distance normalised by the track count
+            else: 
                 print("something went wrong")     
                 
             
