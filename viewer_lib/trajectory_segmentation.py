@@ -419,11 +419,12 @@ class TrajectorySegment(object):
         calculate max speed within a moving window
 
         '''
-
+        
+        
         speed_max=0
         outcome={"frames":[], "speed": None}
         segment_list=skimage.measure.label(np.asarray(track['motion']))
-
+        
 
         for seg_pos in range(1, np.max(segment_list)+1): # over segments
             
@@ -433,26 +434,89 @@ class TrajectorySegment(object):
             
             trace_segment=track['trace'][start_pos:end_pos]
             frame_segment=track['frames'][start_pos:end_pos]
-
-            #iterate wit sliding window
-            if len(trace_segment)>=width:
             
-                for pos in range(0, len(trace_segment)-width):
-                    mini_track=np.asarray(trace_segment[pos:pos + width+1])
+            segment_length=frame_segment[-1]-frame_segment[0]+1
+            
+            
+            # iterate ver the segment with sliding window
+            if segment_length>=width and segment_length>1:
+            
+                for pos in range(0, len(trace_segment)-1):
                     
-                    speed=np.mean(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2)))
+                    mini_track=np.asarray(trace_segment[pos:np.min((pos + width+1, len(trace_segment)))])
+                    mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+1, len(trace_segment)))])
+                    
+                    if len(mini_frames)<(mini_frames[-1]-mini_frames[0]+1):
+
+                        new_width=width-1
+                        while new_width>=1:
+                            mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
+                            mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
+
+                            if width==(mini_frames[-1]-mini_frames[0]):
     
-                    if speed>speed_max:
+                                break
+                            elif width>(mini_frames[-1]-mini_frames[0]): # too small width -> return to the previous result
+                                
+                                mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
+                                mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
+                                break
+                            else:
+                                new_width=new_width-1
+                        
+                    elif len(mini_frames)>(mini_frames[-1]-mini_frames[0]+1): 
+                        val=abs(width-(mini_frames[-1]-mini_frames[0]))
+                        mini_track=np.asarray(trace_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
+                        mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
+                        
+                        
+                        
+                    speed=(np.sum(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2))))/(mini_frames[-1]-mini_frames[0])
+
+                    if speed>speed_max and width<=segment_length:
+
                         speed_max=speed
-                        outcome.update({"frames":[pos+frame_segment[0], pos+width+frame_segment[0]], "speed":speed_max})
+                        outcome.update({"frames":[mini_frames[0], mini_frames[-1]], "speed":speed_max})
                         
                         
             else:
                 pass
-
+            
         return outcome
             
+    def refine_track_sequence(self, tracks, frames, motion):
+        '''
+        check the frame order in the track and save the positioning accordingly
+        '''
+        new_frames=[frames[0]]
+        new_tracks=[tracks[0]]
+        new_motion=[motion[0]]
         
+        pos=frames[0]+1
+        for f in range(1,len(frames)):
+            
+            if frames[f]==pos:
+                new_frames.append(frames[f])
+                new_tracks.append(tracks[f])
+                new_motion.append(motion[f])
+                pos+=1
+                
+            elif  frames[f]>pos: # there are skipped frames
+                
+                while frames[f]>pos:                
+                    new_frames.append(pos)
+                    new_tracks.append(new_tracks[-1])  
+                    new_motion.append(new_motion[-1])          
+                    pos+=1
+                    
+                #append the original f frame
+                new_frames.append(pos)
+                new_tracks.append(tracks[f]) 
+                new_motion.append(motion[f])
+                    
+                pos+=1
+                
+        return new_tracks, new_frames, new_motion        
         
         
         #
