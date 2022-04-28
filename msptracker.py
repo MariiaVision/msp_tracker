@@ -483,7 +483,7 @@ See the Manual for the detailed description of the software.
         lbl3.grid(row=3, column=0, columnspan=4, pady=self.pad_val*2, padx=self.pad_val*2) 
         
         
-        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES DETECTION ",  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATE DETECTION ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val) 
         
     # substract_bg_step background substraction step 
@@ -866,7 +866,7 @@ See the Manual for the detailed description of the software.
 
     def set_detection_parameters_frame(self):
 
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES DETECTION ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATE DETECTION ",  bg='white')
         lbl3.grid(row=0, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
         
     # substract_bg_step background substraction step 
