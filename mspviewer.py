@@ -1515,7 +1515,7 @@ class MainVisual(tk.Frame):
                         # evaluate motion 
                         p['motion']=self.motion_type_evaluate(p, traj_segm_switch_var=self.traj_segmentation_var)
                         
-                        #calculate speed
+                        # calculate speed
                         moving_speeds=self.tg.calculate_speed(p, "movement")
                         curvilinear_speed_move=np.round(moving_speeds[0]*self.img_resolution*self.frame_rate,0)
                     
@@ -3392,6 +3392,7 @@ class TrackViewer(tk.Frame):
         
         
         trajectory=self.trace
+
         try:
             #calculate the displacement
             x=np.asarray(trajectory)[:,0]    
@@ -3404,6 +3405,7 @@ class TrackViewer(tk.Frame):
             
             self.displacement_array=np.sqrt((x-x_0)**2+(y-y_0)**2)
             #calculate all type of displacements
+            
             # max displacement
             self.max_displacement=np.round(np.max(self.displacement_array),2)
             
@@ -3440,10 +3442,15 @@ class TrackViewer(tk.Frame):
                     
             else: # self.speed_graph_var==1:
                 
+                # calculate max curvilinear speed
                 speed_dict=self.tg.max_speed_segment(self.track_data, int(self.speed_sliding_window*self.frame_rate))
-    
-                
-                speed_disp=np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)
+
+                # calculate speed  
+                frames_dist=np.asarray(self.frames[1:])-np.asarray(self.frames[:-1])
+
+                disp=np.sqrt((x_to-x_from)**2+(y_to-y_from)**2)
+
+                speed_disp=disp/frames_dist
                 
                 speed_array=speed_disp*self.frame_rate*self.img_resolution
                 for i in range(1, len(self.motion)):
@@ -3455,10 +3462,11 @@ class TrackViewer(tk.Frame):
     
                     self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
                 
+                
                 #plot fastest segment
                 
                 if speed_dict['frames']!=[]:
-                
+                    
                     fastest_segment_start=np.where(np.asarray(self.frames)==int(speed_dict['frames'][0]))[0][0]
                     fastest_segment_end=np.where(np.asarray(self.frames)==int(speed_dict['frames'][1]))[0][0]
                     
