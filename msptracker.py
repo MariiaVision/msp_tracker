@@ -515,7 +515,7 @@ See the Manual for the detailed description of the software.
         lbl3.grid(row=10, column=0, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)        
                 
         
-        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATES PRUNING ",  bg='white', font=("Helvetica", 8))
+        lbl3 = tk.Label(master=self.information_frame, text=" CANDIDATE PRUNING ",  bg='white', font=("Helvetica", 8))
         lbl3.grid(row=11, column=0,  pady=self.pad_val, padx=self.pad_val) 
 
         
@@ -931,7 +931,7 @@ See the Manual for the detailed description of the software.
         lbl3.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val)        
                 
         
-        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATES PRUNING ",  bg='white')
+        lbl3 = tk.Label(master=self.parametersFrame_detection, text=" CANDIDATE PRUNING ",  bg='white')
         lbl3.grid(row=9, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val) 
 
     # min_distance min distance minimum distance between two max after MSSEF
