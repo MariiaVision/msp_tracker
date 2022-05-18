@@ -104,7 +104,9 @@ class MainVisual(tk.Frame):
         self.movie_length=1
         self.monitor_switch=0 # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.monitor_axis=0 # 0 - not to show axis, 1- show axis
-        self.mode_orientation_diagram=0 # mode of the orientation diagram: 0 - based on number of tracks, 1 - based on the distance, 2-combined (normalised distance)
+        self.mode_orientation_diagram=0 # mode of the orientation diagram: 0 - based on number of tracks, 1 - based on the distance
+        self.axis_orientation_map=0 # visibility of  axis on the orientation map 0 - not visible, 1 - visible
+        self.arrow_size_orientation_map=0 # arrow head size of  axis on the orientation map
         self.pad_val=1
         self.axis_name="A,P" # axis names for the orientation plot
         self.img_resolution=100 # resolution of the image, default is 100 nm/pix 
@@ -606,8 +608,7 @@ class MainVisual(tk.Frame):
                 second_name=" "
                 
                 
-            #define weights:
-            
+            # define weights:
             
             if self.mode_orientation_diagram==0: # track based
                 distance_array=[1]*len(distance_all)
@@ -811,7 +812,8 @@ class MainVisual(tk.Frame):
             
             
             # position of axis
-    
+               
+        # read ap axis
             axis_name=self.axis_name.split(",")
             
             if axis_name[0]:
@@ -823,26 +825,48 @@ class MainVisual(tk.Frame):
                 second_name=axis_name[1]
             else:
                 second_name=" "
-    
-            arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
-            dist=int(self.image.shape[1]/10)
-            arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
-            
-            # check that the points are not outside the view
-    
-            if arrow_b[0]<int(self.image.shape[0]/10):
-                # move the points
-                arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
-                arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
-    
-            if arrow_b[1]<int(self.image.shape[1]/10):
-                # move the points
-                arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
-                arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
                 
-            ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7)
-            ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='magenta', size=12, alpha=0.7)
-            ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='green', size=12, alpha=0.7)
+            # plot axis if needed
+            if self.axis_orientation_map==1:
+        
+                arrow_a=[int(self.image.shape[0]/10),int(self.image.shape[1]/10)]
+                dist=int(self.image.shape[1]/10)
+                arrow_b=[int(dist*math.cos(math.radians(self.ap_axis-90))+arrow_a[0]),int(dist*math.sin(math.radians(self.ap_axis-90))+arrow_a[1])]
+                
+                # check that the points are not outside the view
+        
+                if arrow_b[0]<int(self.image.shape[0]/10):
+                    # move the points
+                    arrow_a[0]=arrow_a[0]+int(self.image.shape[0]/10)
+                    arrow_b[0]=arrow_b[0]+int(self.image.shape[0]/10)
+        
+                if arrow_b[1]<int(self.image.shape[1]/10):
+                    # move the points
+                    arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
+                    arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
+                    
+                ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7, linewidth=3)
+                ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='magenta', size=12, alpha=0.7)
+                ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='green', size=12, alpha=0.7)
+                
+                
+            #set arrow size
+            
+            if self.arrow_size_orientation_map==0:
+                head_width_val=3.00
+                head_length_val=2.0
+            elif self.arrow_size_orientation_map==1: 
+                head_width_val=5.00
+                head_length_val=4.0
+            elif self.arrow_size_orientation_map==2: 
+                head_width_val=8.00
+                head_length_val=7.0
+            else:
+                head_width_val=5.00
+                head_length_val=4.0
+                
+                
+                
     
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
@@ -882,7 +906,7 @@ class MainVisual(tk.Frame):
                 else:
                     color='gold'
                     
-                plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=3.00, head_length=2.0, 
+                plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=head_width_val, head_length=head_length_val, 
                           fc=color, ec=color, length_includes_head = True)
             
             if self.mode_orientation_diagram==1: # distance mode
@@ -984,7 +1008,7 @@ class MainVisual(tk.Frame):
     
         
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Plot orientation diagram based on  " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        self.qnewtext.grid(row=1, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) #
         
         # radiobutton to choose
         
@@ -995,10 +1019,10 @@ class MainVisual(tk.Frame):
             
      
         segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" track count ",variable=var_diagram_switch, value=0, bg='white', command =update_switch )
-        segmentation_switch_off.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_off.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+        segmentation_switch_msd.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
         
 #        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by the movie length", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
 #        segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)             
@@ -1008,21 +1032,57 @@ class MainVisual(tk.Frame):
         
         self.set_range = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
         self.set_range.grid(row=2, column=4, pady=self.pad_val, padx=self.pad_val)  
-    
-
+     
             
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Scale factor to normalise the values:  " ,  bg='white', font=("Times", 10))
         self.qnewtext.grid(row=3, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
         
         self.set_norm_val = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
         self.set_norm_val.grid(row=3, column=4, pady=self.pad_val, padx=self.pad_val)  
-                        
+        
+        # radiobutton for axis on/off         
+        var_diagram_axis_switch = tk.IntVar()
+        
+        def update_switch():            
+            self.axis_orientation_map=var_diagram_axis_switch.get()
+
+            
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Show axis: " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)             
+     
+        segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" off ",variable=var_diagram_axis_switch, value=0, bg='white', command =update_switch )
+        segmentation_switch_off.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_diagram_axis_switch, value=1, bg='white', command =update_switch )
+        segmentation_switch_msd.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        
+        # radiobutton for arrow size         
+        var_arrow_size_switch = tk.IntVar()
+        
+        def update_switch():            
+            self.arrow_size_orientation_map=var_arrow_size_switch.get()
+            
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Arrow size: " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val) 
+            
+     
+        segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" small ",variable=var_arrow_size_switch, value=0, bg='white', command =update_switch )
+        segmentation_switch_off.grid(row=5, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" medium ",variable=var_arrow_size_switch, value=1, bg='white', command =update_switch )
+        segmentation_switch_msd.grid(row=5, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" large ",variable=var_arrow_size_switch, value=2, bg='white', command =update_switch )
+        segmentation_switch_msd.grid(row=5, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
+            
+                     
             
         self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-        self.newbutton.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        self.newbutton.grid(row=8, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-        self.deletbutton.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.deletbutton.grid(row=8, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                 
