@@ -835,8 +835,8 @@ class MainVisual(tk.Frame):
                     arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
                     
                 ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7, linewidth=3)
-                ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='magenta', size=12, alpha=0.7)
-                ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='green', size=12, alpha=0.7)
+                ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='#E91E63', size=12, alpha=0.95, weight="bold")
+                ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='#66BB6A', size=12, alpha=0.95, weight="bold")
                 
                 
             #set arrow size
@@ -844,15 +844,19 @@ class MainVisual(tk.Frame):
             if self.arrow_size_orientation_map==0:
                 head_width_val=3.00
                 head_length_val=2.0
+                linewidth_val=0.3*head_width_val
             elif self.arrow_size_orientation_map==1: 
                 head_width_val=5.00
                 head_length_val=4.0
+                linewidth_val=0.3*head_width_val
             elif self.arrow_size_orientation_map==2: 
                 head_width_val=8.00
                 head_length_val=7.0
+                linewidth_val=0.3*head_width_val
             else:
                 head_width_val=5.00
                 head_length_val=4.0
+                linewidth_val=0.3*head_width_val
                 
                 
                 
@@ -889,14 +893,14 @@ class MainVisual(tk.Frame):
                 
                 # select colour
                 if orintation_move<45:
-                    color='magenta'
+                    color='#E91E63'# magenta
                 elif orintation_move>135: 
-                    color='green'
+                    color='#66BB6A' #   green
                 else:
                     color='gold'
                     
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=head_width_val, head_length=head_length_val, 
-                          fc=color, ec=color, length_includes_head = True)
+                          fc=color, ec=color, width=linewidth_val, length_includes_head = True)
 
 
             # set zoom as in the main window
@@ -1057,7 +1061,8 @@ class MainVisual(tk.Frame):
         segmentation_switch_msd.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         
-        # radiobutton for arrow size         
+        # radiobutton for arrow size     
+        self.arrow_size_orientation_map=0
         var_arrow_size_switch = tk.IntVar()
         
         def update_switch():            
@@ -1075,6 +1080,7 @@ class MainVisual(tk.Frame):
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" large ",variable=var_arrow_size_switch, value=2, bg='white', command =update_switch )
         segmentation_switch_msd.grid(row=5, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
+
             
                      
             
