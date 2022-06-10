@@ -796,18 +796,7 @@ class MainVisual(tk.Frame):
             plt.axis('off')
             ax = orientation_map_figure.add_subplot(121)
             
-            # set zoom as in the main window
-            # read limits
-            xlim_old=self.ax.get_xlim()
-            ylim_old=self.ax.get_ylim()
-            
-            lim_x0=int(ylim_old[1])
-            lim_x1=int(ylim_old[0])
-            lim_y0=int(xlim_old[0]) # because y-axis is inverted
-            lim_y1=int(xlim_old[1]) # because y-axis is inverted
-
             img_to_show=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-            img_to_show=img_to_show[lim_x0:lim_x1,lim_y0:lim_y1]
             ax.imshow(img_to_show, cmap='bone')
             
             
@@ -908,6 +897,17 @@ class MainVisual(tk.Frame):
                     
                 plt.arrow(point_start[1],point_start[0], point_end[1]-point_start[1], point_end[0]-point_start[0], head_width=head_width_val, head_length=head_length_val, 
                           fc=color, ec=color, length_includes_head = True)
+
+
+            # set zoom as in the main window
+            # read limits
+            xlim_old=self.ax.get_xlim()
+            ylim_old=self.ax.get_ylim()
+
+            # set new axis            
+            plt.xlim(xlim_old)
+            plt.ylim(ylim_old)
+
             
             if self.mode_orientation_diagram==1: # distance mode
                
@@ -1389,9 +1389,6 @@ class MainVisual(tk.Frame):
                 arrow_a[1]=arrow_a[1]+dist
                 arrow_b[1]=arrow_b[1]+dist
                 
-
-#            arrow_length=[int(dist*math.cos(math.radians(self.ap_axis))),int(dist*math.sin(math.radians(self.ap_axis)))]
-#            self.ax.arrow(arrow_a[0], arrow_a[1], arrow_length[0], arrow_length[1],  color='r', alpha=0.5, width=0.3, head_length=3, head_width=4, length_includes_head=True)
 
             self.ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='r', alpha=0.5)
             self.ax.text(arrow_a[1]-2, arrow_a[0]-2,  second_name, color='r', size=9, alpha=0.5)
