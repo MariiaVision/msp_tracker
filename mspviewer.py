@@ -488,64 +488,178 @@ class MainVisual(tk.Frame):
         '''
         save track orientation into file
         
-        '''        
-        
-        # request file name name
-        save_file = tk.filedialog.asksaveasfilename()
-         
-        if not save_file:
-            print("File name was not provided. The data was not saved.")
-        else:
+        '''       
+        def cancel_window():
+            '''
+            destroy the window
             
-            #read ap axis
-            if self.ap_parameter.get()!='':
-                self.ap_axis=int(self.ap_parameter.get())
-                
-            if self.axis_name_parameter.get()!='':
-                self.axis_name=self.axis_name_parameter.get()
-      
-            #calculate orientation for each trajectory
-            orintation_array=[]
-            distance_array=[]
+            '''
+            try:
+                self.choose_traj_segmentation.destroy()
+            except:
+                pass
             
-            for trackID in range(0, len(self.track_data_filtered['tracks'])):
-                track=self.track_data_filtered['tracks'][trackID]
-            #    calculate parameters
-                point_start=track['trace'][0]
-                point_end=track['trace'][-1]
-    
-                # calculate orientation
-                y=point_end[1]-point_start[1]
-                x=point_end[0]-point_start[0]
-
-                orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360                
+        def ask_for_segmentation():
+            # request file name name
+            save_file = tk.filedialog.asksaveasfilename()
+             
+            if not save_file:
+                print("File name was not provided. The data was not saved.")
+            else:
                 
-                if orintation_move>180:
-                    orintation_move=abs(orintation_move-360)
+                #read ap axis
+                if self.ap_parameter.get()!='':
+                    self.ap_axis=int(self.ap_parameter.get())
                     
-                # calculate distance
-                net_displacement=np.round(np.sqrt((x)**2+(y)**2),2)*self.img_resolution
+                if self.axis_name_parameter.get()!='':
+                    self.axis_name=self.axis_name_parameter.get()
+                 
+                if self.speed_window_size.get()!='':
+                    self.speed_sliding_window = float(self.speed_window_size.get())
+                else:
+                    self.speed_sliding_window = 1
+                    
+                #read other parameters
+          
+                #calculate orientation for each trajectory
+                orintation_array=[]
+                distance_array=[]
+                speed_array=[]
                 
-                
-                orintation_array.append(orintation_move) 
-                distance_array.append(net_displacement) 
-                
-            # save the array into the file
-    
-            
-            if not(save_file.endswith(".txt")):
-                save_file += ".txt"  
-                
-                if os.path.isfile(save_file)==True:
-                    # add date if the file exists already
-                    now = datetime.datetime.now()
-                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
-                
-                
-            # save in json format                    
-            with open(save_file, 'w') as f:
-                json.dump({'orientation':orintation_array, 'distance': distance_array}, f, ensure_ascii=False) 
+                for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                    track=self.track_data_filtered['tracks'][trackID]
+                #    calculate parameters
+                    point_start=track['trace'][0]
+                    point_end=track['trace'][-1]
         
+                    # calculate orientation
+                    y=point_end[1]-point_start[1]
+                    x=point_end[0]-point_start[0]
+    
+                    orintation_move=(math.degrees(math.atan2(y,x))+360-90-self.ap_axis)%360                
+                    
+                    if orintation_move>180:
+                        orintation_move=abs(orintation_move-360)
+                        
+                    # calculate distance
+                    net_displacement=np.round(np.sqrt((x)**2+(y)**2),2)*self.img_resolution
+                    
+                    
+                    orintation_array.append(orintation_move) 
+                    distance_array.append(net_displacement) 
+
+                    if len(track['trace'])>1 and self.speed_in_colour==1:
+                        
+    #                    self.traj_segmentation_var=1 
+                        
+                        if self.speed_window_size.get()!='':
+                            self.speed_sliding_window=float(self.speed_window_size.get())
+                        else:
+                            self.speed_sliding_window=1 
+                        
+    #                    print("self.traj_segmentation_var=",self.traj_segmentation_var, "; speed_sliding_window=", self.speed_sliding_window)
+                        track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
+    
+                        speed_dict=self.tg.max_speed_segment(track, int(self.speed_sliding_window*self.frame_rate))
+    
+                        speed_val=speed_dict['speed']
+                        
+                        if speed_val==None:
+                            speed_val=0
+#                        print(speed_val*self.img_resolution*self.frame_rate)
+                        speed_array.append(speed_val*self.img_resolution*self.frame_rate)
+                    else:
+                        speed_array.append(0)
+                    
+                # save the array into the file
+        
+                
+                if not(save_file.endswith(".txt")):
+                    save_file += ".txt"  
+                    
+                    if os.path.isfile(save_file)==True:
+                        # add date if the file exists already
+                        now = datetime.datetime.now()
+                        save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                    
+                    
+                # save in json format                    
+                with open(save_file, 'w') as f:
+                    json.dump({'orientation':orintation_array, 'distance': distance_array, 'speed': speed_array}, f, ensure_ascii=False) 
+                    
+                cancel_window()
+                
+                
+        # open new window
+        self.choose_traj_segmentation = tk.Toplevel(root,  bg='white')
+        self.choose_traj_segmentation.title(" Save data about the tracks for orientation diagram")
+    
+
+        # ask about speed evaluation
+        
+        # radiobutton for axis on/off         
+        var_speed_colourmap_switch = tk.IntVar()
+        self.speed_in_colour=0
+        
+        def update_switch():            
+            self.speed_in_colour=var_speed_colourmap_switch.get()
+
+            
+        self.qnewtext0 = tk.Label(master=self.choose_traj_segmentation, text=" Save speed information: " ,  bg='white', font=("Times", 10))
+        self.qnewtext0.grid(row=0, column=0, pady=self.pad_val, padx=self.pad_val)             
+     
+        colourspeed_switch_off = tk.Radiobutton(master=self.choose_traj_segmentation,text=" off ",variable=var_speed_colourmap_switch, value=0, bg='white', command =update_switch )
+        colourspeed_switch_off.grid(row=0, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        colourspeed_switch_on = tk.Radiobutton(master=self.choose_traj_segmentation,text=" on ",variable=var_speed_colourmap_switch, value=1, bg='white', command =update_switch )
+        colourspeed_switch_on.grid(row=0, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)  
+                
+
+        
+        
+        self.qnewtext = tk.Label(master=self.choose_traj_segmentation, text=" Select trajectory segmentation mode:  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=1, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+        
+        #default value -> msd based segmentation
+        self.traj_segmentation_var=1
+        
+
+        
+        # radiobutton to choose
+        
+        var_traj_segm_switch = tk.IntVar()
+        self.traj_segmentation_var=1
+        def update_traj_segm_switch():            
+            self.traj_segmentation_var=var_traj_segm_switch.get()
+#            
+#     
+#        segmentation_switch_off = tk.Radiobutton(master=self.choose_traj_segmentation,text=" without ",variable=var_traj_segm_switch, value=0, bg='white', command =update_traj_segm_switch )
+#        segmentation_switch_off.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_traj_segmentation,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_msd.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+        
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_traj_segmentation,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_unet.grid(row=2, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+            
+        
+        self.lbpose1 = tk.Label(master=self.choose_traj_segmentation, text="segment speed evalution \n time interval, sec", bg='white')
+        self.lbpose1.grid(row=3, column=1,  columnspan=3, pady=self.pad_val, padx=self.pad_val, sticky=tk.W)
+        
+        self.speed_sliding_window=1
+        v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
+        self.speed_window_size = tk.Entry(self.choose_traj_segmentation, width=int(self.button_length/3), text=v_speed)
+        self.speed_window_size.grid(row=3, column=3, pady=self.pad_val, padx=self.pad_val)   
+        
+        
+            
+        self.newbutton = tk.Button(master=self.choose_traj_segmentation, text=" OK ", command=ask_for_segmentation, width=int(self.button_length/2),  bg='green')
+        self.newbutton.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        
+        self.deletbutton = tk.Button(master=self.choose_traj_segmentation, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
+        self.deletbutton.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+                
     def plot_multiple_motion_map(self):
         '''
         load and plot multiple orientations together
@@ -573,6 +687,7 @@ class MainVisual(tk.Frame):
             orientation_all=[]
             orientation=[]
             distance_all=[]
+            speed_all=[]
             title_text=" trajectory orientation " # title of the plot
             
             for file_name in load_files:
@@ -582,7 +697,8 @@ class MainVisual(tk.Frame):
                     orientation_new = json.load(json_file)
                     
                 orientation+=orientation_new['orientation']       
-                distance_all+=orientation_new['distance'] 
+                distance_all+=orientation_new['distance']      
+                speed_all+=orientation_new['speed'] 
                 
             
             for pos in orientation:
@@ -650,24 +766,51 @@ class MainVisual(tk.Frame):
             
             if self.mode_orientation_diagram==0: # track based
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n \n number of tracks", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,"\n \n  \n "+first_name+"\n \n number of tracks"])
                  
-                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                bars=ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax_new.set_theta_direction(1)
                 ax_new.set_title(title_text)
                 ax_new.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True)) # provide only integer
                 
             elif self.mode_orientation_diagram==1: # distance based
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n \n total net distance, $\mu$m", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,"\n \n  \n "+first_name+"\n \n total net distance, $\mu$m"])
                 
-                ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                bars=ax_new.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
                 ax_new.set_theta_direction(1)                
                 ax_new.set_title(title_text)
                 
             else: 
                 print("something went wrong")        
+                
+            # colour coded maximum sliding window segment speed
             
+            if self.speed_in_colour==1:    
+                # calculate speed bins and colour the diagram
+                a_speed , b_speed=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=speed_all)
+                a_num , b_num=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+                
+                a_num_array=np.asarray(a_num)
+                a_num_array[a_num_array==0]=1
+                a_num=a_num_array.tolist()
+                
+                average_speed_array=a_speed/a_num
+            
+                r_values=[]
+                colors=[]
+                for r,bar in zip(average_speed_array, bars):
+                    r_values.append(r/float(2000)) #r_values.append(r) #
+                    colors.append(cm.Blues(r_values[-1], alpha=1)) # 'Blues' rainbow
+                    bar.set_facecolor(colors[-1])
+                    bar.set_edgecolor('grey')
+                    bar.set_alpha(0.8)
+                    
+                normi = matplotlib.colors.Normalize(vmin=0, vmax=2000);
+                cbar=orientation_fig.colorbar(cm.ScalarMappable(norm=normi, cmap='Blues'),  ax=ax_new, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
+    #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec")
+             
+                     
             ax_new.set_thetamin(0)
             ax_new.set_thetamax(180)
             #set a window
@@ -719,7 +862,7 @@ class MainVisual(tk.Frame):
         
             
             self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Plot orientation diagram based on  " ,  bg='white', font=("Times", 10))
-            self.qnewtext.grid(row=0, column=0, columnspan=3, pady=self.pad_val, padx=self.pad_val) 
+            self.qnewtext.grid(row=1, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val) 
             
             # radiobutton to choose
             
@@ -730,10 +873,10 @@ class MainVisual(tk.Frame):
                 
          
             segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" track count ",variable=var_diagram_switch, value=0, bg='white', command =update_switch )
-            segmentation_switch_off.grid(row=1, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+            segmentation_switch_off.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
     
             segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled",variable=var_diagram_switch, value=1, bg='white', command =update_switch )
-            segmentation_switch_msd.grid(row=1, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
+            segmentation_switch_msd.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
             
 #            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" Net distance travelled \n normalised by movie length", variable=var_diagram_switch, value=2, bg='white', command =update_switch )
 #            segmentation_switch_unet.grid(row=1, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
@@ -749,13 +892,60 @@ class MainVisual(tk.Frame):
             
             self.set_norm_val = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
             self.set_norm_val.grid(row=3, column=4, pady=self.pad_val, padx=self.pad_val)  
+            
+            # radiobutton for axis on/off         
+            var_speed_colourmap_switch = tk.IntVar()
+            self.speed_in_colour=0
+            
+            def update_switch():            
+                self.speed_in_colour=var_speed_colourmap_switch.get()
+    
+                
+            self.qnewtext0 = tk.Label(master=self.choose_diagram_settings, text=" Colour coded speed: " ,  bg='white', font=("Times", 10))
+            self.qnewtext0.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)             
+         
+            colourspeed_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" off ",variable=var_speed_colourmap_switch, value=0, bg='white', command =update_switch )
+            colourspeed_switch_off.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+    
+            colourspeed_switch_on = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_speed_colourmap_switch, value=1, bg='white', command =update_switch )
+            colourspeed_switch_on.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)           
+                
+#            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" segment speed evalution \n time interval, sec:  " ,  bg='white', font=("Times", 10))
+#            self.qnewtext.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)          
+#            
+#            self.set_time_interval = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+#            self.set_time_interval.grid(row=4, column=4, pady=self.pad_val, padx=self.pad_val)      
+#            
+#            
+#            # radiobutton to choose
+#            
+#                
+#            self.qnewtext1 = tk.Label(master=self.choose_diagram_settings, text=" Trajectory segmentation mode \n for speed evaluation : " ,  bg='white', font=("Times", 10))
+#            self.qnewtext1.grid(row=5, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)   
+#            
+#            var_traj_segm_switch = tk.IntVar()
+#            self.traj_segmentation_var=1
+#            
+#            def update_traj_segm_switch():            
+#                self.traj_segmentation_var=var_traj_segm_switch.get()
+#                 
+#            segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+#            segmentation_switch_msd.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)    
+#            
+#            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+#            segmentation_switch_unet.grid(row=5, column=4, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+#                
+#                        
+#            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text="  " ,  bg='white', font=("Times", 10))
+#            self.qnewtext.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)   
+            
                     
                     
             self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-            self.newbutton.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            self.newbutton.grid(row=7, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
             self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-            self.deletbutton.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+            self.deletbutton.grid(row=7, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                                     
@@ -790,14 +980,15 @@ class MainVisual(tk.Frame):
       
             orintation_array=[]
             distance_array=[]
+            speed_array=[]
             title_text=" trajectory orientation " # title of the plot
             
             orientation_map_figure = plt.figure(figsize=(15,6))
             plt.axis('off')
-            ax = orientation_map_figure.add_subplot(121)
+            ax1 = orientation_map_figure.add_subplot(121)
             
             img_to_show=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
-            ax.imshow(img_to_show, cmap='bone')
+            ax1.imshow(img_to_show, cmap='bone')
             
             
             # position of axis
@@ -834,9 +1025,9 @@ class MainVisual(tk.Frame):
                     arrow_a[1]=arrow_a[1]+int(self.image.shape[1]/10)
                     arrow_b[1]=arrow_b[1]+int(self.image.shape[1]/10)
                     
-                ax.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7, linewidth=3)
-                ax.text(arrow_a[1], arrow_a[0]-3,  second_name, color='#E91E63', size=12, alpha=0.95, weight="bold")
-                ax.text(arrow_b[1], arrow_b[0]-3,  first_name, color='#66BB6A', size=12, alpha=0.95, weight="bold")
+                ax1.plot([arrow_a[1], arrow_b[1]], [arrow_a[0], arrow_b[0]],  color='w', alpha=0.7, linewidth=3)
+                ax1.text(arrow_a[1], arrow_a[0]-3,  second_name, color='#E91E63', size=12, alpha=0.95, weight="bold")
+                ax1.text(arrow_b[1], arrow_b[0]-3,  first_name, color='#00FFFF', size=12, alpha=0.95, weight="bold")
                 
                 
             #set arrow size
@@ -891,11 +1082,37 @@ class MainVisual(tk.Frame):
                 orintation_array.append(orintation_move)
                 distance_array.append(net_displacement)
                 
+                
+                # calculate speed
+                
+                if len(track['trace'])>1 and self.speed_in_colour==1:
+                    
+#                    self.traj_segmentation_var=1 
+                    
+                    if self.set_time_interval.get()!='':
+                        self.speed_sliding_window=float(self.set_time_interval.get())
+                    else:
+                        self.speed_sliding_window=1 
+                    
+#                    print("self.traj_segmentation_var=",self.traj_segmentation_var, "; speed_sliding_window=", self.speed_sliding_window)
+                    track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
+
+                    speed_dict=self.tg.max_speed_segment(track, int(self.speed_sliding_window*self.frame_rate))
+
+                    speed_val=speed_dict['speed']
+                    
+                    if speed_val==None:
+                        speed_val=0
+#                    print(speed_val*self.img_resolution*self.frame_rate)
+                    speed_array.append(speed_val*self.img_resolution*self.frame_rate)
+                else:
+                    speed_array.append(0)
+                    
                 # select colour
                 if orintation_move<45:
-                    color='#E91E63'# magenta
+                    color='#E91E63'# red
                 elif orintation_move>135: 
-                    color='#66BB6A' #   green
+                    color='#00FFFF' #   cyan
                 else:
                     color='gold'
                     
@@ -927,14 +1144,16 @@ class MainVisual(tk.Frame):
             a , b=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=distance_array)
             centers = np.deg2rad(np.ediff1d(b)//2 + b[:-1]) 
                 
+
             
-            ax = orientation_map_figure.add_subplot(122, projection='polar')
+            ax2 = orientation_map_figure.add_subplot(122, projection='polar')
+            
 
             # if scale is provided 
             
             if self.set_range.get()!='':
                 ylim_max=int(self.set_range.get())            
-                ax.set_ylim([0, ylim_max])
+                ax2.set_ylim([0, ylim_max])
                 
                 
             if self.set_norm_val.get()!='':
@@ -945,30 +1164,59 @@ class MainVisual(tk.Frame):
             if self.mode_orientation_diagram==0: # track based
     
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n \n number of tracks", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
-                ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
-                ax.set_theta_direction(1)
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' , "\n \n  \n "+first_name+"\n \n number of tracks"])
+                bars= ax2.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax2.set_theta_direction(1)
             
-                ax.set_title(title_text)
+                ax2.set_title(title_text)
 
-                ax.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True)) # provide only integer
+                ax2.yaxis.set_major_locator(matplotlib.ticker.MaxNLocator(integer=True)) # provide only integer
                 
                 
             elif self.mode_orientation_diagram==1: # distance based    
                 plt.xticks(np.radians((0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180)),
-                   ["\n \n  \n "+second_name+"\n \n total net distance, $\mu$m", '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,first_name])
-                ax.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
-                ax.set_theta_direction(1)
+                   [second_name, '10', '20', '30', '40', '50', '60', '70', '80', '90' , '100', '110', '120', '130', '140', '150', '160', '170' ,"\n \n  \n "+first_name+"\n \n total net distance, $\mu$m"])
+                bars= ax2.bar(centers, a, width=np.deg2rad(bin_size), bottom=0.0, color='.7', alpha=0.5)
+                ax2.set_theta_direction(1)
                 
-                ax.set_title(title_text)
-
+                ax2.set_title(title_text)
 
             else: 
-                print("something went wrong")     
+                print("something went wrong")    
+
+            
+
+                
+            # colour coded maximum sliding window segment speed
+            
+            if self.speed_in_colour==1:    
+                # calculate speed bins and colour the diagram
+                a_speed , b_speed=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=speed_array)
+                a_num , b_num=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
+                
+                a_num_array=np.asarray(a_num)
+                a_num_array[a_num_array==0]=1
+                a_num=a_num_array.tolist()
+                
+                average_speed_array=a_speed/a_num
+            
+                r_values=[]
+                colors=[]
+                for r,bar in zip(average_speed_array, bars):
+                    r_values.append(r/float(2000)) #r_values.append(r) #
+                    colors.append(cm.Blues(r_values[-1], alpha=1)) # 'Blues' rainbow
+                    bar.set_facecolor(colors[-1])
+                    bar.set_edgecolor('grey')
+                    bar.set_alpha(0.8)
+                    
+                normi = matplotlib.colors.Normalize(vmin=0, vmax=2000);
+                cbar=orientation_map_figure.colorbar(cm.ScalarMappable(norm=normi, cmap='Blues'),  ax=ax2, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
+    #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec")
+             
                 
             
-            ax.set_thetamin(0)
-            ax.set_thetamax(180)        
+            ax2.set_thetamin(0)
+            ax2.set_thetamax(180)        
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
             self.show_orientation_map_win.title(" orientation plot ")
@@ -1044,6 +1292,53 @@ class MainVisual(tk.Frame):
         self.set_norm_val = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
         self.set_norm_val.grid(row=3, column=4, pady=self.pad_val, padx=self.pad_val)  
         
+        
+        # radiobutton for axis on/off         
+        var_speed_colourmap_switch = tk.IntVar()
+        self.speed_in_colour=0
+        
+        def update_switch():            
+            self.speed_in_colour=var_speed_colourmap_switch.get()
+
+            
+        self.qnewtext0 = tk.Label(master=self.choose_diagram_settings, text=" Colour coded speed: " ,  bg='white', font=("Times", 10))
+        self.qnewtext0.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)             
+     
+        colourspeed_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" off ",variable=var_speed_colourmap_switch, value=0, bg='white', command =update_switch )
+        colourspeed_switch_off.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+
+        colourspeed_switch_on = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_speed_colourmap_switch, value=1, bg='white', command =update_switch )
+        colourspeed_switch_on.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)           
+            
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" segment speed evalution \n time interval, sec:  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)          
+        
+        self.set_time_interval = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
+        self.set_time_interval.grid(row=4, column=4, pady=self.pad_val, padx=self.pad_val)      
+        
+        
+        # radiobutton to choose
+        
+            
+        self.qnewtext1 = tk.Label(master=self.choose_diagram_settings, text=" Trajectory segmentation mode \n for speed evaluation : " ,  bg='white', font=("Times", 10))
+        self.qnewtext1.grid(row=5, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)   
+        
+        var_traj_segm_switch = tk.IntVar()
+        self.traj_segmentation_var=1
+        
+        def update_traj_segm_switch():            
+            self.traj_segmentation_var=var_traj_segm_switch.get()
+             
+        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_msd.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)    
+        
+        segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
+        segmentation_switch_unet.grid(row=5, column=4, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+            
+                    
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text="  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)   
+        
         # radiobutton for axis on/off         
         var_diagram_axis_switch = tk.IntVar()
         
@@ -1052,13 +1347,13 @@ class MainVisual(tk.Frame):
 
             
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Show axis: " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=4, column=0, pady=self.pad_val, padx=self.pad_val)             
+        self.qnewtext.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val)             
      
         segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" off ",variable=var_diagram_axis_switch, value=0, bg='white', command =update_switch )
-        segmentation_switch_off.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_off.grid(row=7, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
-        segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_diagram_axis_switch, value=1, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_on = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_diagram_axis_switch, value=1, bg='white', command =update_switch )
+        segmentation_switch_on.grid(row=7, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         
         # radiobutton for arrow size     
@@ -1069,26 +1364,26 @@ class MainVisual(tk.Frame):
             self.arrow_size_orientation_map=var_arrow_size_switch.get()
             
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Arrow size: " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=5, column=0, pady=self.pad_val, padx=self.pad_val) 
+        self.qnewtext.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val) 
             
      
         segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" small ",variable=var_arrow_size_switch, value=0, bg='white', command =update_switch )
-        segmentation_switch_off.grid(row=5, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_off.grid(row=8, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" medium ",variable=var_arrow_size_switch, value=1, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=5, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
+        segmentation_switch_msd.grid(row=8, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" large ",variable=var_arrow_size_switch, value=2, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=5, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
+        segmentation_switch_msd.grid(row=8, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
 
             
                      
             
         self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
-        self.newbutton.grid(row=8, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        self.newbutton.grid(row=10, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
         
         self.deletbutton = tk.Button(master=self.choose_diagram_settings, text=" Cancel ", command=cancel_window, width=int(self.button_length/2))
-        self.deletbutton.grid(row=8, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
+        self.deletbutton.grid(row=10, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)
         
   
                 
