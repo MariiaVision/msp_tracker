@@ -1189,12 +1189,12 @@ See the Manual for the detailed description of the software.
         if self.monitor_switch_detection==1 and self.detection_frame==self.frame_pos: # candidates
             if len(self.detector.detection_candidates)>0:
                 for i in range(0, len(np.asarray(self.detector.detection_candidates))):
-                    circle=plt.Circle((np.asarray(self.detector.detection_candidates)[i,1], np.asarray(self.detector.detection_candidates)[i,0]), 3, color="b", fill=False)
+                    circle=plt.Circle((np.asarray(self.detector.detection_candidates)[i,1], np.asarray(self.detector.detection_candidates)[i,0]), 3, color="c", fill=False, linewidth=2)
                     self.axd.add_artist(circle)    
         elif self.monitor_switch_detection==2: # detection
             if len(self.detector.detection_vesicles)>0 and self.detection_frame==self.frame_pos:
                 for i in range(0, len(np.asarray(self.detector.detection_vesicles))):
-                    circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False)
+                    circle=plt.Circle((np.asarray(self.detector.detection_vesicles)[i,1], np.asarray(self.detector.detection_vesicles)[i,0]), 3, color="r", fill=False, linewidth=2)
                     self.axd.add_artist(circle)    
 
         
