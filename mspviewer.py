@@ -796,19 +796,25 @@ class MainVisual(tk.Frame):
                 a_num=a_num_array.tolist()
                 
                 average_speed_array=a_speed/a_num
+                
+                # read the speed range max value:
+                
+                
+                if self.set_speed_vmax.get()!="":
+                    self.speed_vmax=float(self.set_speed_vmax.get())
             
                 r_values=[]
                 colors=[]
                 for r,bar in zip(average_speed_array, bars):
-                    r_values.append(r/float(2000)) #r_values.append(r) #
-                    colors.append(cm.Blues(r_values[-1], alpha=1)) # 'Blues' rainbow
+                    r_values.append(r/float(self.speed_vmax)) #r_values.append(r) #
+                    colors.append(cm.viridis(r_values[-1], alpha=1)) # 'Blues' rainbow
                     bar.set_facecolor(colors[-1])
                     bar.set_edgecolor('grey')
                     bar.set_alpha(0.8)
                     
-                normi = matplotlib.colors.Normalize(vmin=0, vmax=2000);
-                cbar=orientation_fig.colorbar(cm.ScalarMappable(norm=normi, cmap='Blues'),  ax=ax_new, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
-    #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec")
+                normi = matplotlib.colors.Normalize(vmin=0, vmax=self.speed_vmax);
+                cbar=orientation_fig.colorbar(cm.ScalarMappable(norm=normi, cmap='viridis'),  ax=ax_new, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
+    #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec") Viridis  Blues
              
                      
             ax_new.set_thetamin(0)
@@ -908,7 +914,17 @@ class MainVisual(tk.Frame):
             colourspeed_switch_off.grid(row=4, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
     
             colourspeed_switch_on = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_speed_colourmap_switch, value=1, bg='white', command =update_switch )
-            colourspeed_switch_on.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)           
+            colourspeed_switch_on.grid(row=4, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
+        #colourcode_linit
+            
+            self.speed_vmax=2000  
+                
+            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Speed range (maximum expected speed):  " ,  bg='white', font=("Times", 10))
+            self.qnewtext.grid(row=5, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)          
+            v = tk.StringVar(root, value=str(self.speed_vmax))
+            self.set_speed_vmax = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2), text=v)
+            self.set_speed_vmax.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val) 
+             
                 
 #            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" segment speed evalution \n time interval, sec:  " ,  bg='white', font=("Times", 10))
 #            self.qnewtext.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)          
@@ -1199,18 +1215,24 @@ class MainVisual(tk.Frame):
                 a_num=a_num_array.tolist()
                 
                 average_speed_array=a_speed/a_num
+                
+                # get speed range max value
+                
+                if self.set_speed_vmax.get!="":
+                    self.speed_vmax=float(self.set_speed_vmax.get())
+                    
             
                 r_values=[]
                 colors=[]
                 for r,bar in zip(average_speed_array, bars):
-                    r_values.append(r/float(2000)) #r_values.append(r) #
-                    colors.append(cm.Blues(r_values[-1], alpha=1)) # 'Blues' rainbow
+                    r_values.append(r/float(self.speed_vmax)) #r_values.append(r) #
+                    colors.append(cm.viridis(r_values[-1], alpha=1)) # 'Blues' rainbow viridis
                     bar.set_facecolor(colors[-1])
                     bar.set_edgecolor('grey')
                     bar.set_alpha(0.8)
                     
-                normi = matplotlib.colors.Normalize(vmin=0, vmax=2000);
-                cbar=orientation_map_figure.colorbar(cm.ScalarMappable(norm=normi, cmap='Blues'),  ax=ax2, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
+                normi = matplotlib.colors.Normalize(vmin=0, vmax=self.speed_vmax);
+                cbar=orientation_map_figure.colorbar(cm.ScalarMappable(norm=normi, cmap='viridis'),  ax=ax2, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
     #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec")
              
                 
@@ -1314,14 +1336,27 @@ class MainVisual(tk.Frame):
         self.qnewtext.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)          
         
         self.set_time_interval = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
-        self.set_time_interval.grid(row=4, column=4, pady=self.pad_val, padx=self.pad_val)      
+        self.set_time_interval.grid(row=4, column=4, pady=self.pad_val, padx=self.pad_val)     
+        
+        
+        #colourcode_linit
+        
+        self.speed_vmax=2000  
+            
+        self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Speed range (maximum expected speed):  " ,  bg='white', font=("Times", 10))
+        self.qnewtext.grid(row=5, column=1, columnspan=3, pady=self.pad_val, padx=self.pad_val)          
+        
+        v = tk.StringVar(root, value=str(self.speed_vmax))
+        self.set_speed_vmax = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2), text=v)
+        self.set_speed_vmax.grid(row=5, column=4, pady=self.pad_val, padx=self.pad_val) 
+        
         
         
         # radiobutton to choose
         
             
         self.qnewtext1 = tk.Label(master=self.choose_diagram_settings, text=" Trajectory segmentation mode \n for speed evaluation : " ,  bg='white', font=("Times", 10))
-        self.qnewtext1.grid(row=5, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)   
+        self.qnewtext1.grid(row=6, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)   
         
         var_traj_segm_switch = tk.IntVar()
         self.traj_segmentation_var=1
@@ -1330,14 +1365,14 @@ class MainVisual(tk.Frame):
             self.traj_segmentation_var=var_traj_segm_switch.get()
              
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
-        segmentation_switch_msd.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)    
+        segmentation_switch_msd.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)    
         
         segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
-        segmentation_switch_unet.grid(row=5, column=4, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
+        segmentation_switch_unet.grid(row=6, column=4, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
             
                     
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text="  " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)   
+        self.qnewtext.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val)   
         
         # radiobutton for axis on/off         
         var_diagram_axis_switch = tk.IntVar()
@@ -1347,13 +1382,13 @@ class MainVisual(tk.Frame):
 
             
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Show axis: " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=7, column=0, pady=self.pad_val, padx=self.pad_val)             
+        self.qnewtext.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val)             
      
         segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" off ",variable=var_diagram_axis_switch, value=0, bg='white', command =update_switch )
-        segmentation_switch_off.grid(row=7, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_off.grid(row=8, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         segmentation_switch_on = tk.Radiobutton(master=self.choose_diagram_settings,text=" on ",variable=var_diagram_axis_switch, value=1, bg='white', command =update_switch )
-        segmentation_switch_on.grid(row=7, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_on.grid(row=8, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         
         # radiobutton for arrow size     
@@ -1364,17 +1399,17 @@ class MainVisual(tk.Frame):
             self.arrow_size_orientation_map=var_arrow_size_switch.get()
             
         self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" Arrow size: " ,  bg='white', font=("Times", 10))
-        self.qnewtext.grid(row=8, column=0, pady=self.pad_val, padx=self.pad_val) 
+        self.qnewtext.grid(row=9, column=0, pady=self.pad_val, padx=self.pad_val) 
             
      
         segmentation_switch_off = tk.Radiobutton(master=self.choose_diagram_settings,text=" small ",variable=var_arrow_size_switch, value=0, bg='white', command =update_switch )
-        segmentation_switch_off.grid(row=8, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+        segmentation_switch_off.grid(row=9, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" medium ",variable=var_arrow_size_switch, value=1, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=8, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
+        segmentation_switch_msd.grid(row=9, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)      
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" large ",variable=var_arrow_size_switch, value=2, bg='white', command =update_switch )
-        segmentation_switch_msd.grid(row=8, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
+        segmentation_switch_msd.grid(row=9, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)                           
 
             
                      
@@ -3122,6 +3157,7 @@ class TrackViewer(tk.Frame):
         v_speed = tk.StringVar(root, value=str(self.speed_sliding_window))
         self.speed_window_position = tk.Entry(self.viewer, width=int(self.button_length/3), text=v_speed)
         self.speed_window_position.grid(row=3, column=12, pady=self.pad_val, padx=self.pad_val)   
+        
          
                 
           
