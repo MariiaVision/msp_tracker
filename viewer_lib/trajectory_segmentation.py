@@ -395,8 +395,7 @@ class TrajectorySegment(object):
         calculate max speed within a moving window
 
         '''
-        
-        
+               
         speed_max=0
         outcome={"frames":[], "speed": None}
         segment_list=skimage.measure.label(np.asarray(track['motion']))
@@ -407,7 +406,7 @@ class TrajectorySegment(object):
             positions=np.where(segment_list==seg_pos)
             start_pos=np.max((0, np.min(positions[0])-1))
             end_pos=np.min((len(track['frames'])+1, np.max(positions[0])+1))            
-            
+#            print("\n  start, end:", track['frames'][start_pos], track['frames'][end_pos-1], "-->", (len(track['frames'])+1, np.max(positions[0])+1))
             trace_segment=track['trace'][start_pos:end_pos]
             frame_segment=track['frames'][start_pos:end_pos]
             
@@ -419,45 +418,45 @@ class TrajectorySegment(object):
             
                 for pos in range(0, len(trace_segment)-1):
                     
-                    mini_track=np.asarray(trace_segment[pos:np.min((pos + width+1, len(trace_segment)))])
-                    mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+1, len(trace_segment)))])
-                    
-                    if len(mini_frames)<(mini_frames[-1]-mini_frames[0]+1):
-
-                        new_width=width-1
-                        while new_width>=1:
-                            mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
-                            mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
-
-                            if width==(mini_frames[-1]-mini_frames[0]):
+                    if frame_segment[pos] + width<=frame_segment[-1]:
+                        mini_track=np.asarray(trace_segment[pos:np.min((pos + width+1, len(trace_segment)))])
+                        mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+1, len(trace_segment)))])
+                      
+                        # if there is a gap -> adjust the range
+                        if len(mini_frames)<(mini_frames[-1]-mini_frames[0]+1):
+                     
+                            new_width=width-1
+                            while new_width>=1:
+                                mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
+                                mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+1, len(trace_segment)))])
     
-                                break
-                            elif width>(mini_frames[-1]-mini_frames[0]): # too small width -> return to the previous result
-                                
-                                mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
-                                mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
-                                break
-                            else:
-                                new_width=new_width-1
+                                if width==(mini_frames[-1]-mini_frames[0]):
+        
+                                    break
+                                elif width>(mini_frames[-1]-mini_frames[0]): # too small width -> return to the previous result
+                                    
+                                    mini_track=np.asarray(trace_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
+                                    mini_frames=np.asarray(frame_segment[pos:np.min((pos + new_width+2, len(trace_segment)))])
+                                    break
+                                else:
+                                    new_width=new_width-1
+                                    
+                        elif len(mini_frames)>(mini_frames[-1]-mini_frames[0]+1): 
+                            val=abs(width-(mini_frames[-1]-mini_frames[0]))
+                            mini_track=np.asarray(trace_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
+                            mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
+                            
                         
-                    elif len(mini_frames)>(mini_frames[-1]-mini_frames[0]+1): 
-                        val=abs(width-(mini_frames[-1]-mini_frames[0]))
-                        mini_track=np.asarray(trace_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
-                        mini_frames=np.asarray(frame_segment[pos:np.min((pos + width+val+1, len(trace_segment)))])
-                        
-                        
-                        
-                    speed=(np.sum(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2))))/(mini_frames[-1]-mini_frames[0])
-
-                    if speed>speed_max and width<=segment_length:
-
-                        speed_max=speed
-                        outcome.update({"frames":[mini_frames[0], mini_frames[-1]], "speed":speed_max})
+                        speed=(np.sum(np.sqrt((mini_track[1:, 0] - mini_track[:-1, 0])**2+((mini_track[1:, 1] - mini_track[:-1, 1])**2))))/(mini_frames[-1]-mini_frames[0])
+                     
                         
                         
-            else:
-                pass
-            
+                        if speed>speed_max and width<=segment_length:
+    
+                            speed_max=speed
+                            
+                            outcome.update({"frames":[mini_frames[0], mini_frames[-1]], "speed":speed_max})
+                 
         return outcome
             
     def refine_track_sequence(self, tracks, frames, motion):
