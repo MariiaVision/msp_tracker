@@ -458,6 +458,141 @@ class TrajectorySegment(object):
                             outcome.update({"frames":[mini_frames[0], mini_frames[-1]], "speed":speed_max})
                  
         return outcome
+
+    def num_orientation_change(self, trajectory, motion, check_dist):
+        '''
+        calculate how many times trajectory direction changes
+        in:
+            trajectory - list, trajectory
+            motion - list, motion type for each point of the trajectory
+            check_dist - int, number of frames to check the direction for
+        out:
+            change_direction_pos - list with the positions where the direction was changed
+        '''
+  #      trajectory=track['trace']
+  #      motion=track['motion']
+                #calculate the displacement
+        x=np.asarray(trajectory)[:,0]    
+        y=np.asarray(trajectory)[:,1]
+        x_0=np.asarray(trajectory)[0,0]
+        y_0=np.asarray(trajectory)[0,1]
+        
+        disaplcement=np.sqrt((x-x_0)**2+(y-y_0)**2)        
+            
+        change_direction_pos=[]
+        
+        
+        for i in range(check_dist-1, len(disaplcement)-check_dist):
+            before_list=[]
+            after_list=[]
+            for p in range(1,check_dist+1):
+                before_list.append(disaplcement[i]-disaplcement[i-p])
+                after_list.append(disaplcement[i+p]-disaplcement[i])
+            
+            b_1=(np.asarray(before_list)>0).tolist()
+            b_0=(np.asarray(before_list)<0).tolist()
+            
+            a_1=(np.asarray(after_list)>0).tolist()
+            a_0=(np.asarray(after_list)<0).tolist()
+                
+            # the same orientation in the same direction
+            logic_0=all(b_1) or all(b_0)
+            logic_1=all(a_1) or all(a_0)
+            
+            #different orientation from different sides of the point
+            logic_2= b_1[0]!=a_1[0]
+            
+            # check that the change of the direction is at the moving segment
+            motion_var=motion[i]>0 or motion[i+1]>0
+            
+            if logic_0 and logic_1 and logic_2 and motion_var:
+                change_direction_pos.append(i)  
+                
+                
+        return change_direction_pos
+        
+        
+    def moving_segments_data(self, track, width, framerate):
+        '''
+        calculate number of moving segments and average segment time (taking into account change in direction)
+        
+        in:
+            track - dict, trajectory with trace, frames, motion information
+            width - float, number of frames to consider for directionality change
+            framerate - int, frame rate 
+        out:
+            num_moving_segment - number of moving segments (taking into account directionality change inside the moving segment)
+            average_moving_time_per_segment - average duration of the moving segmnt
+        '''
+        
+        segment_list=skimage.measure.label(np.asarray(track['motion'][1:]))
+        
+        
+        # find the direction changes        
+        change_direction_pos=self.num_orientation_change(track['trace'], track['motion'], width)
+        
+        # total number of segment in the trajectory
+        total_moving_segment_n=0
+        
+        # total time of the moving segments
+#        motion_only=np.asarray(track['motion'])[np.asarray(track['motion'])>0]
+#        print("motion only", len(motion_only), np.sum(np.asarray(track['motion'])), segment_list)
+        total_moving_time=0
+#        total_moving_time=np.sum(np.asarray(track['motion'])) # frames
+        
+        
+        for seg_pos in range(0, np.max(segment_list)+1): # over segments
+            
+            positions=np.where(segment_list==seg_pos)
+            
+            positions_new=positions[0]+1
+
+            
+            if len(positions_new)>0: # if the array is not empty
+    #            print("\n", positions)
+                val_motion=np.asarray(track['motion'])[positions_new[0]]
+       
+                # check if it is moving segment
+                if val_motion==1:
+                    
+                    # moving segment length
+                    segment_length=track['frames'][np.max(positions_new)]-track['frames'][np.min(positions_new)]
+                    
+                    # if it is the first segment from the beginning take it into account
+                    if np.min(positions_new)==1:
+                        
+                        segment_length+=track['frames'][1]-track['frames'][0]
+                        
+                    total_moving_time+=segment_length
+#                    print("segment_length", segment_length, "->", track['frames'][np.max(positions_new)],"-", track['frames'][np.min(positions_new)])
+                    
+                    start_pos=np.min(positions_new)+1 # start position but to the first one
+                    end_pos=np.max(positions_new) # end position but not the last one 
+                    frame_segment=track['frames'][start_pos:end_pos]
+                    
+                    # find is any change of direction inside the moving segment
+                    intersection = [track['frames'][value] for value in change_direction_pos if track['frames'][value] in frame_segment]
+         
+                    #number of segments in thismoving segment
+                    segment_n=1+len(intersection)
+                    
+                    # total number of segment in the trajectory
+                    total_moving_segment_n+=segment_n
+                    
+        
+        #  average_moving_time_per_segment
+        
+        if total_moving_segment_n!=0:
+            average_moving_t=(total_moving_time/total_moving_segment_n)/framerate
+        else:
+            average_moving_t=0
+   
+#        print("total_moving_time ", total_moving_time, "vs", (track['frames'][-1]-track['frames'][0]), "  ->", total_moving_segment_n, average_moving_t)
+        # out
+#        out={'num_moving_segment':total_moving_segment_n, "average_moving_time_per_segment": average_moving_t}
+                 
+        return total_moving_segment_n, average_moving_t
+
             
     def refine_track_sequence(self, tracks, frames, motion):
         '''
