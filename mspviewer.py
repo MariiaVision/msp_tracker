@@ -681,7 +681,8 @@ class MainVisual(tk.Frame):
             '''
             the main code run after OK button
             '''
-                        # plot the image
+                        
+            # plot the image
                        
             # create the joint orientation list            
             orientation_all=[]
@@ -999,9 +1000,9 @@ class MainVisual(tk.Frame):
             speed_array=[]
             title_text=" trajectory orientation " # title of the plot
             
-            orientation_map_figure = plt.figure(figsize=(15,6))
+            orientation_map_figure = plt.figure(figsize=(18,5))
             plt.axis('off')
-            ax1 = orientation_map_figure.add_subplot(121)
+            ax1 = orientation_map_figure.add_subplot(131)
             
             img_to_show=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
             ax1.imshow(img_to_show, cmap='bone')
@@ -1065,8 +1066,7 @@ class MainVisual(tk.Frame):
                 head_length_val=4.0
                 linewidth_val=0.3*head_width_val
                 
-                
-                
+            
     
             for trackID in range(0, len(self.track_data_filtered['tracks'])):
                 track=self.track_data_filtered['tracks'][trackID]
@@ -1162,7 +1162,7 @@ class MainVisual(tk.Frame):
                 
 
             
-            ax2 = orientation_map_figure.add_subplot(122, projection='polar')
+            ax2 = orientation_map_figure.add_subplot(132, projection='polar')
             
 
             # if scale is provided 
@@ -1238,7 +1238,38 @@ class MainVisual(tk.Frame):
                 
             
             ax2.set_thetamin(0)
-            ax2.set_thetamax(180)        
+            ax2.set_thetamax(180)   
+            
+            
+            # trajectories orientations -> all plots on one figure
+            ax3 = orientation_map_figure.add_subplot(133)
+
+            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+                track=self.track_data_filtered['tracks'][trackID]
+                trace=track['trace']
+                trace=np.asarray(trace)*self.img_resolution
+                
+#                plt.axis('off')
+                ax3.plot(trace[:,1]-trace[0,1],trace[:,0]-trace[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+                ax3.text(trace[-1,1]-trace[0,1],trace[-1,0]-trace[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+
+                '''
+                
+                ax3.plot((np.asarray(trace)[:,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[:,0]-np.asarray(trace)[0,0])*self.img_resolution,  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+                ax3.text((np.asarray(trace)[-1,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[-1,0]-np.asarray(trace)[0,0])*self.img_resolution, str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+                
+                ax3.plot(np.asarray(trace)[:,1]-np.asarray(trace)[0,1],np.asarray(trace)[:,0]-np.asarray(trace)[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+                ax3.text(np.asarray(trace)[-1,1]-np.asarray(trace)[0,1],np.asarray(trace)[-1,0]-np.asarray(trace)[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+
+                '''               
+                
+            
+            #invert y axis
+            ax3.invert_yaxis()    
+            ax3.grid(True)
+#            ax3.set_ylabel('Distance, nm')
+            ax3.set_xlabel('distance, nm')
+            
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
             self.show_orientation_map_win.title(" orientation plot ")
@@ -2715,7 +2746,8 @@ class MainVisual(tk.Frame):
                 self.stat_data.append(['Track ID', 'Start frame', ' Total distance travelled (nm)',  'Net distance travelled (nm)', 
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
-                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', "Mean brightness (normalised [0,1]])", "Mean brightness (normalised by max)"  ]) 
+                                 'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', 
+                                 "Mean brightness (normalised [0,1]])", "Mean brightness (normalised by max)", "number of moving segments", "average time of moving segment (sec)"  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -2794,16 +2826,29 @@ class MainVisual(tk.Frame):
                             intensity_mean_roi=None
 
 #                        moving_maxsegcs=np.round(moving_speeds[3]*self.img_resolution*self.frame_rate,0)
+                        # moving segment data
+                        
+                        try:
+                            n_mov_segment, average_mov_segment_time=self.tg.moving_segments_data(track, int(2*self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+                        except:
+                            n_mov_segment=None
+                            average_mov_segment_time=None
+                            
+                                   
+                    
+                            
                         
                         
                         
                         self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                                  max_displacement, time,
-                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs, intensity_mean_segment, intensity_mean_roi])
+                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs, intensity_mean_segment, intensity_mean_roi, n_mov_segment, average_mov_segment_time])
                     else:
-                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None, None, None])
+                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None, None, None, None, None])
                         
         
+                        
+                        
                 if not(save_file.endswith(".csv")):
                     save_file += ".csv"
                     
@@ -2923,7 +2968,11 @@ class TrackViewer(tk.Frame):
         self.speed_graph_var=0 # show curvilinear speed in colours
         self.speed_sliding_window=speed_sliding_window # sliding window interval for the speed evaluation
         self.tg = TrajectorySegment()     
-        self.tg.window_length=8            
+        self.tg.window_length=8     
+        self.change_direction_pos=[] # number changes in directionality
+        self.n_mov_segment=0 # number of moving segments in the trajectory (taking into account directionality change)
+        self.average_mov_segment_time=0 # average time of a moving segment in the trajectory
+        
         #update motion information
         self.motion=self.motion_type_evaluate(self.track_data)
         self.track_data['motion']=self.motion 
@@ -3677,35 +3726,44 @@ class TrackViewer(tk.Frame):
                 intensity_mean_2=None
 #                        
                 
-                
-           # add to the list
-            self.listNodes_parameters.insert(tk.END, " Total distance travelled                    "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
-    
-            self.listNodes_parameters.insert(tk.END, " Net distance travelled                      "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
-    
-            self.listNodes_parameters.insert(tk.END, " Maximum distance travelled                  "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
             
-            self.listNodes_parameters.insert(tk.END, " Total trajectory time                       "+str(np.round((self.frames[-1]-self.frames[0])/self.frame_rate,5))+" sec")
+            # average moving segment time
+            
+            
+#            !!!!!!!!!!!!!!!
+           # add to the list
+            self.listNodes_parameters.insert(tk.END, " Total distance travelled                       "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
     
-            self.listNodes_parameters.insert(tk.END, " Net orientation                             "+str(self.calculate_direction(self.trace))+ " degrees")
+            self.listNodes_parameters.insert(tk.END, " Net distance travelled                         "+str(np.round(self.net_displacement*self.img_resolution,2))+" nm")  
+    
+            self.listNodes_parameters.insert(tk.END, " Maximum distance travelled                     "+str(np.round(self.max_displacement*self.img_resolution,2))+" nm")
+            
+            self.listNodes_parameters.insert(tk.END, " Total trajectory time                          "+str(np.round((self.frames[-1]-self.frames[0])/self.frame_rate,5))+" sec")
+    
+            self.listNodes_parameters.insert(tk.END, " Net orientation                                "+str(self.calculate_direction(self.trace))+ " degrees")
     
 #            self.listNodes_parameters.insert(tk.END, " Mean brightness (normilised [0,1])                 "+str(np.round(intensity_mean_1,5)))  
             
-            self.listNodes_parameters.insert(tk.END, " Mean brightness (normalised)                "+str(np.round(intensity_mean_2,5)))
+            self.listNodes_parameters.insert(tk.END, " Mean brightness (normalised)                   "+str(np.round(intensity_mean_2,5)))
             
-            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average             "+str(mean_curvilinear_average)+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: average                "+str(mean_curvilinear_average)+" nm/sec")
      
-            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average           "+str(mean_straightline_average)+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: average              "+str(mean_straightline_average)+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving              "+str(mean_curvilinear_moving)+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean curvilinear speed: moving                 "+str(mean_curvilinear_moving)+" nm/sec")
     
-            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving            "+str(mean_straightline_moving)+" nm/sec")
+            self.listNodes_parameters.insert(tk.END, " Mean straight-line speed: moving               "+str(mean_straightline_moving)+" nm/sec")
     
        #     self.listNodes_parameters.insert(tk.END, " Max curvilinear speed: moving               "+str(np.round(moving_speeds[2]*self.img_resolution*self.frame_rate,0))+" nm/sec")
     
             self.listNodes_parameters.insert(tk.END, " Max curvilinear speed over a segment : moving  "+str(max_curvilinear_segment)+" nm/sec")
+            
+            self.listNodes_parameters.insert(tk.END, " Number of moving segments:                     "+str(self.n_mov_segment))
 
+            self.listNodes_parameters.insert(tk.END, " Average moving segment time                    "+str(np.round(self.average_mov_segment_time, 5))+" sec")
         
+        
+        self.n_mov_segment, self.average_mov_segment_time
     def show_list(self): 
         '''
         arrangement for the position list
@@ -3817,6 +3875,11 @@ class TrackViewer(tk.Frame):
      
             disaplcement=self.displacement_array*self.img_resolution
             
+            ############# getting orientation out #########
+            
+            self.change_direction_pos=self.tg.num_orientation_change(self.trace, self.motion, int(2*self.speed_sliding_window*self.frame_rate)) 
+            self.n_mov_segment, self.average_mov_segment_time=self.tg.moving_segments_data(self.track_data, int(2*self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+                               
                     
             self.ax_displacement.clear()
             
@@ -3855,7 +3918,10 @@ class TrackViewer(tk.Frame):
                         colourV=color_map_color(speed_array[i-1], vmin=0, vmax=2000)
     
                     self.ax_displacement.plot((self.frames[i-1],self.frames[i]), (disaplcement[i-1],disaplcement[i]), colourV)
-                
+              
+                #plot changes in directionality
+                for pos in self.change_direction_pos:
+                    self.ax_displacement.plot(self.frames[pos], disaplcement[pos], 'ko')  
                 
                 #plot fastest segment
                 
