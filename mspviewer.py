@@ -369,7 +369,11 @@ class MainVisual(tk.Frame):
         button_save.grid(row=14, column=6, pady=self.pad_val, padx=self.pad_val)
         
         button_save=tk.Button(master=self.resultbuttonframe, text="orientation: joint map", command=self.plot_multiple_motion_map, width=int(self.button_length*1.5))
-        button_save.grid(row=15, column=6, pady=self.pad_val, padx=self.pad_val)        
+        button_save.grid(row=15, column=6, pady=self.pad_val, padx=self.pad_val)  
+        
+        button_save=tk.Button(master=self.resultbuttonframe, text="same origin trajectories", command=self.plot_trajectories_thesameorigin, width=int(self.button_length*1.5))
+        button_save.grid(row=16, column=6, pady=self.pad_val, padx=self.pad_val)        
+              
         
         # button to save all the tracks on the image
         button_save=tk.Button(master=self.resultbuttonframe, text="trajectories: save image", command=self.save_track_plot, width=int(self.button_length*1.5))
@@ -483,6 +487,135 @@ class MainVisual(tk.Frame):
             
         if self.axis_name_parameter.get()!='':
             self.axis_name=self.axis_name_parameter.get()
+            
+    
+    def plot_trajectories_thesameorigin(self):
+        '''
+        plot trajectories from different files 
+        all trajectories start from (0,0)
+        '''
+        def rotate_origin_only(x, y, degrees):
+            
+            '''
+            rotate a point around the origin (0, 0)
+            '''
+            radians=math.radians(degrees)
+            xx = x * math.cos(radians) + y * math.sin(radians)
+            yy = -x * math.sin(radians) + y * math.cos(radians)
+        
+            return xx, yy
+        
+    
+        # load multiple files
+        load_files = tk.filedialog.askopenfilenames(title='Select files in json format (.txt)')
+        print(load_files)
+    
+        # trajectories orientations -> all plots on one figure
+        
+        
+        trajectory_map_figure = plt.figure(figsize=(8,5))
+        plt.axis('off')
+        ax12 = trajectory_map_figure.add_subplot(111, label="one")
+        
+        
+        ylim_max=0
+        xlim_max=0
+         
+        if not load_files:
+            print("Files were not selected. The data will not be processed.")
+        else:        
+        
+            file_pos=0
+        # read files and accomulate the data 
+            for file_name in load_files:
+                file_pos+=1
+                
+                #read from json format 
+                with open(file_name) as json_file:  
+                    tracks_original = json.load(json_file)
+                    
+                    #read 
+                    
+                    read_parameters = tracks_original["viewer_set"]
+                    print(read_parameters)
+                    img_resolution=read_parameters["resolution (nm/pix)"]
+                    frame_rate=read_parameters["frame rate (f/sec)"]
+                    ap_axis=read_parameters["axis orientation"]
+                    axis_name=read_parameters["axis"]  
+                    
+
+
+        
+                    
+                    # plot the trajectories
+                    
+                    for trackID in range(0, len(tracks_original['tracks'])):
+                        track=tracks_original['tracks'][trackID]
+                        trace=track['trace']
+                        
+                        #rotating the trajectory
+                        
+                        trace_rotated=[rotate_origin_only(x,y, ap_axis) for [x,y] in trace ]
+                        
+                        trace=np.asarray(trace)*self.img_resolution
+                        
+                        trace_rotated=np.asarray(trace_rotated)*self.img_resolution
+                        
+                        ylim_max=np.max((ylim_max, np.max(abs(trace[:,0]-trace[0,0])), np.max(abs(trace_rotated[:,0]-trace_rotated[0,0]))))
+                        xlim_max=np.max((xlim_max, np.max(abs(trace[:,1]-trace[0,1])), np.max(abs(trace_rotated[:,1]-trace_rotated[0,1]))))
+            
+#                        ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  'k')  
+                        ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+                        
+#                        ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  self.color_list_plot[int((file_pos+1)%len(self.color_list_plot))])  
+            
+#                        ax12.plot(trace_90[:,1]-trace_90[0,1],trace_90[:,0]-trace_90[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])
+#                        ax12.text(trace_rotated[-1,1]-trace_rotated[0,1],trace_rotated[-1,0]-trace_rotated[0,0], str(ap_axis), fontsize=10, color=self.color_list_plot[int((file_pos+1)%len(self.color_list_plot))])
+
+        
+                    
+        # plot axis
+        ystep=int(ylim_max/10)
+        xstep=int(xlim_max/10)
+        
+        ax12.plot((-xlim_max+xstep, -xlim_max+2*xstep),(-ylim_max+ystep, -ylim_max+ystep),  'k')  
+        ax12.text(-xlim_max+xstep, -ylim_max+ystep-5, axis_name.split(",")[0], color='k')
+        ax12.text(-xlim_max+2*xstep, -ylim_max+ystep-5, axis_name.split(",")[-1], color='k')
+        
+                    
+        ax12.set_ylim([-ylim_max-100, ylim_max+100])
+        ax12.set_xlim([-xlim_max-100, xlim_max+100])
+        
+        
+        #invert y axis
+        ax12.invert_yaxis()    
+        ax12.grid(True)
+        ax12.set_xlabel('distance, nm')
+        
+        #set a window
+        self.show_orientation_map_win = tk.Toplevel( bg='white')
+        self.show_orientation_map_win.title(" trajectories from the same origin ")
+        self.canvas_img = FigureCanvasTkAgg(trajectory_map_figure, master=self.show_orientation_map_win)
+        self.canvas_img.get_tk_widget().pack(expand = tk.YES, fill = tk.BOTH)
+        self.canvas_img.draw()
+
+        # request file name
+        save_file = tk.filedialog.asksaveasfilename() 
+        
+        if not save_file:
+            print("File name was not provided. The data was not saved. ")
+        else: 
+                       # plot
+            if not(save_file.endswith(".png")):
+                save_file += ".png"        
+            
+                if os.path.isfile(save_file)==True:
+                    # add date if the file exists already
+                    now = datetime.datetime.now()
+                    save_file=save_file.split(".")[0]+"("+str(now.day)+"-"+str(now.month)+"_"+str(now.hour)+"-"+str(now.minute)+")"+"."+save_file.split(".")[-1]
+                      
+            plt.savefig(save_file)     
+    
         
     def save_orientation_info(self):
         '''
@@ -1000,9 +1133,9 @@ class MainVisual(tk.Frame):
             speed_array=[]
             title_text=" trajectory orientation " # title of the plot
             
-            orientation_map_figure = plt.figure(figsize=(18,5))
+            orientation_map_figure = plt.figure(figsize=(12,5))
             plt.axis('off')
-            ax1 = orientation_map_figure.add_subplot(131)
+            ax1 = orientation_map_figure.add_subplot(121)
             
             img_to_show=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
             ax1.imshow(img_to_show, cmap='bone')
@@ -1046,7 +1179,7 @@ class MainVisual(tk.Frame):
                 ax1.text(arrow_a[1], arrow_a[0]-3,  second_name, color='#E91E63', size=12, alpha=0.95, weight="bold")
                 ax1.text(arrow_b[1], arrow_b[0]-3,  first_name, color='#00FFFF', size=12, alpha=0.95, weight="bold")
                 
-                
+            ax1.axis('off')
             #set arrow size
             
             if self.arrow_size_orientation_map==0:
@@ -1162,7 +1295,7 @@ class MainVisual(tk.Frame):
                 
 
             
-            ax2 = orientation_map_figure.add_subplot(132, projection='polar')
+            ax2 = orientation_map_figure.add_subplot(122, projection='polar')
             
 
             # if scale is provided 
@@ -1241,34 +1374,34 @@ class MainVisual(tk.Frame):
             ax2.set_thetamax(180)   
             
             
-            # trajectories orientations -> all plots on one figure
-            ax3 = orientation_map_figure.add_subplot(133)
-
-            for trackID in range(0, len(self.track_data_filtered['tracks'])):
-                track=self.track_data_filtered['tracks'][trackID]
-                trace=track['trace']
-                trace=np.asarray(trace)*self.img_resolution
-                
-#                plt.axis('off')
-                ax3.plot(trace[:,1]-trace[0,1],trace[:,0]-trace[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-                ax3.text(trace[-1,1]-trace[0,1],trace[-1,0]-trace[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-
-                '''
-                
-                ax3.plot((np.asarray(trace)[:,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[:,0]-np.asarray(trace)[0,0])*self.img_resolution,  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-                ax3.text((np.asarray(trace)[-1,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[-1,0]-np.asarray(trace)[0,0])*self.img_resolution, str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-                
-                ax3.plot(np.asarray(trace)[:,1]-np.asarray(trace)[0,1],np.asarray(trace)[:,0]-np.asarray(trace)[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-                ax3.text(np.asarray(trace)[-1,1]-np.asarray(trace)[0,1],np.asarray(trace)[-1,0]-np.asarray(trace)[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-
-                '''               
-                
-            
-            #invert y axis
-            ax3.invert_yaxis()    
-            ax3.grid(True)
-#            ax3.set_ylabel('Distance, nm')
-            ax3.set_xlabel('distance, nm')
+#            # trajectories orientations -> all plots on one figure
+#            ax3 = orientation_map_figure.add_subplot(133)
+#
+#            for trackID in range(0, len(self.track_data_filtered['tracks'])):
+#                track=self.track_data_filtered['tracks'][trackID]
+#                trace=track['trace']
+#                trace=np.asarray(trace)*self.img_resolution
+#                
+##                plt.axis('off')
+#                ax3.plot(trace[:,1]-trace[0,1],trace[:,0]-trace[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+#                ax3.text(trace[-1,1]-trace[0,1],trace[-1,0]-trace[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+#
+#                '''
+#                
+#                ax3.plot((np.asarray(trace)[:,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[:,0]-np.asarray(trace)[0,0])*self.img_resolution,  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+#                ax3.text((np.asarray(trace)[-1,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[-1,0]-np.asarray(trace)[0,0])*self.img_resolution, str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+#                
+#                ax3.plot(np.asarray(trace)[:,1]-np.asarray(trace)[0,1],np.asarray(trace)[:,0]-np.asarray(trace)[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
+#                ax3.text(np.asarray(trace)[-1,1]-np.asarray(trace)[0,1],np.asarray(trace)[-1,0]-np.asarray(trace)[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
+#
+#                '''               
+#                
+#            
+#            #invert y axis
+#            ax3.invert_yaxis()    
+#            ax3.grid(True)
+##            ax3.set_ylabel('Distance, nm')
+#            ax3.set_xlabel('distance, nm')
             
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
