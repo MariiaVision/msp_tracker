@@ -507,9 +507,48 @@ class TrajectorySegment(object):
             # check that the change of the direction is at the moving segment
             motion_var=motion[i]>0 or motion[i+1]>0
             
+            
+            
+            #if based on the displcement the change in orientation is detected
             if logic_0 and logic_1 and logic_2 and motion_var:
-                change_direction_pos.append(i)  
+                # check orientation change is large enough
+                point_start=trajectory[i-p]
+                point_middle=trajectory[i]
+                point_end=trajectory[i+p]
+#                print("\n points: ", point_start, point_middle, point_end)
+        
+    
+                # calculate orientation
+                y=point_start[1]-point_middle[1]
+                x=point_start[0]-point_middle[0]   
+            
+
+                orientation1=(math.degrees(math.atan2(y,x))+360-90)%360
+                    
+#                print("\n orientation1", orientation1)
+    
+                y=point_end[1]-point_middle[1]
+                x=point_end[0]-point_middle[0]      
+
+                orientation2=(math.degrees(math.atan2(y,x))+360-90)%360
+      
+#                print("orientation2", orientation2)
                 
+                
+                dif=abs(orientation1-orientation2)
+                
+                if dif>180:
+#                    print("dif-360")
+                    dif=abs(dif-360)
+                
+#                dif=180-dif
+#                print("-->", dif)
+                #if the difference in orientation is more than 90 degrees
+                if dif<=90:
+                    change_direction_pos.append(i)  
+
+
+             
                 
         return change_direction_pos
         
@@ -532,6 +571,7 @@ class TrajectorySegment(object):
         
         # find the direction changes        
         change_direction_pos=self.num_orientation_change(track['trace'], track['motion'], width)
+        change_direction_pos_updated=[]
         
         # total number of segment in the trajectory
         total_moving_segment_n=0
@@ -568,15 +608,19 @@ class TrajectorySegment(object):
                     total_moving_time+=segment_length
 #                    print("segment_length", segment_length, "->", track['frames'][np.max(positions_new)],"-", track['frames'][np.min(positions_new)])
                     
-                    start_pos=np.min(positions_new)+1 # start position but to the first one
-                    end_pos=np.max(positions_new) # end position but not the last one 
+                    start_pos=np.min(positions_new)+2 # start position from the second point to avoid single frame segment
+                    end_pos=np.max(positions_new)-1   # end position -second last to avoid single frame segment
                     frame_segment=track['frames'][start_pos:end_pos]
-                    
+               
                     # find is any change of direction inside the moving segment
-                    intersection = [track['frames'][value] for value in change_direction_pos if track['frames'][value] in frame_segment]
-         
-                    #number of segments in thismoving segment
+                    intersection = [value for value in change_direction_pos if track['frames'][value] in frame_segment]
+#                    intersection = [track['frames'][value] for value in change_direction_pos if track['frames'][value] in frame_segment]
+                    
+                    # number of segments in thismoving segment
                     segment_n=1+len(intersection)
+                    
+                    # pruned  directionality change update
+                    change_direction_pos_updated=change_direction_pos_updated+intersection
                     
                     # total number of segment in the trajectory
                     total_moving_segment_n+=segment_n
@@ -593,7 +637,7 @@ class TrajectorySegment(object):
         # out
 #        out={'num_moving_segment':total_moving_segment_n, "average_moving_time_per_segment": average_moving_t}
                  
-        return total_moving_segment_n, average_moving_t
+        return change_direction_pos_updated, total_moving_segment_n, average_moving_t
 
             
     def refine_track_sequence(self, tracks, frames, motion):
