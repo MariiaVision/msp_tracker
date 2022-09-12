@@ -2962,7 +2962,7 @@ class MainVisual(tk.Frame):
                         # moving segment data
                         
                         try:
-                            n_mov_segment, average_mov_segment_time=self.tg.moving_segments_data(track, int(2*self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+                            _, n_mov_segment, average_mov_segment_time=self.tg.moving_segments_data(track, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
                         except:
                             n_mov_segment=None
                             average_mov_segment_time=None
@@ -4010,8 +4010,8 @@ class TrackViewer(tk.Frame):
             
             ############# getting orientation out #########
             
-            self.change_direction_pos=self.tg.num_orientation_change(self.trace, self.motion, int(2*self.speed_sliding_window*self.frame_rate)) 
-            self.n_mov_segment, self.average_mov_segment_time=self.tg.moving_segments_data(self.track_data, int(2*self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+#            self.change_direction_pos=self.tg.num_orientation_change(self.trace, self.motion, int(self.speed_sliding_window*self.frame_rate)) #
+            self.change_direction_pos, self.n_mov_segment, self.average_mov_segment_time=self.tg.moving_segments_data(self.track_data, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
                                
                     
             self.ax_displacement.clear()
