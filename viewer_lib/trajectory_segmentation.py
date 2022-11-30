@@ -404,11 +404,11 @@ class TrajectorySegment(object):
             
             positions=np.where(segment_list==seg_pos)
             
-            # if segment is moving
-            if positions[0][0]!=0:
+            # check that the segment is of moving trajectory
+            if track['motion'][positions[0][0]]!=0:
                 start_pos=np.max((0, np.min(positions[0])-1))
                 end_pos=np.min((len(track['frames'])+1, np.max(positions[0])+1))            
-    #            print("\n  start, end:", track['frames'][start_pos], track['frames'][end_pos-1], "-->", (len(track['frames'])+1, np.max(positions[0])+1))
+                
                 trace_segment=track['trace'][start_pos:end_pos]
                 frame_segment=track['frames'][start_pos:end_pos]
                 
@@ -458,7 +458,7 @@ class TrajectorySegment(object):
                                 speed_max=speed
                                 
                                 outcome.update({"frames":[mini_frames[0], mini_frames[-1]], "speed":speed_max})
-                     
+                      
         return outcome
 
     def num_orientation_change(self, trajectory, motion, check_dist):
@@ -471,9 +471,8 @@ class TrajectorySegment(object):
         out:
             change_direction_pos - list with the positions where the direction was changed
         '''
-  #      trajectory=track['trace']
-  #      motion=track['motion']
-                #calculate the displacement
+
+        # calculate the displacement
         x=np.asarray(trajectory)[:,0]    
         y=np.asarray(trajectory)[:,1]
         x_0=np.asarray(trajectory)[0,0]
