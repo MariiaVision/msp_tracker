@@ -835,6 +835,10 @@ class MainVisual(tk.Frame):
                 speed_all+=orientation_new['speed'] 
                 
             
+            # add count for non-zero speed
+            speed_count_all=[0 if s==0 else 1 for s in speed_all]
+                
+            
             for pos in orientation:
                 if pos==180:
                     pos=179.99
@@ -923,7 +927,7 @@ class MainVisual(tk.Frame):
             if self.speed_in_colour==1:    
                 # calculate speed bins and colour the diagram
                 a_speed , b_speed=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=speed_all)
-                a_num , b_num=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size))
+                a_num , b_num=np.histogram(orientation_all, bins=np.arange(0, 360+bin_size, bin_size), weights=speed_count_all)
                 
                 a_num_array=np.asarray(a_num)
                 a_num_array[a_num_array==0]=1
@@ -1058,38 +1062,6 @@ class MainVisual(tk.Frame):
             v = tk.StringVar(root, value=str(self.speed_vmax))
             self.set_speed_vmax = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2), text=v)
             self.set_speed_vmax.grid(row=5, column=2, pady=self.pad_val, padx=self.pad_val) 
-             
-                
-#            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text=" segment speed evalution \n time interval, sec:  " ,  bg='white', font=("Times", 10))
-#            self.qnewtext.grid(row=4, column=3, pady=self.pad_val, padx=self.pad_val)          
-#            
-#            self.set_time_interval = tk.Entry(master=self.choose_diagram_settings, width=int(self.button_length/2))
-#            self.set_time_interval.grid(row=4, column=4, pady=self.pad_val, padx=self.pad_val)      
-#            
-#            
-#            # radiobutton to choose
-#            
-#                
-#            self.qnewtext1 = tk.Label(master=self.choose_diagram_settings, text=" Trajectory segmentation mode \n for speed evaluation : " ,  bg='white', font=("Times", 10))
-#            self.qnewtext1.grid(row=5, column=1, columnspan=2,  pady=self.pad_val, padx=self.pad_val)   
-#            
-#            var_traj_segm_switch = tk.IntVar()
-#            self.traj_segmentation_var=1
-#            
-#            def update_traj_segm_switch():            
-#                self.traj_segmentation_var=var_traj_segm_switch.get()
-#                 
-#            segmentation_switch_msd = tk.Radiobutton(master=self.choose_diagram_settings,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
-#            segmentation_switch_msd.grid(row=5, column=3, pady=self.pad_val, padx=self.pad_val)    
-#            
-#            segmentation_switch_unet = tk.Radiobutton(master=self.choose_diagram_settings,text=" U-Net based ", variable=var_traj_segm_switch, value=2, bg='white', command =update_traj_segm_switch )
-#            segmentation_switch_unet.grid(row=5, column=4, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
-#                
-#                        
-#            self.qnewtext = tk.Label(master=self.choose_diagram_settings, text="  " ,  bg='white', font=("Times", 10))
-#            self.qnewtext.grid(row=6, column=0, pady=self.pad_val, padx=self.pad_val)   
-            
-                    
                     
             self.newbutton = tk.Button(master=self.choose_diagram_settings, text=" OK ", command=run_main_code, width=int(self.button_length/2),  bg='green')
             self.newbutton.grid(row=7, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val) 
@@ -1131,6 +1103,7 @@ class MainVisual(tk.Frame):
             orintation_array=[]
             distance_array=[]
             speed_array=[]
+            non_zero_speed_count=[]
             title_text=" trajectory orientation " # title of the plot
             
             orientation_map_figure = plt.figure(figsize=(12,5))
@@ -1236,14 +1209,11 @@ class MainVisual(tk.Frame):
                 
                 if len(track['trace'])>1 and self.speed_in_colour==1:
                     
-#                    self.traj_segmentation_var=1 
-                    
                     if self.set_time_interval.get()!='':
                         self.speed_sliding_window=float(self.set_time_interval.get())
                     else:
                         self.speed_sliding_window=1 
                     
-#                    print("self.traj_segmentation_var=",self.traj_segmentation_var, "; speed_sliding_window=", self.speed_sliding_window)
                     track['motion']=self.motion_type_evaluate(track, traj_segm_switch_var=self.traj_segmentation_var)
 
                     speed_dict=self.tg.max_speed_segment(track, int(self.speed_sliding_window*self.frame_rate))
@@ -1252,10 +1222,17 @@ class MainVisual(tk.Frame):
                     
                     if speed_val==None:
                         speed_val=0
-#                    print(speed_val*self.img_resolution*self.frame_rate)
+                        
                     speed_array.append(speed_val*self.img_resolution*self.frame_rate)
+                    
+                    if speed_val==0:                        
+                        non_zero_speed_count.append(0)
+                    else:
+                        non_zero_speed_count.append(1)
+                    
                 else:
                     speed_array.append(0)
+                    non_zero_speed_count.append(0)
                     
                 # select colour
                 if orintation_move<45:
@@ -1340,8 +1317,11 @@ class MainVisual(tk.Frame):
             
             if self.speed_in_colour==1:    
                 # calculate speed bins and colour the diagram
+                
+                #find speed per 
                 a_speed , b_speed=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=speed_array)
-                a_num , b_num=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size))
+                a_num , b_num=np.histogram(orintation_array, bins=np.arange(0, 360+bin_size, bin_size), weights=non_zero_speed_count)
+
                 
                 a_num_array=np.asarray(a_num)
                 a_num_array[a_num_array==0]=1
@@ -1366,7 +1346,6 @@ class MainVisual(tk.Frame):
                     
                 normi = matplotlib.colors.Normalize(vmin=0, vmax=self.speed_vmax);
                 cbar=orientation_map_figure.colorbar(cm.ScalarMappable(norm=normi, cmap='viridis'),  ax=ax2, orientation='vertical',shrink=0.7, fraction=0.05, label='maximum segment speed, nm/sec', anchor=(1, 1))
-    #            orientation_map_figure.colorbar.set_ylabel(" for curvilinear speed, nm/sec")
              
                 
             
@@ -1374,34 +1353,6 @@ class MainVisual(tk.Frame):
             ax2.set_thetamax(180)   
             
             
-#            # trajectories orientations -> all plots on one figure
-#            ax3 = orientation_map_figure.add_subplot(133)
-#
-#            for trackID in range(0, len(self.track_data_filtered['tracks'])):
-#                track=self.track_data_filtered['tracks'][trackID]
-#                trace=track['trace']
-#                trace=np.asarray(trace)*self.img_resolution
-#                
-##                plt.axis('off')
-#                ax3.plot(trace[:,1]-trace[0,1],trace[:,0]-trace[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-#                ax3.text(trace[-1,1]-trace[0,1],trace[-1,0]-trace[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-#
-#                '''
-#                
-#                ax3.plot((np.asarray(trace)[:,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[:,0]-np.asarray(trace)[0,0])*self.img_resolution,  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-#                ax3.text((np.asarray(trace)[-1,1]-np.asarray(trace)[0,1])*self.img_resolution,(np.asarray(trace)[-1,0]-np.asarray(trace)[0,0])*self.img_resolution, str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-#                
-#                ax3.plot(np.asarray(trace)[:,1]-np.asarray(trace)[0,1],np.asarray(trace)[:,0]-np.asarray(trace)[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-#                ax3.text(np.asarray(trace)[-1,1]-np.asarray(trace)[0,1],np.asarray(trace)[-1,0]-np.asarray(trace)[0,0], str(track["trackID"]), fontsize=10, color=self.color_list_plot[int(trackID%len(self.color_list_plot))])
-#
-#                '''               
-#                
-#            
-#            #invert y axis
-#            ax3.invert_yaxis()    
-#            ax3.grid(True)
-##            ax3.set_ylabel('Distance, nm')
-#            ax3.set_xlabel('distance, nm')
             
             #set a window
             self.show_orientation_map_win = tk.Toplevel( bg='white')
