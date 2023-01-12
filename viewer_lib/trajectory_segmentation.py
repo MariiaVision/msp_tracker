@@ -561,8 +561,10 @@ class TrajectorySegment(object):
             width - float, number of frames to consider for directionality change
             framerate - int, frame rate 
         out:
+            change_direction_pos_updated - number of time the direction is changed
             num_moving_segment - number of moving segments (taking into account directionality change inside the moving segment)
             average_moving_time_per_segment - average duration of the moving segmnt
+            total_moving_time - duration of movement in the trajectory
         '''
         
         segment_list=skimage.measure.label(np.asarray(track['motion'][1:]))
@@ -636,7 +638,7 @@ class TrajectorySegment(object):
         # out
 #        out={'num_moving_segment':total_moving_segment_n, "average_moving_time_per_segment": average_moving_t}
                  
-        return change_direction_pos_updated, total_moving_segment_n, average_moving_t
+        return change_direction_pos_updated, total_moving_segment_n, average_moving_t, total_moving_time/framerate
 
             
     def refine_track_sequence(self, tracks, frames, motion):
