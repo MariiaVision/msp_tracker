@@ -700,6 +700,7 @@ class MainVisual(tk.Frame):
                         if speed_val==None:
                             speed_val=0
 #                        print(speed_val*self.img_resolution*self.frame_rate)
+                            
                         speed_array.append(speed_val*self.img_resolution*self.frame_rate)
                     else:
                         speed_array.append(0)
@@ -2831,7 +2832,7 @@ class MainVisual(tk.Frame):
                                  ' Maximum distance travelled (nm)', ' Total trajectory time (sec)',  
                                  ' Net orientation (degree)', 'Mean curvilinear speed: average (nm/sec)', 'Mean straight-line speed: average (nm/sec)',
                                  'Mean curvilinear speed: moving (nm/sec)', 'Mean straight-line speed: moving (nm/sec)', 'Max curvilinear speed per segment: moving (nm/sec)', 
-                                 "Mean brightness (normalised [0,1]])", "Mean brightness (normalised by max)", "number of moving segments", "average time of moving segment (sec)"  ]) 
+                                 "Mean brightness (normalised [0,1]])", "Mean brightness (normalised by max)", "number of moving segments", "average moving segment time (sec)", "total moving time (sec)"  ]) 
         
         
                 print("Total number of tracks to process: ", len(self.track_data_filtered['tracks']))
@@ -2913,10 +2914,11 @@ class MainVisual(tk.Frame):
                         # moving segment data
                         
                         try:
-                            _, n_mov_segment, average_mov_segment_time=self.tg.moving_segments_data(track, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+                            _, n_mov_segment, average_mov_segment_time, total_moving_time=self.tg.moving_segments_data(track, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
                         except:
                             n_mov_segment=None
                             average_mov_segment_time=None
+                            total_moving_time=None
                             
                                    
                     
@@ -2926,9 +2928,9 @@ class MainVisual(tk.Frame):
                         
                         self.stat_data.append([track['trackID'], track['frames'][0], total_displacement ,net_displacement,
                                                  max_displacement, time,
-                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs, intensity_mean_segment, intensity_mean_roi, n_mov_segment, average_mov_segment_time])
+                                                 net_direction, average_mcs, average_msls, moving_mcs, moving_msls, moving_maxsegcs, intensity_mean_segment, intensity_mean_roi, n_mov_segment, average_mov_segment_time, total_moving_time])
                     else:
-                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None, None, None, None, None])
+                        self.stat_data.append([track['trackID'], None, None ,None,None, None, None, None, None, None, None, None, None, None, None, None, None, None])
                         
         
                         
@@ -3056,6 +3058,7 @@ class TrackViewer(tk.Frame):
         self.change_direction_pos=[] # number changes in directionality
         self.n_mov_segment=0 # number of moving segments in the trajectory (taking into account directionality change)
         self.average_mov_segment_time=0 # average time of a moving segment in the trajectory
+        self.total_moving_time=0
         
         #update motion information
         self.motion=self.motion_type_evaluate(self.track_data)
@@ -3844,7 +3847,9 @@ class TrackViewer(tk.Frame):
             
             self.listNodes_parameters.insert(tk.END, " Number of moving segments:                     "+str(self.n_mov_segment))
 
-            self.listNodes_parameters.insert(tk.END, " Average moving segment time                    "+str(np.round(self.average_mov_segment_time, 5))+" sec")
+            self.listNodes_parameters.insert(tk.END, " Average moving segment time:                   "+str(np.round(self.average_mov_segment_time, 5))+" sec")
+            
+            self.listNodes_parameters.insert(tk.END, " Total moving time:                             "+str(np.round(self.total_moving_time, 5))+" sec")
         
         
         self.n_mov_segment, self.average_mov_segment_time
@@ -3962,7 +3967,7 @@ class TrackViewer(tk.Frame):
             ############# getting orientation out #########
             
 #            self.change_direction_pos=self.tg.num_orientation_change(self.trace, self.motion, int(self.speed_sliding_window*self.frame_rate)) #
-            self.change_direction_pos, self.n_mov_segment, self.average_mov_segment_time=self.tg.moving_segments_data(self.track_data, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
+            self.change_direction_pos, self.n_mov_segment, self.average_mov_segment_time, self.total_moving_time=self.tg.moving_segments_data(self.track_data, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
                                
                     
             self.ax_displacement.clear()
