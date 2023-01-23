@@ -84,6 +84,7 @@ class MainVisual(tk.Frame):
         self.stat_data=[] # stat data to save csv file
         self.new_trackID=1 # default value or new track ID
         self.speed_sliding_window = 1 # length of the sliding window to evaluate speed
+        self.norm_switch=False
         
         # segmentation 
         self.tg = TrajectorySegment()     
@@ -217,7 +218,29 @@ class MainVisual(tk.Frame):
         v = tk.StringVar(root, value=str(self.axis_name))
         self.axis_name_parameter = tk.Entry(root, width=int(self.button_length/2), text=v)
         self.axis_name_parameter.grid(row=6, column=3, pady=self.pad_val, padx=self.pad_val)   
-       
+
+
+#    # # # # # # Radiobuttone:axis # # # # # # #   
+        var_img_norm = tk.IntVar()
+        
+        def update_image_monitor_switch():
+            if var_img_norm.get()==1:
+                self.norm_switch=True
+            else: 
+                self.norm_switch=False
+            self.show_tracks()
+            
+        
+        lbl5 = tk.Label(master=root, text=" Intensity adjustment: ", width=int(2*self.button_length), bg='white')
+        lbl5.grid(row=7, column=0, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R3 = tk.Radiobutton(root, text=" OFF", variable=var_img_norm, value=0, bg='white', command =update_image_monitor_switch )
+        self.R3.grid(row=7, column=2,  pady=self.pad_val, padx=self.pad_val)  
+        
+        self.R4 = tk.Radiobutton(root, text=" ON ", variable=var_img_norm, value=1, bg='white',command = update_image_monitor_switch ) #  command=sel)
+        self.R4.grid(row=7, column=3, columnspan=2, pady=self.pad_val, padx=self.pad_val)     
+               
         
         #update the list
 
@@ -564,15 +587,8 @@ class MainVisual(tk.Frame):
                         ylim_max=np.max((ylim_max, np.max(abs(trace[:,0]-trace[0,0])), np.max(abs(trace_rotated[:,0]-trace_rotated[0,0]))))
                         xlim_max=np.max((xlim_max, np.max(abs(trace[:,1]-trace[0,1])), np.max(abs(trace_rotated[:,1]-trace_rotated[0,1]))))
             
-#                        ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  'k')  
                         ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])  
-                        
-#                        ax12.plot(trace_rotated[:,1]-trace_rotated[0,1],trace_rotated[:,0]-trace_rotated[0,0],  self.color_list_plot[int((file_pos+1)%len(self.color_list_plot))])  
-            
-#                        ax12.plot(trace_90[:,1]-trace_90[0,1],trace_90[:,0]-trace_90[0,0],  self.color_list_plot[int(trackID%len(self.color_list_plot))])
-#                        ax12.text(trace_rotated[-1,1]-trace_rotated[0,1],trace_rotated[-1,0]-trace_rotated[0,0], str(ap_axis), fontsize=10, color=self.color_list_plot[int((file_pos+1)%len(self.color_list_plot))])
-
-        
+                             
                     
         # plot axis
         ystep=int(ylim_max/10)
@@ -765,10 +781,7 @@ class MainVisual(tk.Frame):
         self.traj_segmentation_var=1
         def update_traj_segm_switch():            
             self.traj_segmentation_var=var_traj_segm_switch.get()
-#            
-#     
-#        segmentation_switch_off = tk.Radiobutton(master=self.choose_traj_segmentation,text=" without ",variable=var_traj_segm_switch, value=0, bg='white', command =update_traj_segm_switch )
-#        segmentation_switch_off.grid(row=2, column=1, columnspan=1, pady=self.pad_val, padx=self.pad_val)   
+#             
 
         segmentation_switch_msd = tk.Radiobutton(master=self.choose_traj_segmentation,text=" MSD based ",variable=var_traj_segm_switch, value=1, bg='white', command =update_traj_segm_switch )
         segmentation_switch_msd.grid(row=2, column=2, columnspan=1, pady=self.pad_val, padx=self.pad_val)    
@@ -1714,14 +1727,6 @@ class MainVisual(tk.Frame):
         def cancel_window():
             self.save_data_window.destroy()
             
-        # if zoom is on
-
-#        xlim=self.ax.get_xlim()
-#        ylim=self.ax.get_ylim()
-#        print(xlim, ylim)
-#        print(self.movie.shape)
-#        print(xlim[0]!=0, ylim[1]!=0, xlim[1]!=self.movie.shape[2], ylim[0]!=self.movie.shape[1])
-#        zoom= xlim[0]!=0 or ylim[1]!=0 or xlim[1]!=self.movie.shape[2] or ylim[0]!=self.movie.shape[1]
         print(self.is_zoom_filtered)
         if self.is_zoom_filtered==True:
           self.save_data_window = tk.Toplevel(root,  bg='white')
@@ -1774,7 +1779,13 @@ class MainVisual(tk.Frame):
 
 
         # plot image
-        self.image = self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        self.image = np.uint8((self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:]))*255)
+        
+        # normalisation with openCV
+        if self.norm_switch==True:
+            clahe = cv2.createCLAHE(clipLimit=5.0, tileGridSize=(16,16))
+            self.image = clahe.apply(self.image)
+#            self.image = cv2.equalizeHist(self.image)
         
         self.ax.clear() # clean the plot 
         self.ax.imshow(self.image, cmap="gray")
@@ -2569,10 +2580,18 @@ class MainVisual(tk.Frame):
                 self.lbl1.destroy()
             except:
                 pass
+#            
+#            if self.movie.dtype=='uint16':      
+#                print("data type uint16 is converted to uint8")
+#                self.movie=(self.movie - np.min(self.movie))/(np.max(self.movie)- np.min(self.movie))
+#                self.movie=skimage.util.img_as_ubyte(self.movie)
+            
+       
                 
             self.lbl1 = tk.Label(master=root, text="movie: "+self.movie_file.split("/")[-1], bg='white')
             self.lbl1.grid(row=2, column=0, columnspan=4, pady=self.pad_val, padx=self.pad_val)
              
+            
             
             # set axes
             #set the same "zoom"
@@ -3047,6 +3066,7 @@ class TrackViewer(tk.Frame):
         self.ap_axis=ap_axis
         self.axis_name=axis_name
         self.img_range=[[0,0],[0,0]] # range of image ccordinates used for plotting [[x_min, x_max],[y_min, y_max]]
+        self.norm_switch=False
         
         
         # segmentation 
@@ -3307,17 +3327,39 @@ class TrackViewer(tk.Frame):
 
         # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
         self.R1 = tk.Radiobutton(master=self.viewer, text=" tracks on  ", variable=var, value=0, bg='white', command =update_monitor_plot )
-        self.R1.grid(row=1, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
+        self.R1.grid(row=0, column=2, columnspan=1,  pady=self.pad_val, padx=self.pad_val)  
 
-        self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R2.grid(row=1, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
+        self.R2 = tk.Radiobutton(master=self.viewer, text=" tracks off ", variable=var, value=1, bg='white',command = update_monitor_plot )
+        self.R2.grid(row=0, column=3, columnspan=1,  pady=self.pad_val, padx=self.pad_val)
         
-        self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R3.grid(row=2, column=2, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
+        self.R3 = tk.Radiobutton(master=self.viewer, text=" motion type ", variable=var, value=2, bg='white',command = update_monitor_plot )
+        self.R3.grid(row=1, column=2, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
         
-        self.R3 = tk.Radiobutton(master=self.viewer, text=" all tracks ", variable=var, value=5, bg='white',command = update_monitor_plot ) #  command=sel)
-        self.R3.grid(row=2, column=3, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
+        self.R4 = tk.Radiobutton(master=self.viewer, text=" all tracks ", variable=var, value=5, bg='white',command = update_monitor_plot )
+        self.R4.grid(row=1, column=3, columnspan=1,  pady=self.pad_val*2, padx=self.pad_val)
+        
 
+        var_img_norm = tk.IntVar()
+        
+        def update_image_monitor_switch():
+            if var_img_norm.get()==1:
+                self.norm_switch=True
+            else: 
+                self.norm_switch=False
+            self.plot_image()
+            
+        
+        lbl5 = tk.Label(master=self.viewer, text=" Intensity adjustment: ", width=int(2*self.button_length), bg='white')
+        lbl5.grid(row=2, column=2, columnspan=2, pady=self.pad_val, padx=self.pad_val)
+
+        # monitor switch: # 0- show tracks and track numbers, 1- only tracks, 2 - nothing
+        self.R3 = tk.Radiobutton(self.viewer, text=" OFF", variable=var_img_norm, value=0, bg='white', command =update_image_monitor_switch )
+        self.R3.grid(row=3, column=2,  pady=self.pad_val, padx=self.pad_val)  
+        
+        self.R4 = tk.Radiobutton(self.viewer, text=" ON ", variable=var_img_norm, value=1, bg='white',command = update_image_monitor_switch ) #  command=sel)
+        self.R4.grid(row=3, column=3, columnspan=1, pady=self.pad_val, padx=self.pad_val)     
+               
+        
         
         
     
@@ -3331,7 +3373,6 @@ class TrackViewer(tk.Frame):
         changeInY = pointB[1] - pointA[1]
         
         return int((math.degrees(math.atan2(changeInY,changeInX))+360-90-self.ap_axis)%360)
-#        return int(abs(math.degrees(math.atan2(changeInX,changeInY))-self.ap_axis)%360) 
 
         
     def change_position(self):
@@ -3636,7 +3677,12 @@ class TrackViewer(tk.Frame):
         
         '''
                 
-        img=self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])
+        img=np.uint8(self.movie[self.frame_pos,:,:]/np.max(self.movie[self.frame_pos,:,:])*255)
+        
+        # normalisation with openCV
+        if self.norm_switch==True:
+            clahe = cv2.createCLAHE(clipLimit=5.0, tileGridSize=(16,16))
+            img = clahe.apply(img)
 
 
         #calculate window position        
@@ -3817,7 +3863,6 @@ class TrackViewer(tk.Frame):
             # average moving segment time
             
             
-#            !!!!!!!!!!!!!!!
            # add to the list
             self.listNodes_parameters.insert(tk.END, " Total distance travelled                       "+str(np.round(self.total_distance*self.img_resolution,2))+" nm") 
     
@@ -3895,21 +3940,14 @@ class TrackViewer(tk.Frame):
         try :
             
             self.ax_intensity.clear()           
-#            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="normalised [0,1]")
+            
             self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="normalised by max")
             
-#            self.ax_intensity.plot(self.frames, intensity_array_1, "-b", label="segmented vesicle")
-#            self.ax_intensity.plot(self.frames, intensity_array_2, "-k", label="without segmentation")
-
-#            self.ax_intensity.plot(self.frames, (intensity_array_1-np.min(intensity_array_1))/np.max(((np.max(intensity_array_1)-np.min(intensity_array_1)), 0.00001)), "-b", label="segmented vesicle")
-#    
-##            self.ax_intensity.set_ylabel("intensity", fontsize='small')
-#            self.ax_intensity.plot(self.frames, (intensity_array_2-np.min(intensity_array_2))/np.max(((np.max(intensity_array_2)-np.min(intensity_array_2)), 0.00001)), "-k", label="without segmentation")
             if check_border==0:
                 self.ax_intensity.set_title('Vesicle intensity (normalised) per frame', fontsize='small')
             else:
                 self.ax_intensity.set_title('Vesicle intensity: fail to compute for all frames!', fontsize='small')
-#            self.ax_intensity.legend(fontsize='small')   
+
             self.ax_intensity.set_ylim(top = 1.1, bottom = 0)            
             
             # DrawingArea
@@ -3966,7 +4004,6 @@ class TrackViewer(tk.Frame):
             
             ############# getting orientation out #########
             
-#            self.change_direction_pos=self.tg.num_orientation_change(self.trace, self.motion, int(self.speed_sliding_window*self.frame_rate)) #
             self.change_direction_pos, self.n_mov_segment, self.average_mov_segment_time, self.total_moving_time=self.tg.moving_segments_data(self.track_data, int(self.speed_sliding_window*self.frame_rate), self.frame_rate)            
                                
                     
@@ -4030,10 +4067,7 @@ class TrackViewer(tk.Frame):
                     displacement_val=(disaplcement[fastest_segment_start]+disaplcement[fastest_segment_end])/2
                     self.ax_displacement.text(frame_val,displacement_val, str(int(np.round(fastest_speed_value, 0)))+" nm", fontsize='8') #, c=colourV)
                
-                #colourbar 
-    #            normi = matplotlib.colors.Normalize(vmin=np.min(speed_array), vmax=np.max(speed_array));
-    #            self.cbar.set_clim(vmin=np.min(speed_array),vmax=np.max(speed_array))
-            
+           
     
             
             #        self.ax_displacement.set_ylabel('Displacement (nm)', fontsize='small')
