@@ -60,7 +60,7 @@ class MainVisual(tk.Frame):
         
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # half the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.7)  # 0.9 of the monitor height
+        self.window_height = int(master.winfo_screenheight()*0.5)  # 0.9 of the monitor height
 
         
         #colours for plotting tracks        
@@ -3042,7 +3042,7 @@ class TrackViewer(tk.Frame):
         
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # of the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.7)  # of the monitor height
+        self.window_height = int(master.winfo_screenheight()*0.5)  # of the monitor height
 
         
         # save important data
