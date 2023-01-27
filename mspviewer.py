@@ -127,7 +127,7 @@ class MainVisual(tk.Frame):
         self.pad_val=2
         self.dpi=100
         self.img_width=self.window_height*0.6
-        self.figsize_value=(self.img_width/self.dpi, self.img_width/self.dpi)
+        self.figsize_value=(self.window_height*0.8/self.dpi, self.window_height*0.8/self.dpi)
         
         ### frames ###
     
@@ -135,7 +135,7 @@ class MainVisual(tk.Frame):
         self.is_zoom_filtered=False # check is any tracks were filtered by zoom
         
         self.filterframe= tk.Frame(root, bg='white') 
-        self.filterframe.grid(row=2, column=5, columnspan=4,rowspan=4,  pady=self.pad_val, padx=self.pad_val) 
+        self.filterframe.grid(row=2, column=5, columnspan=4,rowspan=7,  pady=self.pad_val, padx=self.pad_val) 
         
         # Framework: saving/plotting results
         self.resultbuttonframe= tk.Frame(root, bg='white')
@@ -3042,7 +3042,7 @@ class TrackViewer(tk.Frame):
         
         #set the window size        
         self.window_width = int(master.winfo_screenwidth()/2.5) # of the monitor width
-        self.window_height = int(master.winfo_screenheight()*0.5)  # of the monitor height
+        self.window_height = int(master.winfo_screenheight()*0.7)  # of the monitor height
 
         
         # save important data
