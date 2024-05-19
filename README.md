@@ -5,10 +5,13 @@ This repository contains two modules with graphical-user interface:
 2) MSP-viewer: track viewer to visualise the tracks, correct trajectories if required and provide statisticsy.
 
 
-The basis of the tracking approach is described in the paper "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873 
-
+The software package and its applications are decribed in "Tracking exocytic vesicle movements reveals the spatial control of secretion in epithelial cells"
+Jennifer H. Richens, Mariia Dmitrieva, Helen L. Zenner, Nadine Muschalik, Richard Butler, Jade Glashauser, Carolina Camelo, Stefan Luschnig, Sean Munro, Jens Rittscher, Daniel St Johnston
+bioRxiv 2024.01.25.577201; doi: https://doi.org/10.1101/2024.01.25.577201  and basis of the tracking approach is described in "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873
 
 Please, see manual for the detailed description of the software and its functionality
+
+!!! Coming soon: docker container will be added to run the MSP-tracker more easily. 
 
 ### Software installation
 
