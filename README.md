@@ -70,6 +70,6 @@ Use 'run_msp_tracker.sh' to run the tracker when the parameters for detection an
 
 Docker container with working set up is available to use: !!! link will be here!!!
 1. Install Docker from the official page. 
-2. Build the image from the provided file: `docker load -i msp_img.tar`
+2. Build the image from the provided file: `docker load -i msp_docker.tar`
 3. Run the Docker container (`docker run -it --rm msp_docker`) mounting the folder with code and data (`-v /path/to/folder/with/code/and/data:/mnt`), as well as providing Display informration for the Docker (`-e DISPLAY=$DISPLAY`). All the data should be inside the mounted folder. The display attachment setup varies for different OS.
 4. While inside the container use command line to activate the environment `source activate msp' and run the software using command line. 
