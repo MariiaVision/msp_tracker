@@ -9,9 +9,8 @@ The software package and its applications are decribed in "Tracking exocytic ves
 Jennifer H. Richens, Mariia Dmitrieva, Helen L. Zenner, Nadine Muschalik, Richard Butler, Jade Glashauser, Carolina Camelo, Stefan Luschnig, Sean Munro, Jens Rittscher, Daniel St Johnston
 bioRxiv 2024.01.25.577201; doi: https://doi.org/10.1101/2024.01.25.577201  and basis of the tracking approach is described in "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873
 
-Please, see manual for the detailed description of the software and its functionality
+#### Please, see manual for the detailed description of the software and its functionality: MSP_framework_manual_v03.pdf
 
-!!! Coming soon: docker container will be added to run the MSP-tracker more easily. 
 
 ### Software installation
 
@@ -66,4 +65,10 @@ Use 'run_msp_tracker.sh' to run the tracker when the parameters for detection an
   - load protein movie
   - select the tracks (.txt file (json format) or csv file)
   - optional: select membrane movie
+    
+#### Docker container
 
+Docker container with working set up is available to use: !!! link will be here!!!
+1. Install Docker from the official page. 
+2. Build the image from the provided file: `docker load -i msp_img.tar`
+3. Run the Docker container (`docker run -it --rm msp_docker`) mounting the folder with code and data (`-v /path/to/folder/with/code/and/data:/mnt`), as well as providing Display informration for the Docker (`-e DISPLAY=$DISPLAY`). The display attachment setup varies for different OS.     
