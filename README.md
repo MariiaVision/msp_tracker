@@ -9,7 +9,7 @@ The software package and its applications are decribed in "Tracking exocytic ves
 Jennifer H. Richens, Mariia Dmitrieva, Helen L. Zenner, Nadine Muschalik, Richard Butler, Jade Glashauser, Carolina Camelo, Stefan Luschnig, Sean Munro, Jens Rittscher, Daniel St Johnston
 bioRxiv 2024.01.25.577201; doi: https://doi.org/10.1101/2024.01.25.577201  and basis of the tracking approach is described in "Protein Tracking By CNN-Based Candidate Pruning And Two-Step Linking With Bayesian Network" M Dmitrieva, H L Zenner,J Richens,D St Johnston and J Rittscher, MLSP 2019:  https://ieeexplore.ieee.org/abstract/document/8918873
 
-#### Please, see manual for the detailed description of the software and its functionality: MSP_framework_manual_v03.pdf
+#### Please, see manual for the detailed description of the software and its functionality: MSP_framework_manual_v04.pdf
 
 
 ### Software installation
